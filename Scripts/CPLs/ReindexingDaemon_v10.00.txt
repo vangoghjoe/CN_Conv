@@ -1,0 +1,131 @@
+/*
+ * PROGRAM NAME: ReindexingDaemon.CPL
+ * ------------
+ *      Concordance® Programming Language Reindexing Daemon Program Copyright © 2012 LexisNexis,
+ *      a division of Reed Elsevier Inc.All rights reserved.
+ *      LexisNexis and the Knowledge Burst logo are registered 
+ *      trademarks of Reed Elsevier Properties Inc., used under license.  Concordance is a 
+ *      registered trademark of LexisNexis, a division of Reed Elsevier Inc.
+ *      LexisNexis, 13427 NE 16th ST Suite 200 
+ *      Bellevue, WA 98005
+ *
+ *      Unauthorized distribution, adaptation or use may be 
+ *      subject to civil and criminal penalties.
+ *     
+ *      You may incorporate this program into your own programs 
+ *      ONLY if you incorporate the following copyright notice:
+ *      Copyright © 20__ YOUR NAME. ALL RIGHTS RESERVED. 
+ *      Portions copyright © 1994-2012 LexisNexis, a division of Reed Elsevier, Inc.  
+ *      All rights reserved.
+ *
+ *
+ *      Synopsis
+ *      ---------
+ *      This utility reindexes all databases that have the file path location written into a log file.
+ *
+ * USAGE:
+ * ------
+ *      There are several lines below that define szUserID, szPassword, LogFile. Put 
+ *      your user id, password, and the log file name all between the quotation marks 
+ *      in the proper variables. Then run the Program.
+ */
+
+
+text szUserID = "";
+text szPassword = "";
+
+text logFile = "";
+
+/****************************************************************
+* Name:         main()                                          *
+* Synopsis:     Main entry point for all Concordance CPLs       *
+****************************************************************/
+main() {
+
+int    fhLog;
+char   logPath[256];
+
+
+   puts(0,0,"Concordance Reindexing Daemon");
+   closedb(0);
+
+   /* Get the name of a log file */    
+   if (logFile == "")
+      getfile("Open log file", "*.txt", logFile);
+         
+   /* Open log file */
+   if ((fhLog = open(logFile, "r")) <> EOF) {
+
+      /* Read a directory and then index all databases in that directory */
+      while (readln(fhLog, logPath) <> EOF)
+         reindexDaemon(logPath);
+      
+      /* Close log file */
+      close(fhLog);
+   }
+
+   exit();
+}
+
+
+/****************************************************************
+* Name:         reindexDaemon()                                 *
+* Synopsis:     Main processing routine for the CPL             *
+****************************************************************/
+reindexDaemon(text directoryPath)
+{
+char szFile[256];
+int db, i;
+
+	if (substr(directoryPath, len(directoryPath), 1) <> "\")
+		directoryPath = directoryPath + "\";
+		
+   for (szFile= findfirst(directoryPath + "*.dcb", 0); szFile[0]; szFile = findnext()) {
+
+      /* Give the user the opportunity to quit */   
+      Message("Press [Esc] to quit now.", FALSE);
+      i = clock() + 3000;
+      while(i > clock()) {
+         if (keypress())
+            if (getkey() == ESC)
+                exit();
+      }
+
+      /* Put a message that we are reindexing */
+      Message("Reindexing "+directoryPath + szFile, FALSE);
+            
+      /* Reindex the database */
+      if ((db = opendb(directoryPath + szFile, szUserID, szPassword)) <> EOF) {
+         reindex(db);
+         closedb(db);
+      }
+   }
+   
+} /* reindexDaemon() */
+
+
+
+/****************************************************************
+* Name:         Message                                         *
+* Synopsis:     Displays error message and waits for key.       *
+****************************************************************/
+Message(text message; int wait)
+{
+text screen;
+int key;
+
+   cursoroff();
+   if (wait)
+      screen = save(5,13,8,69);
+
+   box(5,13,8,69, "3D", MenuColor_);
+   puts(6,14,pad(message,'C',53),MenuColor_);
+
+   if (wait)  {
+      key = getkey();
+      restore(5,13,screen);
+   }
+
+   return(asc(upper(chr(key))));
+}  /* Message() */
+

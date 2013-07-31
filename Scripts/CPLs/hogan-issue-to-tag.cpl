@@ -1,0 +1,404 @@
+/* call is 
+ *    0          1        2      3
+ * $concordance_exe /nosplash  this_CPT   DCB   LOG_FILE
+ */
+
+/* GLOBALS */
+int db, g_fh_log;
+text g_spaceStr = "LN_SPACE_XYZ";
+text g_dcb_pfn, g_results_pfn, g_log_pfn;
+int CR=13, LF=10, TAB=9, EOF=-1;
+int g_hasError;
+int OK=0, ERROR=1, TRUE=1, FALSE=0;
+
+/* Get the paths of various input / output files, 
+ * - initialize the log
+ * - open the db
+ */
+Inits() 
+{
+	text time;
+	
+    /* Problems with spaces in cmd line args, so sort of URL-encode it,
+     * except substitute the string LN_SPACE_XYZ for any spaces
+     */
+
+	/* call is 
+	 *    0          1        2      3
+	 * /nosplash  this_CPT   DCB   LOG_FILE
+     */
+	  
+	/* get cmdline args */
+    g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
+    g_log_pfn = LN_replace(getarg(3), g_spaceStr, " ");
+
+    if (g_dcb_pfn == "") {
+        messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
+        return ERROR;  
+    }
+
+	/* initialize log */
+    init_log();
+    time = get_time_stamp();
+    write_log(time + "|START|" + g_dcb_pfn);
+	
+	/* open DB */
+	if ((db = opendb(g_dcb_pfn)) == EOF) {
+		write_log("|ERROR|" + "Unable to open dcb");
+        g_hasError = TRUE;
+		return ERROR;
+	}
+    return OK;
+}
+
+/**************************************************************************
+ * Function: Main                                    
+ * Purpose : Entry point for all programs            
+ **************************************************************************/
+main()
+{
+   int      db,
+            nError,
+            bCancelProcessing,
+            btIssues,
+            nCurrentAnnotation,
+            nTotalAnnotations,
+            btNotesTag,
+            nData,
+            bDeleteEmptyNotes;
+   text     pszOldDatabase,
+            pszIssuesBtree,
+            pszIssue;    
+
+   	int status;
+	
+    /* Inits */
+    g_hasError = FALSE;
+	if ((Inits())==ERROR) {  
+        finish_log(); 
+        exit();
+    }
+   
+    /* if true, deletes empty notes - whatever that means */
+      bDeleteEmptyNotes = FALSE;
+      
+   /* Initialize variables.  Unnecessary, but good to do. */
+   nError = 0;
+   bCancelProcessing = FALSE;
+   btIssues = EOF;
+   
+   /* Cycle through the current query */
+   cycle(db) {
+   
+      /* Put up a status message */
+      puts(0, 0, "Processing record " + str(docno(db)) + " of " + str(count(db)));
+      
+      /* Check to see if the database changed */
+      if (db.database <> pszOldDatabase) {
+      
+         /* Close the old temp b-tree */
+         if (btIssues <> EOF) {
+            btclose(btIssues);
+            erase(pszIssuesBtree);
+            btIssues = EOF;
+         }
+         
+         /* Create a new temporary b-tree containing all */
+         /* issues for the current notes database.       */
+         pszIssuesBtree = db.database + "-temp issues.lst";
+         if ((btIssues = btcreate(pszIssuesBtree, FALSE)) <> EOF) {
+
+            /* Copy the tags from the notes file */
+			if (GetDatabaseVersion(db) < 9)
+			{
+				if (CopyIssues(db, btIssues))
+					bCancelProcessing = TRUE;
+			}
+			else
+			{
+				if (CopyIssuesV9(db, btIssues))
+					bCancelProcessing = TRUE;
+			}
+         
+         } else {
+             write_log("|ERROR| Can't open temp file: " + pszIssuesBtree);
+             g_hasError = TRUE;
+             bCancelProcessing = TRUE;
+         }
+         
+         /* Save the old database */
+         pszOldDatabase = db.database;
+      }
+      
+      /* Get the annotation count */
+      nCurrentAnnotation = nTotalAnnotations = annotationCount(db);
+
+      /* Cycle backwards through the annotations.  This is so we can delete an annotation if necessary. */
+      for (nError = annotationGoto(db, nCurrentAnnotation); (nError == 0) and (bCancelProcessing == FALSE) and (nCurrentAnnotation > 0); nError = annotationGoto(db, nCurrentAnnotation)) {
+      
+         /* Cycle through the list of issues */
+         for (nError = btfirst(btIssues, pszIssue, nData); nError == 0; nError = btnext(btIssues, pszIssue, nData)) {
+
+            /* See if the current annotation is tagged with this issue */
+            if (annotationIsTagged(db, pszIssue)) {
+            
+               /* Untag the issue */
+               annotationTag(db, FALSE, pszIssue);
+               
+               /* Tag the issue to the document */
+               tag(db, TRUE, pszIssue);               
+            }
+         }
+      
+         /* Delete empty notes or scan backwards to the previous annotation */
+         if (bDeleteEmptyNotes) {
+         
+            /* Check to see if there is text or an attachment */
+            if ((annotationRetrieve(db, "NOTETEXT") == "") and (annotationRetrieve(db, "NOTEATTACHED") == "")) {            
+            
+               /* Delete the annotation */
+               annotationDelete(db);
+               
+               /* Reset the count */
+               if (nCurrentAnnotation == nTotalAnnotations)
+                  nCurrentAnnotation = nTotalAnnotations = annotationCount(db);
+               else
+                  nCurrentAnnotation = nCurrentAnnotation - 1;
+               
+            } else
+               nCurrentAnnotation = nCurrentAnnotation - 1;
+               
+         } else                      
+            nCurrentAnnotation = nCurrentAnnotation - 1;
+      } 
+            
+      /* If we exited prematurely, or the user hit Cancel, exit the program */
+      if (bCancelProcessing == TRUE)
+         break;
+      if (keypress()) {
+         if (getkey() == ESC)
+            break;
+      }           
+   }   
+   
+   /* Close and delete any temporary files */
+   if (btIssues <> EOF) {
+      btclose(btIssues);
+      erase(pszIssuesBtree);
+      btIssues = EOF;
+   }   
+
+    /* still here?  finish the log */
+     finish_log();
+     exit();
+}
+
+
+/**************************************************************************
+ * Function: CopyIssues
+ * Purpose : Copies issues from the tag file into a destination list file.
+ **************************************************************************/
+CopyIssues(int db, btDestination)
+{
+   int      btIssues,
+            nError,
+            nData;
+   text     pszIssue;
+   
+   /* Try and open the notes tag file */
+   if ((btIssues = btopen(db.database + "-notes.tag")) <> EOF) {
+
+      /* Cycle through the tag file */
+      for (nError = btfirst(btIssues, pszIssue, nData); nError == 0; nError = btgte(btIssues, pszIssue, pszIssue, nData)) {
+      
+         /* Insert the tag into the file */
+         btinsert(btDestination, pszIssue, nData);
+         
+         /* Concatenate a space to skip over all tags to the next tag */
+         pszIssue = pszIssue + " ";
+      }
+      
+      /* Close the notes tag file */
+      btclose(btIssues);
+      nError = FALSE;
+         
+   } else {
+   
+      /* Tell the user we were unable to open the notes tag file */
+      messageBox("Unable to open the notes tag (issue) file.  Most likely there are no issues attached to this database.", gszIssue2Tag, MB_ICONEXCLAMATION | MB_OK);
+      nError = TRUE;
+   }
+   
+   return(nError);
+}
+
+
+/**************************************************************************
+ * Function: CopyIssues
+ * Purpose : Copies issues from the tag file into a destination list file.
+ **************************************************************************/
+CopyIssuesV9(int db, btDestination)
+{
+   int      btIssues,
+            nError,
+            nData,
+			i;
+   text     pszIssue;
+   
+   /* Try and open the notes tag file */
+   if ((btIssues = btopen(db.database + "-notes.trk")) <> EOF) {
+
+      /* Set up our string to search */
+      pszIssue = "$";
+
+      /* Cycle through the track file looking for all entries that start with '$' */
+      for (i = btgte(btIssues, pszIssue, pszIssue, nData); i == 0; i = btgt(btIssues, pszIssue, pszIssue, nData)) 
+      {    
+         /* Add the key to the list */
+         i = btinsert(btDestination, substr(pszIssue, 2), 0);
+      
+         /* Add a space to jump to the next tag */
+         pszIssue = pszIssue + " ";
+      }            
+
+      /* Close the notes tag file */
+      btclose(btIssues);
+      nError = FALSE;
+         
+   } else {
+   
+      /* Tell the user we were unable to open the notes tag file */
+      messageBox("Unable to open the notes trk file.  Most likely there are no issues attached to this database.", gszIssue2Tag, MB_ICONEXCLAMATION | MB_OK);
+      nError = TRUE;
+   }
+   
+   return(nError);
+}
+
+
+/****************************************************************
+* Name:         GetDatabaseVersion                              *
+* Synopsis:     Returns int with major version of db.           *
+****************************************************************/
+GetDatabaseVersion(int db)
+{
+   int fh;
+   char szBuffer[3];
+   float fVer;
+   
+   /* Open the database for reading */
+   if ((fh = open(db.database + ".dcb", "r")) <> EOF) {
+   
+      /* Seek to the database version offset */
+      lseek(fh, 32, 'B');
+      
+      /* Read the majver/minver bytes */
+      read(fh, szBuffer, 2);
+
+      /* Close the file handle */
+      close(fh);
+   }
+   
+   return(num(szBuffer[0]));
+}
+
+/****************************************************************
+* Name:         LN_replace(text str, oldval, newval)          *
+* Synopsis:     Replace instances of oldval with new val in str *
+* Returns:      str
+****************************************************************/
+LN_replace(text mystr, oldval, newval)
+{
+   int i, len_oldval, len_newval;
+
+   len_oldval = len(oldval);
+   len_newval = len(newval);
+
+   i = 1;
+   while (i=match(mystr, oldval, i)) {
+      mystr = substr(mystr, 1, i-1) + newval + substr(mystr, i + len_oldval);
+      i = i + len_newval;
+   }
+
+   return mystr;
+}
+/****************************************************************
+* Name:         stripDcbExt (text pfn)                          *
+* Synopsis:                                                     *
+* Returns:      pfn
+****************************************************************/
+stripDcbExt (text pfn) {
+   text temp;
+   int ll;
+
+   ll = len(pfn);
+   temp = upper(substr(pfn, ll-3));
+
+   if (temp == ".DCB") {
+      pfn = substr(pfn,1,ll-4);
+   }
+   
+   return pfn;
+}
+
+/****************************************************************
+* Name:         init_log()
+****************************************************************/
+init_log() 
+{
+    if ((g_fh_log = open(g_log_pfn, "w")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    close(g_fh_log);
+    /* write_log("START|" + get_time_stamp()); */
+}
+
+/****************************************************************
+* Name:         finish_log
+* Depending on error status, write the STOP REC and EXIT STATUS rec
+****************************************************************/
+finish_log()
+{
+    write_log("|STOP|");
+    if (g_hasError == TRUE) {
+		write_log("|EXIT_STATUS|" + "FAILED");
+    }
+    else {
+		write_log("|EXIT_STATUS|" + "OK");
+    }
+}
+
+/****************************************************************
+* Name:         write_log(msg, hasCRLF)
+* Open and close each time to make sure its flushed.  This is
+* a low traffic file so won't impact performance.
+****************************************************************/
+write_log(text msg) 
+{
+	int msgLen;
+	text mytime;
+
+	mytime = get_time_stamp();
+    msg = mytime + "|" + msg;
+	msgLen = len(msg);
+    if ((g_fh_log = open(g_log_pfn, "a")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    writeln(g_fh_log, msg, msgLen);
+    close(g_fh_log);
+}
+
+/****************************************************************
+* Name:         get_time_stamp()
+****************************************************************/
+get_time_stamp ()
+{ 
+    int hours, mins, secs;
+    text buf;
+
+    time(hours, mins, secs);
+    buf = dtoc(today()) + "  " + str(hours) + ":" + str(mins) + ":" + str(secs);
+    return buf;
+}
