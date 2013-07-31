@@ -73,7 +73,13 @@ int MAX_DATABASES_ALLOWED_OPEN = 16;
 int fh_stats_log, fh_args_file;
 char args_file_pfn[256], stats_log_pfn[256], dcb_pfn[256], dir_pfn[256], vol_pfn[256];
 int  nDstVersion = 5;
-int db;
+int db, g_fh_log;
+text g_spaceStr = "LN_SPACE_XYZ";
+text g_dcb_pfn, g_results_pfn, g_log_pfn;
+
+int CR=13, LF=10, TAB=9, EOF=-1;
+int g_hasError;
+int OK=0, ERROR=1, TRUE=1, FALSE=0;
 
 /****************************************************************
 * Name:         LN_replace(text str, oldval, newval)          *
@@ -119,7 +125,6 @@ main()
     text   start_time, stop_time;
     char   status, convert_status;
     char   dcb_pfn_root[256];
-    text   spaceStr = "LN_SPACE_XYZ";
 
 
     /* Problems with spaces in cmd line args, so sort of URL-encode it,
@@ -132,7 +137,7 @@ main()
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
         return;  
     }
-    dcb_pfn_root = LN_replace(dcb_pfn_root, spaceStr, " ");
+    dcb_pfn_root = LN_replace(dcb_pfn_root, g_spaceStr, " ");
     dcb_pfn_root = stripDcbExt(dcb_pfn_root);
 
 
@@ -143,7 +148,7 @@ main()
     /* stats log */
     stats_log_pfn = getarg(3); 
     if (stats_log_pfn <> "") {
-       stats_log_pfn = LN_replace(stats_log_pfn, spaceStr, " ");
+       stats_log_pfn = LN_replace(stats_log_pfn, g_spaceStr, " ");
     }
     else {
        stats_log_pfn = dcb_pfn_root + "-CONV-CPL-STATS.LOG";
@@ -255,13 +260,34 @@ init_stats_log()
 * Open and close each time to make sure its flushed.  This is
 * a low traffic file so won't impact performance.
 ****************************************************************/
-write_stats_log(text msg) 
+write_stats_log_old(text msg) 
 {
     if ((fh_stats_log = open(stats_log_pfn, "a")) == EOF) {
         exit();  /* ends the CPL, closes all dbs and quite CN */
     }
     writeln(fh_stats_log, msg, len(msg));
     close(fh_stats_log);
+}
+
+/****************************************************************
+* Name:         write_log(msg, hasCRLF)
+* Open and close each time to make sure its flushed.  This is
+* a low traffic file so won't impact performance.
+****************************************************************/
+write_stats_log(text msg) 
+{
+	int msgLen;
+	text mytime;
+
+	mytime = get_time_stamp();
+    msg = mytime + "|" + msg;
+	msgLen = len(msg);
+    if ((g_fh_log = open(g_log_pfn, "a")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    writeln(g_fh_log, msg, msgLen);
+    close(g_fh_log);
 }
 
 /****************************************************************
