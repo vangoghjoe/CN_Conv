@@ -1,0 +1,286 @@
+
+/* GLOBALS */
+int db, g_fh_log;
+text g_spaceStr = "LN_SPACE_XYZ";
+text g_dcb_pfn, g_results_pfn, g_log_pfn;
+int CR=13, LF=10, TAB=9, EOF=-1;
+int g_hasError;
+int OK=0, ERROR=1, TRUE=1, FALSE=0;
+
+main() 
+{
+	int status;
+	
+    /* Inits */
+    g_hasError = FALSE;
+
+    
+    /*if ((Inits())==ERROR) {  */
+        /*finish_log(); */
+        /*exit();*/
+    /*}*/
+    
+    /* DEBUG */
+	g_results_pfn = "C:\get-natives-results.txt";
+	g_log_pfn = "C:\get-natives-status.txt";
+    init_log();
+
+    /* process natives */
+    /* as far as I now, the same code should work for v8 - 10
+     * but I'll leave the logic in, just in case
+     */
+	if (GetDatabaseVersion(db) < 9)
+	   status = ProcessNatives(db);
+	else
+	   status = ProcessNatives(db);
+	 if (status == ERROR) {
+         finish_log();
+         /* DEBUG */
+         /*exit();*/
+     }
+
+     /* still here?  finish the log */
+     finish_log();
+     /* DEBUG */
+     /*exit();*/
+}
+
+/* Get the paths of various input / output files, 
+ * - initialize the log
+ * - open the db
+ */
+Inits() 
+{
+	text dcb_pfn_root, vname, time;
+	
+    /* Problems with spaces in cmd line args, so sort of URL-encode it,
+     * except substitute the string LN_SPACE_XYZ for any spaces
+     */
+
+	/* call is 
+	 *    0          1        2      3              4
+	 * /nosplash  this_CPT   DCB  RESULTS_FILE  LOG_FILE
+     */
+	  
+	/* get cmdline args */
+    g_dcb_pfn = getarg(2);
+	g_results_pfn = getarg(3);
+	g_log_pfn = getarg(4);
+    g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
+    g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
+    g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");
+
+    if (g_dcb_pfn == "") {
+        messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
+        return ERROR;  
+    }
+
+	/* initialize log */
+    init_log();
+    time = get_time_stamp();
+    write_log(time + "|START|" + g_dcb_pfn);
+	
+	/* open DB */
+	if ((db = opendb(g_dcb_pfn)) == EOF) {
+		write_log("|ERROR|" + "Unable to open dcb");
+        g_hasError = TRUE;
+		return ERROR;
+	}
+    return OK;
+}
+
+/* If has error, writes an error to the log,
+ * sets g_hasError = TRUE
+ * and returns FALSE
+ * else returns TRUE
+ */
+ProcessNatives(int db)
+{
+	text buf;
+	text outStr;
+    int fh,nAnnotationCount, i;
+    text type, pfn;
+
+	/* open file for writing */
+    if ((fh=open(g_results_pfn,"w"))==EOF) {
+        g_hasError = TRUE;
+        write_log("|ERROR| Can't open results file: " + g_results_pfn);
+        return ERROR;
+    }
+
+    /* loop over docs
+     * get the annoations for each, looking for any with
+     * AttachType = "External"
+     * (however, will make a note of any of type viewer, 
+     * just in case: not sure what they're for)
+     *
+     * Some confusion about what the 2nd param to annotationGoto is:
+     * the old CreateHyperlinks CPL seems to use to specify which annoation
+     * to goto for a specific doc.  But the docs say it's just the recno.
+     * Ah, but here, the rec no must mean which annotation it is.
+     * To retrieve an annotation:
+     *   be on a given doc in the main db
+     *   call annoationGoto(db)
+     */
+    cycle(db) {
+        nAnnotationCount = annotationCount(db);
+        for (i = nAnnotationCount; i >= 1; i = i - 1) {
+            if (annotationGoto(db, i) == 0) {
+                type = upper(annotationRetrieve(db, "ATTACHTYPE"));
+                outStr = "";
+                if (type == "EXTERNAL") {
+                    pfn = annotationRetrieve(db,"NOTEATTACHED") + chr(13) + chr(10) ;
+                    outStr = pfn;
+                }
+                else { 
+                    /* CN doesn't seem to have else-if stmts */
+                    if (type == "VIEWER") {
+                        pfn = annotationRetrieve(db,"NOTEATTACHED") + "|VIEWER REC recno = " + str(recno(db)) + chr(13) + chr(10) ;
+                        outStr = pfn;
+                        write_log("|INFO|VIEWER REC at recno = " + str(recno(db)));
+                    }
+                }
+                if (outStr <> "") {
+                    if ((write(fh, outStr, len(outStr)))==EOF) {
+                        write_log("|ERROR| Cannot write to results file.");
+                        g_hasError = TRUE;
+                        return ERROR;
+                    }
+                }
+            }
+        }
+    }
+
+	/* close file */
+    close(fh);
+    return OK;
+}
+
+/****************************************************************
+* Name:         GetDatabaseVersion                              *
+* Synopsis:     Returns int with major version of db.           *
+****************************************************************/
+GetDatabaseVersion(int db)
+{
+   int fh;
+   char szBuffer[3];
+   float fVer;
+   
+   /* Open the database for reading */
+   if ((fh = open(db.database + ".dcb", "r")) <> EOF) {
+   
+      /* Seek to the database version offset */
+      lseek(fh, 32, 'B');
+      
+      /* Read the majver/minver bytes */
+      read(fh, szBuffer, 2);
+
+      /* Close the file handle */
+      close(fh);
+   }
+   
+   return(num(szBuffer[0]));
+}
+
+
+
+/****************************************************************
+* Name:         LN_replace(text str, oldval, newval)          *
+* Synopsis:     Replace instances of oldval with new val in str *
+* Returns:      str
+****************************************************************/
+LN_replace(text mystr, oldval, newval)
+{
+   int i, len_oldval, len_newval;
+
+   len_oldval = len(oldval);
+   len_newval = len(newval);
+
+   i = 1;
+   while (i=match(mystr, oldval, i)) {
+      mystr = substr(mystr, 1, i-1) + newval + substr(mystr, i + len_oldval);
+      i = i + len_newval;
+   }
+
+   return mystr;
+}
+/****************************************************************
+* Name:         stripDcbExt (text pfn)                          *
+* Synopsis:                                                     *
+* Returns:      pfn
+****************************************************************/
+stripDcbExt (text pfn) {
+   text temp;
+   int ll;
+
+   ll = len(pfn);
+   temp = upper(substr(pfn, ll-3));
+
+   if (temp == ".DCB") {
+      pfn = substr(pfn,1,ll-4);
+   }
+   
+   return pfn;
+}
+
+/****************************************************************
+* Name:         init_log()
+****************************************************************/
+init_log() 
+{
+    if ((g_fh_log = open(g_log_pfn, "w")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    close(g_fh_log);
+    /* write_log("START|" + get_time_stamp()); */
+}
+
+/****************************************************************
+* Name:         finish_log
+* Depending on error status, write the STOP REC and EXIT STATUS rec
+****************************************************************/
+finish_log()
+{
+    write_log("|STOP|");
+    if (g_hasError == TRUE) {
+		write_log("|EXIT_STATUS|" + "FAILED");
+    }
+    else {
+		write_log("|EXIT_STATUS|" + "OK");
+    }
+}
+
+/****************************************************************
+* Name:         write_log(msg, hasCRLF)
+* Open and close each time to make sure its flushed.  This is
+* a low traffic file so won't impact performance.
+****************************************************************/
+write_log(text msg) 
+{
+	int msgLen;
+	text mytime;
+
+	mytime = get_time_stamp();
+    msg = mytime + "|" + msg;
+	msgLen = len(msg);
+    if ((g_fh_log = open(g_log_pfn, "a")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    writeln(g_fh_log, msg, msgLen);
+    close(g_fh_log);
+}
+
+/****************************************************************
+* Name:         get_time_stamp()
+****************************************************************/
+get_time_stamp ()
+{ 
+    int hours, mins, secs;
+    text buf;
+
+    time(hours, mins, secs);
+    buf = dtoc(today()) + "  " + str(hours) + ":" + str(mins) + ":" + str(secs);
+    return buf;
+}
