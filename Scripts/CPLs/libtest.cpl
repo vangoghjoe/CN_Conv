@@ -1,7 +1,0 @@
-
-text libraryLN_pfn = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\CPLs\library_LN.cpl"; 
-main() 
-{
-	run(libraryLN_pfn);
-	messageBox(str(CR),"",0);
-}
