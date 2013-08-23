@@ -15,15 +15,11 @@ main()
     g_hasError = FALSE;
 
     
-    /*if ((Inits())==ERROR) {  */
-        /*finish_log(); */
-        /*exit();*/
-    /*}*/
+    if ((Inits())==ERROR) { 
+        finish_log();
+        exit();
+    }
     
-    /* DEBUG */
-	g_results_pfn = "C:\get-natives-results.txt";
-	g_log_pfn = "C:\get-natives-status.txt";
-    init_log();
 
     /* process natives */
     /* as far as I now, the same code should work for v8 - 10
@@ -35,14 +31,12 @@ main()
 	   status = ProcessNatives(db);
 	 if (status == ERROR) {
          finish_log();
-         /* DEBUG */
-         /*exit();*/
+         exit();
      }
 
      /* still here?  finish the log */
      finish_log();
-     /* DEBUG */
-     /*exit();*/
+     exit();
 }
 
 /* Get the paths of various input / output files, 
