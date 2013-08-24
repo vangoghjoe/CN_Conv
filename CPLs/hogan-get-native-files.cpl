@@ -12,6 +12,7 @@ main()
 	int status;
 	
     /* Inits */
+    /*messageBox("toop of main","",0);*/
     g_hasError = FALSE;
 
     
@@ -19,6 +20,7 @@ main()
         finish_log();
         exit();
     }
+    /*messageBox("aftet inits","",0);*/
     
 
     /* process natives */
@@ -63,6 +65,7 @@ Inits()
     g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
     g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
     g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");
+    /*messageBox("log pfn = " + g_log_pfn, "Error", MB_OK);*/
 
     if (g_dcb_pfn == "") {
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
