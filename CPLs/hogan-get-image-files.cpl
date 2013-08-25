@@ -1,0 +1,380 @@
+/* Problems with spaces in cmd line args, so sort of URL-encode it,
+ * except substitute the string LN_SPACE_XYZ for any spaces
+ */
+
+/* cmdline is 
+ * path-to-CN-exe /nosplash  this_CPT   DCB  DIR_RESULTS_FILE  VOL_RESULTS_FILE LOG_FILE
+ */
+
+/* GLOBALS */
+int db, g_fh_log;
+text g_spaceStr = "LN_SPACE_XYZ";
+text g_dcb_pfn, g_dir_results_pfn, g_vol_results_pfn, g_log_pfn;
+int CR=13, LF=10, TAB=9, EOF=-1;
+int g_hasError;
+int OK=0, ERROR=1, TRUE=1, FALSE=0;
+
+main() 
+{
+	int status;
+    int btfh, data;
+    char key[256];
+    
+    /* Inits */
+    g_hasError = FALSE;
+    if ((Inits())==ERROR) {
+        finish_log();
+        /*exit();*/
+    }
+
+    /* Check if DIR/VOL are present */
+    /* Bail if not */
+    if (AreFilesPresent(db) == 0) {
+        finish_log();
+        exit();
+    }
+
+    /* Process DIR */
+    if (ProcessFile(db, "DIR", g_dir_results_pfn) == ERROR) {
+        finish_log();
+        exit();
+    }
+
+
+    /* Process VOL */
+    if (ProcessFile(db, "VOL", g_vol_results_pfn) == ERROR) {
+        finish_log();
+        exit();
+    }
+
+     /* still here?  finish the log */
+     finish_log();
+     exit();
+}
+
+/* Get the paths of various input / output files, 
+ * - initialize the log
+ * - open the db
+ */
+Inits() 
+{
+	text dcb_pfn_root, vname, time;
+	
+    /* Problems with spaces in cmd line args, so sort of URL-encode it,
+     * except substitute the string LN_SPACE_XYZ for any spaces
+     */
+
+	/* call is 
+	 *    0          1        2      3              4                5
+	 * /nosplash  this_CPT   DCB  DIR_RESULTS_FILE  VOL_RESULTS_FILE LOG_FILE
+     */
+	  
+	/* get cmdline args */
+    g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
+    g_dir_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
+    g_vol_results_pfn = LN_replace(getarg(4), g_spaceStr, " ");
+    g_log_pfn = LN_replace(getarg(5), g_spaceStr, " ");
+
+    if (g_dcb_pfn == "") {
+        messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
+        return ERROR;  
+    }
+
+	/* initialize log */
+    init_log();
+    time = get_time_stamp();
+    write_log(time + "|START|" + g_dcb_pfn);
+	
+	/* open DB */
+	if ((db = opendb(g_dcb_pfn)) == EOF) {
+		write_log("|ERROR|" + "Unable to open dcb");
+        g_hasError = TRUE;
+		return ERROR;
+	}
+    return OK;
+}
+
+
+/* return 1 if both DIR and VOL are present,
+ * else 0
+ */
+AreFilesPresent(int db) 
+{
+    text volFile, dirFile;
+    int volExists, dirExists, existsSum;
+    int retVal;
+
+    dirExists = exist(db.database + ".DIR"); 
+    if (dirExists > 0) { dirExists = 1; }
+    volExists = exist(db.database + ".VOL"); 
+    if (volExists > 0) { volExists = 1; }
+
+    /* not sure how well "&&" works in CPL-land, so will instead
+     * do the logic with arithmetic
+     * First, exist() returns various possible vals if file is there, 
+     * so I have to first convert all to simple1.
+     * Then once each Exists var has a value of 0 or 1, the sum of their
+     * results tells me what I need to know
+     */
+
+    existsSum = dirExists + volExists;
+    
+    /* it's ok if neither dir nor vol are present,
+     * but it's an error if one is present but not the other
+     */
+    if (existsSum == 2) { retVal = 1; }
+    else {
+        if (existsSum == 0) { retVal = 0; }
+        else {
+            retVal = 0;
+            write_log("|NOTE| either DIR or VOL present, but not the other");
+        }
+    }
+
+    return retVal;
+}
+
+ProcessVol(int db)
+{
+    int      btVol = EOF,
+             nData,
+             status,
+             res_fh,
+             i;
+    text     outStr, 
+             pszKey;
+
+    status = OK;
+
+    if ((res_fh = open(g_vol_results_pfn,"w")) == EOF) {
+        write_log("|ERROR| can't open dir resutls file for writing " + g_vol_results_pfn);
+        g_hasError = TRUE;
+        return ERROR;
+    }
+
+    if ((db <> EOF)) 
+    {
+        /* Try and open the vol file */
+        outStr = db.database + ".VOL";
+        if ((btVol = btopen(outStr)) <> EOF) {      
+
+            /* Cycle through the VOL file */
+            for (i = btfirst(btVol, pszKey, nData); i == 0; i = btnext(btVol, pszKey, nData)) 
+            {         
+                outStr = pszKey + "|" + str(nData) + chr(13) + chr(10);
+                if ((write(res_fh, outStr, len(outStr)))==EOF) {
+                    write_log("|ERROR| Cannot write to results file.");
+                    g_hasError = TRUE;
+                    return ERROR;
+                }
+
+                /* Add a space to jump to the next key */
+                pszKey = pszKey + " ";
+            }
+            /* Close the bt file */
+            btclose(btVol);
+        }
+        else {
+            /* We were unable to open the bt file*/
+            messageBox("can't open vol " + outStr, "", 0);
+            messageBox("exist = " + str(exist(outStr)),"", 0);
+            write_log("|ERROR| Can't open .VOL file" + " " + outStr);
+            g_hasError = TRUE;
+            status = ERROR;
+        }
+    }
+    else {
+        /* somehow lost db connection */
+        write_log("|ERROR| in ProcessVol, db is EOF");
+        g_hasError = TRUE;
+        status = ERROR;
+    }
+    return status;
+}
+
+ProcessFile(int db; text ext; text results_pfn)
+{
+    int      bt_fh = EOF,
+             nData,
+             status,
+             res_fh,
+             i;
+    text     outStr, 
+             pszKey;
+
+    status = OK;
+
+    if ((res_fh = open(results_pfn,"w")) == EOF) {
+        write_log("|ERROR| can't open results file for writing " + results_pfn);
+        g_hasError = TRUE;
+        return ERROR;
+    }
+
+    if ((db <> EOF)) 
+    {
+        /* Try and open the vol file */
+        outStr = db.database + "." + ext;
+        if ((bt_fh = btopen(outStr)) <> EOF) {      
+
+            /* Cycle through the VOL file */
+            for (i = btfirst(bt_fh, pszKey, nData); i == 0; i = btnext(bt_fh, pszKey, nData)) 
+            {         
+                outStr = pszKey + "|" + str(nData) + chr(13) + chr(10);
+                if ((write(res_fh, outStr, len(outStr)))==EOF) {
+                    write_log("|ERROR| Cannot write to results file: " + results_pfn);
+                    g_hasError = TRUE;
+                    return ERROR;
+                }
+
+                /* Add a space to jump to the next key */
+                pszKey = pszKey + " ";
+            }
+            /* Close the bt file */
+            btclose(bt_fh);
+        }
+        else {
+            /* We were unable to open the bt file*/
+            messageBox("can't open vol " + outStr, "", 0);
+            messageBox("exist = " + str(exist(outStr)),"", 0);
+            write_log("|ERROR| Can't open " + ext + " file" + " " + outStr);
+            g_hasError = TRUE;
+            status = ERROR;
+        }
+    }
+    else {
+        /* somehow lost db connection */
+        write_log("|ERROR| in ProcessFile, db is EOF");
+        g_hasError = TRUE;
+        status = ERROR;
+    }
+    return status;
+}
+
+/****************************************************************
+* Name:         GetDatabaseVersion                              *
+* Synopsis:     Returns int with major version of db.           *
+****************************************************************/
+GetDatabaseVersion(int db)
+{
+   int fh;
+   char szBuffer[3];
+   float fVer;
+   
+   /* Open the database for reading */
+   if ((fh = open(db.database + ".dcb", "r")) <> EOF) {
+   
+      /* Seek to the database version offset */
+      lseek(fh, 32, 'B');
+      
+      /* Read the majver/minver bytes */
+      read(fh, szBuffer, 2);
+
+      /* Close the file handle */
+      close(fh);
+   }
+   
+   return(num(szBuffer[0]));
+}
+
+
+
+/****************************************************************
+* Name:         LN_replace(text str, oldval, newval)          *
+* Synopsis:     Replace instances of oldval with new val in str *
+* Returns:      str
+****************************************************************/
+LN_replace(text mystr, oldval, newval)
+{
+   int i, len_oldval, len_newval;
+
+   len_oldval = len(oldval);
+   len_newval = len(newval);
+
+   i = 1;
+   while (i=match(mystr, oldval, i)) {
+      mystr = substr(mystr, 1, i-1) + newval + substr(mystr, i + len_oldval);
+      i = i + len_newval;
+   }
+
+   return mystr;
+}
+/****************************************************************
+* Name:         stripDcbExt (text pfn)                          *
+* Synopsis:                                                     *
+* Returns:      pfn
+****************************************************************/
+stripDcbExt (text pfn) {
+   text temp;
+   int ll;
+
+   ll = len(pfn);
+   temp = upper(substr(pfn, ll-3));
+
+   if (temp == ".DCB") {
+      pfn = substr(pfn,1,ll-4);
+   }
+   
+   return pfn;
+}
+
+/****************************************************************
+* Name:         init_log()
+****************************************************************/
+init_log() 
+{
+    if ((g_fh_log = open(g_log_pfn, "w")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        /*exit();  [> ends the CPL, closes all dbs and quite CN <]*/
+    }
+    close(g_fh_log);
+    /* write_log("START|" + get_time_stamp()); */
+}
+
+/****************************************************************
+* Name:         finish_log
+* Depending on error status, write the STOP REC and EXIT STATUS rec
+****************************************************************/
+finish_log()
+{
+    write_log("|STOP|");
+    if (g_hasError == TRUE) {
+		write_log("|EXIT_STATUS|" + "FAILED");
+    }
+    else {
+		write_log("|EXIT_STATUS|" + "OK");
+    }
+}
+
+/****************************************************************
+* Name:         write_log(msg, hasCRLF)
+* Open and close each time to make sure its flushed.  This is
+* a low traffic file so won't impact performance.
+****************************************************************/
+write_log(text msg) 
+{
+	int msgLen;
+	text mytime;
+
+	mytime = get_time_stamp();
+    msg = mytime + "|" + msg;
+	msgLen = len(msg);
+    if ((g_fh_log = open(g_log_pfn, "a")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing","",0);
+        exit();  /* ends the CPL, closes all dbs and quite CN */
+    }
+    writeln(g_fh_log, msg, msgLen);
+    close(g_fh_log);
+}
+
+/****************************************************************
+* Name:         get_time_stamp()
+****************************************************************/
+get_time_stamp ()
+{ 
+    int hours, mins, secs;
+    text buf;
+
+    time(hours, mins, secs);
+    buf = dtoc(today()) + "  " + str(hours) + ":" + str(mins) + ":" + str(secs);
+    return buf;
+}
