@@ -74,6 +74,32 @@ function CF-Init-RunEnv {
     
 }
 
+# sets a script level var to hold the current logPfn
+function CF-Initialize-Log ($logPfn) {
+    clear-content $logPfn
+}
+
+function CF-Write-Log ($logPfn, $msg) {
+    $msg = "$(get-date -format $CF_DateFormat)|$msg"
+    $msg | out-file -encoding ASCII -append -filepath $logPfn
+}
+
+function CF-Finish-Log ($logPfn) {
+    CF-Write-Log $logPfn "|STOP|"
+    if ($script:rowHasError) {
+        CF-Write-Log $logPfn "|EXIT_STATUS|FAILED" 
+    }
+    else {
+        CF-Write-Log $logPfn "|EXIT_STATUS|OK"
+    }
+}
+
+function CF-IsPath ($str) {
+    (($str -match "^\\") -or ($str -match "^[A-z]:"))
+}
+
+
+
 function CF-Log-Says-Ran-Successfully ($logPFN) {
     try {
         $logRecs = get-content $logPfn
