@@ -99,7 +99,7 @@ function Exec-Process-Results {
     $resFile = "${bStr}_${dbStr}_images_ALL.txt"
     $dirResFile = "${bStr}_${dbStr}_images_DIR.txt"
     $volResFile = "${bStr}_${dbStr}_images_VOL.txt"
-    $statusFile = "${bStr}_${dbStr}_images_STATUS.txt"
+    $statusFile = "${bStr}_${dbStr}_images_pt2_STATUS.txt"
     #$localResFilePFN = "$dcbDir\$CF_LocaldcbDir
     $dirResFilePFN = "$($runEnv.SearchResultsDir)\$dirResFile"
     $volResFilePFN = "$($runEnv.SearchResultsDir)\$volResFile"
