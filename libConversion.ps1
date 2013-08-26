@@ -76,10 +76,17 @@ function CF-Init-RunEnv {
 
 # sets a script level var to hold the current logPfn
 function CF-Initialize-Log ($logPfn) {
-    clear-content $logPfn
+    if (test-path $logPfn) {
+        clear-content $logPfn
+    }
 }
 
 function CF-Write-Log ($logPfn, $msg) {
+    # DEBUG
+    if ($msg -match "error") { 
+        write-host $msg 
+    }
+
     $msg = "$(get-date -format $CF_DateFormat)|$msg"
     $msg | out-file -encoding ASCII -append -filepath $logPfn
 }
@@ -95,7 +102,7 @@ function CF-Finish-Log ($logPfn) {
 }
 
 function CF-IsPath ($str) {
-    (($str -match "^\\") -or ($str -match "^[A-z]:"))
+    (($str -match "^\\\\") -or ($str -match "^[A-z]:"))
 }
 
 

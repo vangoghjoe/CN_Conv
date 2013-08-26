@@ -42,16 +42,26 @@ param(
 function Process-Vol($volPfn) {
 
     # would be faster with arrays, but don't have time to fuss with it
-    $script:volPaths[$key] = @{}
+    $script:volPaths = @{}
 
     $recs = get-content $volPfn
-    for ($rec in $recs) {
+    foreach ($rec in $recs) {
         # ignore lines that don't look like paths
+
+        $rec = $rec.Trim()
         if (CF-IsPath $rec) {
-            ($path, $key) = $rec -split "\|"
+            try {
+            ($path, [int]$key) = $rec -split "\|"
+            
+            $path = $path.Trim()        
             $script:volPaths[$key] = $path
+            }
+            catch {
+                write-host $key
+            }
         }
     }
+    $x = 1
 }
 
 # DIR File like
@@ -61,19 +71,18 @@ function Process-Vol($volPfn) {
 function Process-Dir($dirPfn) {
 
     $recs = get-content $dirPfn
-    for ($rec in $recs) {
-            ($id, $file, [int]$key) = $rec -split "[\s+\|]"
-            if ($key -lt 0) { 
-                $key += [math]::Pow(2,31)
-            }
-            if ($script:volPaths.Contains($key)) {
-                CF-Write-Log $script:resFilePFN ("$file" + $script:volPaths[$key])
-            }
-            else {
-                CF-Write-Log $script:logPfn "|ERROR|key $key in DIR doesn't exist in VOL"
-                $script:rowHasError = $true
-                return
-            }
+    foreach ($rec in $recs) {
+        ($id, $file, [int]$key) = $rec -split "[\s+\|]"
+        if ($key -lt 0) { 
+            $key += [math]::Pow(2,31)
+        }
+        if ($script:volPaths.Contains($key)) {
+             ("$file" + $script:volPaths[$key]) | out-file -Encoding ASCII -append -filepath $script:resFilePFN 
+        }
+        else {
+            CF-Write-Log $script:logPfn "|ERROR|key $key in DIR doesn't exist in VOL"
+            $script:rowHasError = $true
+            return
         }
     }
 }
@@ -87,27 +96,43 @@ function Exec-Process-Results {
         $Vstr
     )
 
+    $bStr = $runEnv.bStr
+    $dbid = $dbRow.dbid
+    
     $dcbPfn = $dbRow.conv_dcb;
     
     $dbStr = "{0:0000}" -f [int]$dbid
     $resFile = "${bStr}_${dbStr}_images_ALL.txt"
+    $dirResFile = "${bStr}_${dbStr}_images_DIR.txt"
+    $volResFile = "${bStr}_${dbStr}_images_VOL.txt"
     $statusFile = "${bStr}_${dbStr}_images_STATUS.txt"
     #$localResFilePFN = "$dcbDir\$CF_LocaldcbDir
+    $dirResFilePFN = "$($runEnv.SearchResultsDir)\$dirResFile"
+    $volResFilePFN = "$($runEnv.SearchResultsDir)\$volResFile"
     $script:resFilePFN = "$($runEnv.SearchResultsDir)\$resFile"
     $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
 
-    Initialize-Log $script:statusFilePFN
+    write-host $script:resFilePFN
+    write-host $script:statusFilePFN
+
+    CF-Initialize-Log $script:statusFilePFN
+    CF-Initialize-Log $script:resFilePFN 
+    
     $script:rowHasError = $false
-    try {
+    write-host "before CheckFiles"
+    #try {
         if (CheckFiles $dirResFilePFN $volResFilePFN) {
-            ProcessVol $volResFilePFN
-            ProcessDir $dirResFilePFN
+            write-host "call process-vol"
+            Process-Vol $volResFilePFN
+            write-host "call process-dir"
+            Process-Dir $dirResFilePFN
+            write-host "finish process-dir"
         }
-    }
-    catch {
-        CF-Write-Log $script:statusFilePFN "|ERROR|$error[0]"
+    #}
+    #catch {
+        #CF-Write-Log $script:statusFilePFN "|ERROR|$error[0]"
         $script:rowHasError = $true
-    }
+    #}
     CF-Finish-Log $script:statusFilePFN 
 }
 
@@ -118,7 +143,8 @@ function CheckFiles($dirPfn, $volPfn) {
             return $false
         }
         else {
-            if ((get-item out.csv).length -le 0) { 
+            $len = (get-item $file).length
+            if ($len -le 0) { 
                 return $false 
             }
         }
@@ -131,7 +157,7 @@ function Main {
     $runEnv = CF-Init-RunEnv $BatchID
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
-    try {
+    #try {
 
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
          
@@ -147,10 +173,12 @@ function Main {
                 continue
             }
             Exec-Process-Results $row $runEnv  $CN_EXE 
-    }
-    catch {
+        }
+    #}
+    #catch {
+        write-host $error[0]
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$error[0]"
-    }
+    #}
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 }     
