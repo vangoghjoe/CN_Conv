@@ -72,7 +72,7 @@ function Process-Row($dbRow, $runEnv) {
     
     $dbStr = "{0:0000}" -f [int]$dbid
     $resFile = "${bStr}_${dbStr}_dbfiles.txt"
-    $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
+    $statusFile = "${bStr}_${dbStr}_get_arch_db_files_STATUS.txt"
     $resFilePFN = "$($runEnv.SearchResultsDir)\$resFile"
     $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
     write-host $script:statusFilePFN

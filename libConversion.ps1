@@ -23,7 +23,6 @@ else {
     $CF_CN_V10_EXE = "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe" 
 }
 
-write-host "root = $CF_LNroot"
 $CF_ConvAdminDir = "$CF_LNRoot\Conversion_Admin"
 $CF_DBDir = "$CF_ConvAdminDir\DB"
 $CF_BatchesDir = "$CF_ConvAdminDir\Batches"
@@ -324,7 +323,6 @@ function CF-Get-DbFiles {
 # 1 = in process
 # 2 = ran successfully
 function CF-Finish-DBRow($dbRow, $statFld) {
-    write-host "stat = $statFld"
     if ($script:rowHasError) {
         $dbRow.$statFld = $CF_STATUS_FAILED
     }
