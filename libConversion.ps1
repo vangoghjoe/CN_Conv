@@ -135,6 +135,7 @@ function CF-Write-Log ($logPfn, $msg) {
     # DEBUG
     if ($msg -match "error") { 
         write-host $msg 
+        $error[0] | format-list
     }
 
     $msg = "$(get-date -format $CF_DateFormat)|$msg"
@@ -142,7 +143,7 @@ function CF-Write-Log ($logPfn, $msg) {
 }
 
 function CF-Write-File($file, $msg) {
-    $msg | out-file -encoding ASCII -append -filepath $logPfn
+    $msg | out-file -encoding ASCII -append -filepath $file
 }
 
 function CF-Finish-Log ($logPfn) {
