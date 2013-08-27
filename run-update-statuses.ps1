@@ -63,8 +63,7 @@ function Process-Row($dbRow, $runEnv) {
 
     # Loop over types, setting listFile and calling Process-Type
     try {
-        #foreach ($type in @("dbfiles", "natives", "images")) {
-        foreach ($type in @("natives", "images")) {
+        foreach ($type in @("dbfiles", "natives", "images")) {
             if ($type -eq "images") {
                 $listFile =   "${bStr}_${dbStr}_${type}_ALL.txt"
             }
