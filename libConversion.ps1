@@ -41,7 +41,46 @@ $script:CF_DBEnv = @{}  # DB-specifc environment
 
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
 
+$CF_FIELDS = @(
+"batchid",
+"dbid",
+"clientid",
+"loadnr",
+"orig_dcb",
+"conv_dcb",
+"orig_dir",
+"backup_done",
+"db_bytes",
+"db_files",
+"natives_bytes",
+"natives_files_present",
+"natives_files_missing",
+"images_bytes",
+"images_files_present",
+"image_files_missing",
+"st_backup",
+"st_get_images",
+"st_get_images2",
+"st_get_natives",
+"st_qc_tags",
+"st_qc_compare_tags",
+"st_backup_arch",
+"st_convert",
+"st_get_arch_db_files"
+)
 
+$CF_STATUS_FAILED = 0
+$CF_STATUS_IN_PROGRESS = 1
+$CF_STATUS_GOOD = 2
+
+function CF-Put-DCB-Header-On-Clipboard() {
+    # intended to be redirected to a file
+    [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
+}
+
+function CF-Check-DB-Fields($dbRows) {
+}
+    
 function CF-Init-RunEnv {
     param  (
         $bID
@@ -81,6 +120,18 @@ function CF-Initialize-Log ($logPfn) {
     }
 }
 
+function CF-Resolve-Error ($ErrorRecord=$Error[0])
+{
+   $ErrorRecord | Format-List * -Force
+   $ErrorRecord.InvocationInfo |Format-List *
+   $Exception = $ErrorRecord.Exception
+   for ($i = 0; $Exception; $i++, ($Exception = $Exception.InnerException))
+   {   "$i" * 80
+       $Exception |Format-List * -Force
+   }
+}
+
+
 function CF-Write-Log ($logPfn, $msg) {
     # DEBUG
     if ($msg -match "error") { 
@@ -88,6 +139,10 @@ function CF-Write-Log ($logPfn, $msg) {
     }
 
     $msg = "$(get-date -format $CF_DateFormat)|$msg"
+    $msg | out-file -encoding ASCII -append -filepath $logPfn
+}
+
+function CF-Write-File($file, $msg) {
     $msg | out-file -encoding ASCII -append -filepath $logPfn
 }
 
@@ -100,6 +155,7 @@ function CF-Finish-Log ($logPfn) {
         CF-Write-Log $logPfn "|EXIT_STATUS|OK"
     }
 }
+
 
 function CF-IsPath ($str) {
     (($str -match "^\\\\") -or ($str -match "^[A-z]:"))
@@ -169,12 +225,10 @@ function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) {
     $lockFile = "$dbFile.LOCK"
     
     # spin until 
-    
     $rows = import-csv -Delimiter "`t" $dbFile
 
     
     # TODO: unlock file
-    
     return $rows
 }
 
@@ -263,6 +317,20 @@ function CF-Get-DbFiles {
     $dcbBase = CF-Get-PfnWithoutExtension $dcbPfn
     
     return Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
+}
+
+# possible status values:
+# 0 = ran but failed
+# 1 = in process
+# 2 = ran successfully
+function CF-Finish-DBRow($dbRow, $statFld) {
+    write-host "stat = $statFld"
+    if ($script:rowHasError) {
+        $dbRow.$statFld = $CF_STATUS_FAILED
+    }
+    else {
+        $dbRow.$statFld = $CF_STATUS_GOOD
+    }
 }
 
 # inputs: 1) dir-to-search  2) extension, eg "txt"
