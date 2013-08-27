@@ -44,44 +44,6 @@ function Get-File-Size($file) {
     }
 }
 
-# Process the list files for a given row
-# Verifies status of each type (db, natives and images) before calling
-function Process-Row($dbRow, $runEnv) {
-
-    # Inits
-    $bStr = $runEnv.bStr
-    $dbid = $dbRow.dbid
-    $dcbPfn = $dbRow.conv_dcb;
-    $dbStr = "{0:0000}" -f [int]$dbid
-    $missFile = "${bStr}_${dbStr}_arch_missing.txt"
-    $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
-    $missFilePFN = "$($runEnv.SearchResultsDir)\$missFile"
-    $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
-    CF-Initialize-Log $script:statusFilePFN
-    write-host $script:statusFilePFN
-    $script:rowHasError = $false
-
-    # Loop over types, setting listFile and calling Process-Type
-    try {
-        #foreach ($type in @("dbfiles", "natives", "images")) {
-        foreach ($type in @("natives", "images")) {
-            if ($type -eq "images") {
-                $listFile =   "${bStr}_${dbStr}_${type}_ALL.txt"
-            }
-            else {
-                $listFilePFN =   "${bStr}_${dbStr}_${type}.txt"
-            }
-            $listFilePFN = "$($runEnv.SearchResultsDir)\$listFilePFN"
-            Process-Type $type $listFilePFN $missFilePFN $dbRow
-        }
-    }
-    catch {
-        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
-        $script:rowHasError = $true
-    }
-    CF-Finish-Log $script:statusFilePFN 
-}
-
 # Take a type (db, natives, images)
 # sets size/num_files in db
 # makes a result file of missings
@@ -101,13 +63,14 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
             continue
         }
 
+
         try {
             $size = Get-File-Size $file
             
             # missing?
-            if ($size == -1) {
+            if ($size -eq -1) {
                 $numMiss++
-                CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file"
+                CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file")
             }
             else {
                 $numPresent++
@@ -140,6 +103,51 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
 
 }
 
+# Process the list files for a given row
+# Verifies status of each type (db, natives and images) before calling
+function Process-Row($dbRow, $runEnv) {
+
+    # Inits
+    $bStr = $runEnv.bStr
+    $dbid = $dbRow.dbid
+    $dcbPfn = $dbRow.conv_dcb;
+    $dbStr = "{0:0000}" -f [int]$dbid
+    $missFile = "${bStr}_${dbStr}_arch_missing.txt"
+    $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
+    $missFilePFN = "$($runEnv.SearchResultsDir)\$missFile"
+    if (test-path $missFilePFN) {
+        rm $missFilePFN
+    }
+
+    $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
+    CF-Initialize-Log $script:statusFilePFN
+    write-host $script:statusFilePFN
+    $script:rowHasError = $false
+
+    # Loop over types, setting listFile and calling Process-Type
+    try {
+        #foreach ($type in @("dbfiles", "natives", "images")) {
+        foreach ($type in @("natives", "images")) {
+            if ($type -eq "images") {
+                $listFilePFN =   "${bStr}_${dbStr}_${type}_ALL.txt"
+            }
+            else {
+                $listFilePFN =   "${bStr}_${dbStr}_${type}.txt"
+            }
+            $listFilePFN = "$($runEnv.SearchResultsDir)\$listFilePFN"
+            if (test-path $listFilePFN) {
+                Process-Type $type $listFilePFN $missFilePFN $dbRow
+            }
+        }
+    }
+    catch {
+        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
+        $script:rowHasError = $true
+    }
+    CF-Finish-Log $script:statusFilePFN 
+}
+
+
 function Main {
     $runEnv = CF-Init-RunEnv $BatchID
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
@@ -168,6 +176,8 @@ function Main {
 
             Process-Row $row $runEnv  
         }
+        # Finished with all the rows.  Rewrite the whole DB file
+        CF-Write-DB-File "DCBs" $dcbRows
     }
     catch {
         $error[0] | format-list
