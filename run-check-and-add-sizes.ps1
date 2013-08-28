@@ -23,15 +23,15 @@ One or more examples
 
 #>
 
-
 param(
     $BatchID,
-    $CN_Ver
+    $ignoreStatus = $false,
+    $startRow,
+    $endRow
 )
 
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
-
 
 # Take a file and return its size, or -1 if doesn't exist
 function Get-File-Size($file) {
@@ -56,8 +56,10 @@ function Get-File-Size($file) {
 function Process-Type($type, $listFile, $missFile, $dbRow) {
     # Inits
     $line = 0
-    $numMiss = 0
-    $missFile = "${missFile}${type}.txt"
+    $numMiss = $numPresent = $ttlSize = 0
+    $missFile = "${missFile}${type}.txt" # specific to type
+
+    # Use separate status field for natives vs images
     switch ($type) {
         "natives" {
             $status = $dbRow.st_add_natives
@@ -68,8 +70,9 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
     }
 
     # Don't process this type if in progress or already done
-    if ($status -gt $CF_STATUS_FAILED) {
-        #return
+    if (($ignoreStatus -eq $false) -and ($status -gt $CF_STATUS_FAILED)) {
+        write-host ("Skipping, already processed: " + $dbRow.dbid + " $type")
+        return
     }
     
     # Make sure not to initialize this until verified not already done!
@@ -165,6 +168,9 @@ function Process-Row($dbRow, $runEnv) {
             if (test-path $listFilePFN) {
                 Process-Type $type $listFilePFN $missFileStub $dbRow
             }
+            else {
+                write-host "No list file: $($dbRow.dbid) $type"
+            }
         }
     }
     catch {
@@ -174,21 +180,20 @@ function Process-Row($dbRow, $runEnv) {
     CF-Finish-Log $script:statusFilePFN 
 }
 
-
 function Main {
     $runEnv = CF-Init-RunEnv $BatchID
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
-
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
-         
-        # going to write to batchResult File
-        # status to batchStatus = 1 per DB per pgm
-        #  steps table in db can have separate field for step name and pgm-that-does-step
-        # if processing breadth first, step name can be ALL STEPS
 
-        for($i = 0 ; $i -lt $dcbRows.length; $i++) {
+        # Setup start/stop rows (assume user specifies as 1-based)
+        if ($startRow -eq $null) { $startRow = 1 }
+        if ($endRow -eq $null) { $endRow = $dcbRows.length } 
+        CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start row=$startRow  End row=$endRow"
+         
+        # Main loop
+        for($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
             $row = $dcbRows[$i]
             
             # Only process this row if it's in the right batch 
@@ -196,10 +201,11 @@ function Main {
             if ($row.batchid -ne $BatchID) {
                 continue
             }
-            if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
-                ($ignoreStatus=$false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
-                continue
-            }
+            # Status check is done on a per type basis in Process-Type
+            #if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
+                #($ignoreStatus=$false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
+                #continue
+            #}
 
             Process-Row $row $runEnv  
         }
@@ -210,6 +216,8 @@ function Main {
         $error[0] | format-list
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
+
+    write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow"
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 }     
