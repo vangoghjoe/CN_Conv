@@ -8,12 +8,12 @@ param (
 function Main() {
     # Inits
     if (test-path $outFile) { clear-content $outFile }
-    CF-Write-File (@("DCB","Size in Bytes","Num Files") -join "`t")
+    CF-Write-File $outFile (@("DCB","Size in Bytes","Num Files") -join "`t")
     $ttlSize = $numFiles = 0
     
     # For each dcb
     $dcbs = get-content $dbList
-    write-host "num files in list = $($files.length)"
+    write-host "num files in list = $($dcbs.length)"
     foreach ($dcb in $dcbs) {
         # Get the dir
         $dir = [system.io.path]::GetDirectoryName($dcb)
