@@ -124,7 +124,7 @@ function Main {
 
             write-host ("in batch: " + $row.orig_dcb)
             
-            if ($row.st_backup -ne $CF_STATUS_GOOD) {
+            if ($row.backup_done -lt 1) {
                 continue
             }
 
@@ -137,7 +137,7 @@ function Main {
         }
 
         # Finished with all the rows.  Rewrite the whole DB file
-        CF-Write-DB-File "DCBs" $dcbRows
+        #CF-Write-DB-File "DCBs" $dcbRows
     }
     catch {
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"

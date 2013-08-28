@@ -81,6 +81,25 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
+### Given a dir, returns @($bytes, $numFiles), where
+#  $bytes =    total size of all files in the dir and any subdirs
+#  $numFiles = num files  " " "
+# If folder doesn't exists, returns @("", "")
+function CF-Get-Num-Files-And-Size-Of-Folder ($dir) {
+    if (test-path $dir) {
+        $size = $numFiles = 0
+        Get-ChildItem -Recurse $dir | foreach {
+            if (-not ($_.PSIsContainer)) { $size+= $_.length ; $numFiles++ }
+        }
+    }
+    else {
+        $size = $numFiles = ""
+    }
+    
+    return @($size, $numFiles)
+}
+
+
 function CF-Check-DB-Fields($dbRows) {
 }
     
