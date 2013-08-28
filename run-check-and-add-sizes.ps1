@@ -35,12 +35,18 @@ param(
 
 # Take a file and return its size, or -1 if doesn't exist
 function Get-File-Size($file) {
-    if (-not (test-path $file)) {
-        return -1
+
+    # have to check $? *immediately* after call to test-path
+    # can't even be like if (-not (test-path blut)) ...
+    $mytest = test-path $file 2>null
+    $last = $?
+    if (-not ($mytest)) {
+        #write-host ("test-path neg: last val = " + $last + " $file")
+        return @(-1, $last)
     }
     else {
         $len = (get-item $file).length
-        return $len
+        return @($len, $true)
     }
 }
 
@@ -51,6 +57,22 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
     # Inits
     $line = 0
     $numMiss = 0
+    $missFile = "${missFile}${type}.txt"
+    switch ($type) {
+        "natives" {
+            $status = $dbRow.st_add_natives
+        }
+        "images" {
+            $status = $dbRow.st_add_images
+        }
+    }
+
+    # Don't process this type if in progress or already done
+    if ($status -gt $CF_STATUS_FAILED) {
+        #return
+    }
+    
+    # Make sure not to initialize this until verified not already done!
     CF-Initialize-Log $missFile
 
     # read listFile and gather stats
@@ -63,14 +85,18 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
             continue
         }
 
-
         try {
-            $size = Get-File-Size $file
+            ($size, $lastExitStat) = Get-File-Size $file
             
             # missing?
             if ($size -eq -1) {
                 $numMiss++
-                CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file")
+                if ($lastExitStat -eq $false) {
+                    CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file`twarning when testing path, probably too long or bad format")
+                }
+                else {
+                    CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file")
+                }
             }
             else {
                 $numPresent++
@@ -93,13 +119,16 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
             $dbRow.natives_bytes = $ttlSize
             $dbRow.natives_files_present = $numPresent
             $dbRow.natives_files_missing = $numMiss
+            $dbRow.st_add_natives = $CF_STATUS_GOOD
         }
         "images" {
             $dbRow.images_bytes = $ttlSize
             $dbRow.images_files_present = $numPresent
             $dbRow.images_files_missing = $numMiss
+            $dbRow.st_add_images = $CF_STATUS_GOOD
         }
     }
+    write-host "$type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
 
 }
 
@@ -112,12 +141,10 @@ function Process-Row($dbRow, $runEnv) {
     $dbid = $dbRow.dbid
     $dcbPfn = $dbRow.conv_dcb;
     $dbStr = "{0:0000}" -f [int]$dbid
-    $missFile = "${bStr}_${dbStr}_arch_missing.txt"
+
+    $missFileStub = "${bStr}_${dbStr}_arch_missing_"
     $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
-    $missFilePFN = "$($runEnv.SearchResultsDir)\$missFile"
-    if (test-path $missFilePFN) {
-        rm $missFilePFN
-    }
+    $missFileStub = "$($runEnv.SearchResultsDir)\$missFileStub"
 
     $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
     CF-Initialize-Log $script:statusFilePFN
@@ -136,7 +163,7 @@ function Process-Row($dbRow, $runEnv) {
             }
             $listFilePFN = "$($runEnv.SearchResultsDir)\$listFilePFN"
             if (test-path $listFilePFN) {
-                Process-Type $type $listFilePFN $missFilePFN $dbRow
+                Process-Type $type $listFilePFN $missFileStub $dbRow
             }
         }
     }

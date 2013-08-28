@@ -65,7 +65,11 @@ $CF_FIELDS = @(
 "st_qc_compare_tags",
 "st_backup_arch",
 "st_convert",
-"st_get_arch_db_files"
+"st_get_arch_db_files",
+"funky",
+"st_add_images",
+"st_add_natives",
+"st_add_db"
 )
 
 $CF_STATUS_FAILED = 0

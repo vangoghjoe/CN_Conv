@@ -68,24 +68,25 @@ function Process-Row($dbRow, $runEnv) {
     $bStr = $runEnv.bStr
     $dbid = $dbRow.dbid
     
-    # CAREFUL: have to use ORIG DCB for this one, since only backed up the db files
-    $dcbPfn = $dbRow.orig_dcb;
+    $dcbPfn = $dbRow.conv_dcb;
     
     $dbStr = "{0:0000}" -f [int]$dbid
-    # just one output file, holds all the valid db folders
-    $resFile = "${bStr}_db_folders.txt"
+    $resFile = "${bStr}_${dbStr}_dbfiles.txt"
     $statusFile = "${bStr}_${dbStr}_get_arch_db_files_STATUS.txt"
     $resFilePFN = "$($runEnv.SearchResultsDir)\$resFile"
     $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
     write-host $script:statusFilePFN
 
+
     # Init logs
     CF-Initialize-Log $script:statusFilePFN
     CF-Initialize-Log $resFilePFN 
+    CF-Write-Log $script:statusFilePFN 
     
     # Get the db files and write them to the result file
     $script:rowHasError = $false
     try {
+        $files = Get-DbFiles  $dcbPfn
         $files | out-file -append -encoding ASCII -filepath $resFilePFN
     }
     catch {
@@ -97,9 +98,6 @@ function Process-Row($dbRow, $runEnv) {
     CF-Finish-Log $script:statusFilePFN 
 }
 
-# for each dcb, just make sure the dcb is actually present
-# if so, add to the file of list of db-folders
-# and add up it's size and file count
 function Main {
     $statusFld = "st_get_arch_db_files"
     $runEnv = CF-Init-RunEnv $BatchID
@@ -117,23 +115,16 @@ function Main {
             if ($row.batchid -ne $BatchID) {
                 continue
             }
-            #if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
-                #($ignoreStatus=$false -and ($row.$statusFld -eq $CF_STATUS_GOOD))) {
-                #continue
-            #}
-
-            write-host ("in batch: " + $row.orig_dcb)
-            
-            if ($row.st_backup -ne $CF_STATUS_GOOD) {
+            if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
+                ($ignoreStatus=$false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
                 continue
             }
 
-            write-host ("good statusn" + $row.orig_dcb)
-            $dcbPfn = $row.orig_dcb
-            $dcbDir = [system.io.path]::GetDirectoryName($dcbPfn) 
-            CF-Write-File $dcbDir "list-of-dcb-dirs-for-bckup.txt"
-            
+            # Work on this one row
+            Process-Row $row $runEnv 
 
+            # Set the status for this row in the DB
+            CF-Finish-DBRow $row $statusFld
         }
 
         # Finished with all the rows.  Rewrite the whole DB file
