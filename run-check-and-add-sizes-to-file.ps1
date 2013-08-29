@@ -41,7 +41,7 @@ function Get-File-Size($file) {
 
     # have to check $? *immediately* after call to test-path
     # can't even be like if (-not (test-path blut)) ...
-    $mytest = test-path $file 2>null
+    $mytest = test-path $file 2>$null
     $last = $?
     if (-not ($mytest)) {
         #write-host ("test-path neg: last val = " + $last + " $file")
