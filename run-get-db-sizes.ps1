@@ -74,7 +74,6 @@ function Main {
 
             # Write out whole DB every time in case stop before end of run
             CF-Write-DB-File "DCBs" $dcbRows
-            Read-Host "<return>"
         }
     }
     catch {
