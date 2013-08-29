@@ -63,8 +63,8 @@ function Main {
             }
 
             [int64]$rowBytes = [int64]$row.db_bytes + [int64]$row.natives_bytes + [int64]$row.images_bytes
-            [int]$rowFiles = [int]$row.db_files + [int]$row.natives_files_present + [int]$row.images_files_present
-            [int]$rowMiss = [int]$row.natives_files_miss + [int]$row.images_files_miss
+            [int64]$rowFiles = [int64]$row.db_files + [int64]$row.natives_files_present + [int64]$row.images_files_present
+            [int64]$rowMiss = [int64]$row.natives_files_missing + [int64]$row.images_files_missing
             #write-host (@($rowBytes, $row.db_bytes, $row.natives_bytes, $row.images_bytes) -join "|")
             $ttlBytes += $rowBytes
             $ttlFiles += $rowFiles
