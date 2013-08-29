@@ -71,7 +71,7 @@ function Main {
             $ttlMiss += $rowMiss
 
             # Write to file, tab delimited
-            CF-Write-File $outFile (@($row.clientid, $row.orig_dcb, ($rowBytes), $rowFiles, $rowMiss, $row.backup_done, $row.db_bytes, $row.db_files, $row.natives_bytes, $row.natives_files_present, $row.natives_files_missing, $row.images_bytes, $row.images_files_present, $row.images_files_missing) -join "`t")
+            CF-Write-File $outFile (@($row.clientid, $row.orig_dcb, ($rowBytes/1GB), $rowFiles, $rowMiss, $row.backup_done, $row.db_bytes, $row.db_files, $row.natives_bytes, $row.natives_files_present, $row.natives_files_missing, $row.images_bytes, $row.images_files_present, $row.images_files_missing) -join "`t")
             $msg = (@($dcb, $row.db_bytes, $row.db_files) -join "`t")
             write-host $msg
 
