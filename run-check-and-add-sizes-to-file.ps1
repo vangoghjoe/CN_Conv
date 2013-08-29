@@ -96,7 +96,7 @@ function Process-Type($type, $listFile, $outFile, $missFile, $errFile, $dbRow) {
 
     # Append results to $outFile
     CF-Write-File $outFile (@($dbrow.orig_dcb, $type, $ttlSize, $numFiles) -join "`t")
-    write-host "$type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
+    write-host "$(get-date): $($dbrow.dbid): $type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
 }
 
 # Process the list files for a given row
@@ -172,7 +172,7 @@ function Main {
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
 
-    write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow"
+    write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow  fileStub = $fileStub"
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 }     
