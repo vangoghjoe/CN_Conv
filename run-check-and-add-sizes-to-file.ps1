@@ -27,11 +27,7 @@ param(
     [Parameter(Mandatory=$true)]
     $BatchID,
     [Parameter(Mandatory=$true)]
-    $outFile,
-    [Parameter(Mandatory=$true)]
-    $missFile,
-    [Parameter(Mandatory=$true)]
-    $errFile,
+    $fileStub,
     $ignoreStatus = $false,
     $startRow,
     $endRow
@@ -147,6 +143,9 @@ function Main {
         # Inits
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
         #   Remove output files
+        $outFile = "${fileStub}.txt"
+        $missFile = "${fileStub}-miss.txt"
+        $errFile = "${fileStub}-err.txt"
         foreach ($file in @($outFile, $missFile, $errFile)) {
             rm $file 2>&1 > $null
         }
