@@ -24,7 +24,14 @@ One or more examples
 #>
 
 param(
+    [Parameter(Mandatory=$true)]
     $BatchID,
+    [Parameter(Mandatory=$true)]
+    $outFile,
+    [Parameter(Mandatory=$true)]
+    $missFile,
+    [Parameter(Mandatory=$true)]
+    $errFile,
     $ignoreStatus = $false,
     $startRow,
     $endRow
@@ -33,33 +40,30 @@ param(
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
+# Take a file and return its size, or -1 if doesn't exist
+function Get-File-Size($file) {
+
+    # have to check $? *immediately* after call to test-path
+    # can't even be like if (-not (test-path blut)) ...
+    $mytest = test-path $file 2>null
+    $last = $?
+    if (-not ($mytest)) {
+        #write-host ("test-path neg: last val = " + $last + " $file")
+        return @(-1, $last)
+    }
+    else {
+        $len = (get-item $file).length
+        return @($len, $true)
+    }
+}
+
 # Take a type (db, natives, images)
 # sets size/num_files in db
 # makes a result file of missings
-function Process-Type($type, $listFile, $missFile, $dbRow) {
+function Process-Type($type, $listFile, $outFile, $missFile, $errFile, $dbRow) {
     # Inits
     $line = 0
     $numMiss = $numPresent = $ttlSize = 0
-    $missFile = "${missFile}${type}.txt" # specific to type
-
-    # Use separate status field for natives vs images
-    switch ($type) {
-        "natives" {
-            $status = $dbRow.st_add_natives
-        }
-        "images" {
-            $status = $dbRow.st_add_images
-        }
-    }
-
-    # Don't process this type if in progress or already done
-    if (($ignoreStatus -eq $false) -and ($status -gt $CF_STATUS_FAILED)) {
-        write-host ("Skipping, already processed: " + $dbRow.dbid + " $type")
-        return
-    }
-    
-    # Make sure not to initialize this until verified not already done!
-    CF-Initialize-Log $missFile
 
     # read listFile and gather stats
     $files = get-content $listFile 
@@ -90,50 +94,17 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
             }
         }
         catch {
-            CF-Write-Log $script:statusFilePFN "|ERROR|Can't get size [line $line]: $file: $($error[0])"
+            CF-Write-File $errFile (@($dbrow.orig_dcb, $type, "ERROR", "ERROR") -join "`t")
         }
     }
 
-    # Save stats in DB by setting values in row
-    # kind of kludgy, but ...
-    switch ($type) {
-        "db" {
-            $dbRow.db_bytes = $ttlSize
-            $dbRow.db_files = $numPresent
-        }
-        "natives" {
-            $dbRow.natives_bytes = $ttlSize
-            $dbRow.natives_files_present = $numPresent
-            $dbRow.natives_files_missing = $numMiss
-            $dbRow.st_add_natives = $CF_STATUS_GOOD
-        }
-        "images" {
-            $dbRow.images_bytes = $ttlSize
-            $dbRow.images_files_present = $numPresent
-            $dbRow.images_files_missing = $numMiss
-            $dbRow.st_add_images = $CF_STATUS_GOOD
-        }
-    }
+    # Append results to $outFile
+    CF-Write-File $outFile (@($dbrow.orig_dcb, $type, $ttlSize, $numFiles) -join "`t")
     write-host "$type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
-
 }
 
-
-#for each step: get-images get-natives
-#    need name of status file, name of status field
-#    if has error, 
-#        if not, set status ok 
-#    else
-#        write out the errors to a big file
-#            dcb | type | error message   (what if multiple lines?)
-#        set status to bad
-#    
-#for each step:  add images, add natives
-#    if has error
-#        if not, nothing to do
-#    else
-#        write out the errors to a big file
-#            dcb | type | error message   (what if multiple lines?)
+# Process the list files for a given row
+# Verifies status of each type (db, natives and images) before calling
 function Process-Row($dbRow, $runEnv) {
 
     # Inits
@@ -141,24 +112,6 @@ function Process-Row($dbRow, $runEnv) {
     $dbid = $dbRow.dbid
     $dcbPfn = $dbRow.conv_dcb;
     $dbStr = "{0:0000}" -f [int]$dbid
-
-    $missFileStub = "${bStr}_${dbStr}_arch_missing_"
-    $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
-    $missFileStub = "$($runEnv.SearchResultsDir)\$missFileStub"
-
-    $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
-    CF-Initialize-Log $script:statusFilePFN
-    write-host $script:statusFilePFN
-    $script:rowHasError = $false
-    #
-    switch ($type) {
-        "natives" {
-            $status = $dbRow.st_add_natives
-        }
-        "images" {
-            $status = $dbRow.st_add_images
-        }
-    }
 
     # Loop over types, setting listFile and calling Process-Type
     try {
@@ -172,18 +125,18 @@ function Process-Row($dbRow, $runEnv) {
             }
             $listFilePFN = "$($runEnv.SearchResultsDir)\$listFilePFN"
             if (test-path $listFilePFN) {
-                Process-Type $type $listFilePFN $missFileStub $dbRow
+                Process-Type $type $listFilePFN $outFile $missFile $errFile $dbRow
             }
             else {
+                CF-Write-File $outFile (@($dbrow.orig_dcb, $type, "missing", "missing") -join "`t")
                 write-host "No list file: $($dbRow.dbid) $type"
             }
         }
     }
     catch {
-        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
+        CF-Write-File $errFile "|ERROR|$($error[0])"
         $script:rowHasError = $true
     }
-    CF-Finish-Log $script:statusFilePFN 
 }
 
 function Main {
@@ -191,9 +144,13 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
+        # Inits
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
-
-        # Setup start/stop rows (assume user specifies as 1-based)
+        #   Remove output files
+        foreach ($file in @($outFile, $missFile, $errFile)) {
+            rm $file 2>&1 > $null
+        }
+        #   Setup start/stop rows (assume user specifies as 1-based)
         if ($startRow -eq $null) { $startRow = 1 }
         if ($endRow -eq $null) { $endRow = $dcbRows.length } 
         CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start row=$startRow  End row=$endRow"
@@ -207,11 +164,6 @@ function Main {
             if ($row.batchid -ne $BatchID) {
                 continue
             }
-            # Status check is done on a per type basis in Process-Type
-            #if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
-                #($ignoreStatus=$false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
-                #continue
-            #}
 
             Process-Row $row $runEnv  
         }
@@ -220,6 +172,8 @@ function Main {
         $error[0] | format-list
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
+
+    write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow"
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 }     
