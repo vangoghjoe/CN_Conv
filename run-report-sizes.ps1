@@ -62,7 +62,7 @@ function Main {
                 continue
             }
 
-            [int]$rowBytes = [int]$row.db_bytes + [int]$row.natives_bytes + [int]$row.images_bytes
+            [int64]$rowBytes = [int64]$row.db_bytes + [int64]$row.natives_bytes + [int64]$row.images_bytes
             [int]$rowFiles = [int]$row.db_files + [int]$row.natives_files_present + [int]$row.images_files_present
             [int]$rowMiss = [int]$row.natives_files_miss + [int]$row.images_files_miss
             #write-host (@($rowBytes, $row.db_bytes, $row.natives_bytes, $row.images_bytes) -join "|")
