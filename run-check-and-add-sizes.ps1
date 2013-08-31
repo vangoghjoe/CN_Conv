@@ -156,7 +156,6 @@ function Process-Row($dbRow, $runEnv) {
 
     # Loop over types, setting listFile and calling Process-Type
     try {
-        #foreach ($type in @("dbfiles", "natives", "images")) {
         foreach ($type in @("natives", "images")) {
             if ($type -eq "images") {
                 $listFilePFN =   "${bStr}_${dbStr}_${type}_ALL.txt"
@@ -203,7 +202,7 @@ function Main {
             }
             # Status check is done on a per type basis in Process-Type
             #if (($row.$statusFld -eq $CF_STATUS_IN_PROGRESS) -or
-                #($ignoreStatus=$false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
+                #($ignoreStatus -eq $false -and ($row.statusFld -eq $CF_STATUS_GOOD))) {
                 #continue
             #}
 

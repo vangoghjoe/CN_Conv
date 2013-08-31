@@ -115,7 +115,6 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
         }
     }
     write-host "$type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
-
 }
 
 

@@ -22,6 +22,29 @@ for each row
             write out the errors to a big file
                 dcb | type | error message   (what if multiple lines?)
             
+
+want natives and images to say 0 instead of blank if the program ran ok but there just wasn't any natives or images
+    if status is ok, then if num field is blank, change it 0
+    
+st_get_images = run-get-images = makes the DIR/VOL files
+st_get_images2 = run-get-images-pt2 makes the images-ALL files
+
+what happens if I run everything again?
+    backup-for-archiving 
+        add a status log
+        maybe change to set a different status field
+        modify to run by in chunks
+    run-get-images
+        modify to run by in chunks
+        write to status field
+    run-get-images-pt2
+        modify to run by in chunks
+        write to status field
+    run-get-natives
+        modify to run by in chunks
+        write to status field
+    run-check-and-add-sizes
+        
 need to gather list of missing files
     can just cat them all together
 

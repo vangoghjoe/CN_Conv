@@ -1,12 +1,8 @@
-#$CF_ConvDir = "W:\_FYI-Conversions"
-#$CF_MasterLog = "$CF_ConvDir\_master.log"
-#$CF_LocalConvDir = "zLN-Conversion"
+#####
+$CF_DEBUG = $false
+#####
 
-<#
 
-#>
-
-# v local 7/1
 if ($(hostname) -eq "LNGHBEL-5009970") {
     $CF_LNRoot = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN"
     $CF_CN_V8_EXE = "C:\Program Files\Dataflight\Concordance\Concordance.exe" 
@@ -39,6 +35,11 @@ $script:CF_BatchEnv = @{}  # Environment for whole batch
 $script:CF_DBEnv = @{}  # DB-specifc environment
 
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
+
+$CF_PGMS = @{
+"backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
+"run-get-images" = @("st_get_images", "run-get-images")
+}
 
 $CF_FIELDS = @(
 "batchid",
@@ -103,6 +104,16 @@ function CF-Get-Num-Files-And-Size-Of-Folder ($dir) {
 function CF-Check-DB-Fields($dbRows) {
 }
     
+function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
+    $dbid = $dbRow.dbid
+    $bStr = $runEnv.bStr
+    $dbStr = "{0:0000}" -f [int]$dbid
+    $runEnv.dbStr = $dbStr
+
+    $statusFile = "${bStr}_${dbStr}_$($runEnv.outFileStub)_STATUS.txt"
+    $runEnv["StatusFile"] =  "$($runEnv.ProgramLogsDir)\$statusFile"
+}
+
 function CF-Init-RunEnv {
     param  (
         $bID
@@ -129,6 +140,13 @@ function CF-Init-RunEnv {
     # lastly, add in any values that aren't for dirs to be made
     $h["bStr"] = $bStr
     $h["MasterLogPFN"] = "$($h.LogsDir)\_Master.log"
+    $basename = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
+    $h["BaseName"] = $basename 
+
+    # get outStub and status field
+    $h["StatusField"] = $CF_PGMS[$basename][0]
+    $h["outFileStub"] = $CF_PGMS[$basename][1]
+
     
     $script:CF_BatchEnv = $h
     return $h
@@ -155,10 +173,11 @@ function CF-Resolve-Error ($ErrorRecord=$Error[0])
 
 
 function CF-Write-Log ($logPfn, $msg) {
-    # DEBUG
     if ($msg -match "error") { 
-        write-host $msg 
-        $error[0] | format-list
+        write-host ("Write to error log: " + $msg )
+        if ($CF_DEBUG) {
+            $error[0] | format-list
+        }
     }
 
     $msg = "$(get-date -format $CF_DateFormat)|$msg"
@@ -221,7 +240,6 @@ function CF-Log-To-Master-Log {
         $msg
     )
  
-    
     $pgm = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
     
     # TS | HOST | PID | PGM | USER | BATCH | DBID
