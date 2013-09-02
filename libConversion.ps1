@@ -38,7 +38,10 @@ $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL'
 
 $CF_PGMS = @{
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
-"run-get-images" = @("st_get_images", "run-get-images")
+"run-get-images" = @("st_get_images", "images");
+"run-get-images-pt2" = @("st_get_images2","images_pt2");
+"run-get-natives" = @("st_get_natives","natives")
+
 }
 
 $CF_FIELDS = @(
@@ -144,9 +147,14 @@ function CF-Init-RunEnv {
     $h["BaseName"] = $basename 
 
     # get outStub and status field
-    $h["StatusField"] = $CF_PGMS[$basename][0]
-    $h["outFileStub"] = $CF_PGMS[$basename][1]
-
+    if ($CF_PGMS.ContainsKey($basename)) {
+        $h["StatusField"] = $CF_PGMS[$basename][0]
+        $h["outFileStub"] = $CF_PGMS[$basename][1]
+    }
+    else {
+        $h.Remove("StatusField")
+        $h.Remove("outFileStub")
+    }
     
     $script:CF_BatchEnv = $h
     return $h
@@ -157,6 +165,30 @@ function CF-Init-RunEnv {
 function CF-Initialize-Log ($logPfn) {
     if (test-path $logPfn) {
         clear-content $logPfn
+    }
+}
+
+# Takes a status file, pulls out any errors,
+# adds some info to each error, and appends it to the global err log
+function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog) {
+    $recs = get-content $pgmStatusFilePFN
+    $buf = ""
+
+    # Error recs look like:
+    # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
+    #
+    # Not sure if there can be more than one error in a given STAT file, but will assume there can be
+    # Will make each it's own rec in the this global error log
+    #
+    # Output err struc:
+    # pgm | dbid | clientid | orig_dcb | TS | any other pieces 
+    foreach ($rec in $recs) {
+        $p = $rec -split "\|"
+        if ($p[2] -eq "ERROR") {
+            $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $p[0]) -join "|"
+            $msg += $p[3 .. ($p.length-1)] -join "|"
+            CF-Write-Log $errLog $msg
+        }
     }
 }
 
@@ -206,7 +238,7 @@ function CF-IsPath ($str) {
 
 
 function CF-Log-Says-Ran-Successfully ($logPFN) {
-    try {
+    if (Test-Path $logPFN) {
         $logRecs = get-content $logPfn
         $lastLine = $logRecs[$logRecs.length - 1]
         if ($lastLine -match "EXIT STATUS|OK") {
@@ -216,8 +248,8 @@ function CF-Log-Says-Ran-Successfully ($logPFN) {
             return $false;
         }
     }
-    catch {
-        throw
+    else {
+        return $false;
     }
 }
         

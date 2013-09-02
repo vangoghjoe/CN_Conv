@@ -33,89 +33,6 @@ param(
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
-# Take a type (db, natives, images)
-# sets size/num_files in db
-# makes a result file of missings
-function Process-Type($type, $listFile, $missFile, $dbRow) {
-    # Inits
-    $line = 0
-    $numMiss = $numPresent = $ttlSize = 0
-    $missFile = "${missFile}${type}.txt" # specific to type
-
-    # Use separate status field for natives vs images
-    switch ($type) {
-        "natives" {
-            $status = $dbRow.st_add_natives
-        }
-        "images" {
-            $status = $dbRow.st_add_images
-        }
-    }
-
-    # Don't process this type if in progress or already done
-    if (($ignoreStatus -eq $false) -and ($status -gt $CF_STATUS_FAILED)) {
-        write-host ("Skipping, already processed: " + $dbRow.dbid + " $type")
-        return
-    }
-    
-    # Make sure not to initialize this until verified not already done!
-    CF-Initialize-Log $missFile
-
-    # read listFile and gather stats
-    $files = get-content $listFile 
-    foreach ($file in $files) {
-        $line++
-
-        # skip blank lines
-        if ($file -match '^\s*$') {
-            continue
-        }
-
-        try {
-            ($size, $lastExitStat) = Get-File-Size $file
-            
-            # missing?
-            if ($size -eq -1) {
-                $numMiss++
-                if ($lastExitStat -eq $false) {
-                    CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file`twarning when testing path, probably too long or bad format")
-                }
-                else {
-                    CF-Write-File $missFile ($dbRow.orig_dcb +"`t$type`t$file")
-                }
-            }
-            else {
-                $numPresent++
-                $ttlSize += $size
-            }
-        }
-        catch {
-            CF-Write-Log $script:statusFilePFN "|ERROR|Can't get size [line $line]: $file: $($error[0])"
-        }
-    }
-
-    # Save stats in DB by setting values in row
-    # kind of kludgy, but ...
-    switch ($type) {
-        "db" {
-            $dbRow.db_bytes = $ttlSize
-            $dbRow.db_files = $numPresent
-        }
-        "natives" {
-            $dbRow.natives_bytes = $ttlSize
-            $dbRow.natives_files_present = $numPresent
-            $dbRow.natives_files_missing = $numMiss
-            $dbRow.st_add_natives = $CF_STATUS_GOOD
-        }
-        "images" {
-            $dbRow.images_bytes = $ttlSize
-            $dbRow.images_files_present = $numPresent
-            $dbRow.images_files_missing = $numMiss
-            $dbRow.st_add_images = $CF_STATUS_GOOD
-        }
-    }
-    write-host "$type: present = $numPresent  miss = $numMiss bytes = $ttlSize"
-}
 
 
 #for each step: get-images get-natives
@@ -134,6 +51,8 @@ function Process-Type($type, $listFile, $missFile, $dbRow) {
 #        write out the errors to a big file
 #            dcb | type | error message   (what if multiple lines?)
 function Process-Row($dbRow, $runEnv) {
+    # Inits
+    CF-Init-RunEnv-This-Row $runEnv $dbRow
 
     # Inits
     $bStr = $runEnv.bStr
@@ -141,40 +60,33 @@ function Process-Row($dbRow, $runEnv) {
     $dcbPfn = $dbRow.conv_dcb;
     $dbStr = "{0:0000}" -f [int]$dbid
 
-    $missFileStub = "${bStr}_${dbStr}_arch_missing_"
-    $statusFile = "${bStr}_${dbStr}_check-and-add-sizes_STATUS.txt"
-    $missFileStub = "$($runEnv.SearchResultsDir)\$missFileStub"
-
-    $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
-    CF-Initialize-Log $script:statusFilePFN
-    write-host $script:statusFilePFN
-    $script:rowHasError = $false
-    #
-    switch ($type) {
-        "natives" {
-            $status = $dbRow.st_add_natives
-        }
-        "images" {
-            $status = $dbRow.st_add_images
-        }
-    }
-
-    # Loop over types, setting listFile and calling Process-Type
+    # Loop over the programs (like run-get-images, run-get-natives)
+    write-host "DBID = $dbid"
     try {
-        #foreach ($type in @("dbfiles", "natives", "images")) {
-        foreach ($type in @("natives", "images")) {
-            if ($type -eq "images") {
-                $listFilePFN =   "${bStr}_${dbStr}_${type}_ALL.txt"
+        foreach ($pgm in @("run-get-images", "run-get-images-pt2","run-get-natives")) {
+            # Calc status field and status file
+            $pgmStatFld = $CF_PGMS.$pgm[0];
+            $pgmStatFileStub = $CF_PGMS.$pgm[1];
+            $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
+            $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
+
+            # DEBUG SECTION
+            #write-host "pgm = $pgm"
+            #write-host "statfld = $pgmStatFld"
+            #write-host "stub = $pgmStatFileStub"
+            #write-host "statfile = $pgmStatusFilePFN"
+
+            # Get status from log
+            # If log not there at all, have to assume it didn't run, so status is empty
+            if (-not (test-path $pgmStatusFilePFN)) {
+                $dbRow.$pgmStatFld = ""
+            }
+            elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
+                $dbRow.$pgmStatFld = $CF_STATUS_GOOD
             }
             else {
-                $listFilePFN =   "${bStr}_${dbStr}_${type}.txt"
-            }
-            $listFilePFN = "$($runEnv.SearchResultsDir)\$listFilePFN"
-            if (test-path $listFilePFN) {
-                Process-Type $type $listFilePFN $missFileStub $dbRow
-            }
-            else {
-                write-host "No list file: $($dbRow.dbid) $type"
+                $dbRow.$pgmStatFld = $CF_STATUS_FAILED
+                CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
             }
         }
     }
@@ -190,6 +102,16 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
+        # For this program, use a simple log file in curr dir to capture errors
+        $script:statusFilePFN = "run-update-statuses-STATUS.txt"
+        CF-Initialize-Log $statusFilePFN 
+
+        # The log of the munged error lines from all the pgms we're looking at
+        # It will also go in the curr dir
+        $script:collectedErrLog = "collected-error-log-$($runEnv.bstr).txt"
+        CF-Initialize-Log $collectedErrLog
+        CF-Write-Log $collectedErrLog "PGM | DB_ID | CLIENT_ID | DCB | Timestampt | Err Msg" 
+
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
         # Setup start/stop rows (assume user specifies as 1-based)
@@ -198,7 +120,7 @@ function Main {
         CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start row=$startRow  End row=$endRow"
          
         # Main loop
-        for($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
+        for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
             $row = $dcbRows[$i]
             
             # Only process this row if it's in the right batch 
@@ -213,6 +135,9 @@ function Main {
             #}
 
             Process-Row $row $runEnv  
+
+            # Write out whole DB every time in case stop before end of run
+            CF-Write-DB-File "DCBs" $dcbRows
         }
     }
     catch {
@@ -221,6 +146,9 @@ function Main {
     }
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
+
+    write-host ""
+    write-host "DONE"
 }     
 
 Main
