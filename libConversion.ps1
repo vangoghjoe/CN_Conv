@@ -108,7 +108,7 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
     $dbid = $dbRow.dbid
     $bStr = $runEnv.bStr
     $dbStr = "{0:0000}" -f [int]$dbid
-    $runEnv.dbStr = $dbStr
+    $runEnv["dbStr"] = $dbStr
 
     $statusFile = "${bStr}_${dbStr}_$($runEnv.outFileStub)_STATUS.txt"
     $runEnv["StatusFile"] =  "$($runEnv.ProgramLogsDir)\$statusFile"
