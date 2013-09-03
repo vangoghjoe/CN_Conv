@@ -95,6 +95,19 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
                 CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
             }
         }
+
+        # if pgm = get-natives or get-images-pt2, remove their SearchResults files 
+        # unless status = good
+        #write-host "pgm: $pgm" # debug
+        if (($pgm -eq "run-get-natives") -or ($pgm -eq "run-get-images-pt2")) {
+            if ($dbRow.pgmStatFld -ne $CF_STATUS_GOOD) {
+                $resFile = CF-Make-Output-PFN-Name $runEnv $CF_PGMS.$pgm[2] "search"
+                # debug
+                write-host "pgm: $pgm  resultsFile to kill = $resFile"
+                write $resFile >> $script:resultsToRm 
+                #rm $resFile 2>&1 > $null
+            }
+        }
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
@@ -117,6 +130,11 @@ function Main {
         # For this program, use a simple log file in curr dir to capture errors
         $script:statusFilePFN = "run-update-statuses-STATUS.txt"
         CF-Initialize-Log $statusFilePFN 
+
+        # List of results file to remove b/c had bad statuses
+        # Once I'm confident in this list, can have the script do the remove
+        $script:resultsToRm = "result-files-for-removal.txt"
+        CF-Initialize-Log $resultsToRm
 
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
@@ -143,6 +161,7 @@ function Main {
 
             for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
                 $row = $dcbRows[$i]
+                CF-Init-RunEnv-This-Row $runEnv $row
                 
                 # Only process this row if it's in the right batch 
                 if ($row.batchid -ne $BatchID) {
@@ -165,6 +184,7 @@ function Main {
 
     write-host ""
     write-host "DONE"
+    write-host "See $resultsToRm for files to remove"
 }     
 
 Main

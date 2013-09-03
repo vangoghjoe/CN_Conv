@@ -2,8 +2,6 @@
 $CF_DEBUG = $true
 #####
 
-
-
 if ($(hostname) -eq "LNGHBEL-5009970") {
     $CF_LNRoot = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN"
     $CF_CN_V8_EXE = "C:\Program Files\Dataflight\Concordance\Concordance.exe" 
@@ -47,12 +45,14 @@ $script:CF_DBEnv = @{}  # DB-specifc environment
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
 
 $CF_PGMS = @{
+# 0 = status field
+# 1 = root for status file
+# 2 = root search results (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "run-get-images" = @("st_get_images", "images");
-"run-get-images-pt2" = @("st_get_images2","images_pt2");
-"run-get-natives" = @("st_get_natives","natives")
-"run-get-db-sizes" = @("st_get_natives","natives","db-sizes")
-
+"run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL");
+"run-get-natives" = @("st_get_natives","natives","natives");
+"run-check-and-add-sizes-to-file" = @("st_get_natives","sizes",@("sizes-natives","sizes-images","miss-natives","miss-images"));
 }
 
 $CF_FIELDS = @(
@@ -140,6 +140,7 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
 
     $statusFile = "${bStr}_${dbStr}_$($runEnv.outFileStub)_STATUS.txt"
     $runEnv["StatusFile"] =  "$($runEnv.ProgramLogsDir)\$statusFile"
+    $runEnv["badbStr"] = "${bstr}_${dbStr}"
 }
 
 function CF-Init-RunEnv {
@@ -302,10 +303,24 @@ function CF-Log-Says-Ran-Successfully ($logPFN) {
     }
 }
         
-    
+
 
 function CF-Make-DbStr ([int] $dbid) {
     return "{0:0000}" -f [int]$dbid
+}
+
+# $type = status or search or qc
+function CF-Make-Output-PFN-Name ($runEnv, $stub, $type) {
+    if ($type -eq "status") { 
+        $root = $runEnv.ProgramLogsDir 
+        $suf = "_STATUS" 
+    } 
+    elseif ($type -eq "search") { 
+        $root = $runEnv.SearchResultsDir 
+        $suf = "" 
+    } 
+    $file = $root + "\" + $runEnv.badbStr + "_" + $stub + $suf + ".txt"
+    return $file
 }
 
 function CF-Log-To-Master-Log {
