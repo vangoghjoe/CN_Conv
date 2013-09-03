@@ -45,14 +45,15 @@ function Process-Vol($volPfn) {
     # would be faster with arrays, but don't have time to fuss with it
     $script:volPaths = @{}
 
-    $recs = get-content $volPfn
+    # Force array context in case file only has one line
+    $recs = @(get-content $volPfn)  # need this to work if file only has one line
     foreach ($rec in $recs) {
-        # ignore lines that don't look like paths
 
         $rec = $rec.Trim()
+        # ignore lines that don't look like paths
         if (CF-IsPath $rec) {
             ($path, [int]$key) = $rec -split "\|"
-            
+            #write-host "proc-vol: path: $path  key: $key" #debug
             $path = $path.Trim()        
             $script:volPaths[$key] = $path
         }
@@ -65,9 +66,14 @@ function Process-Vol($volPfn) {
 
 function Process-Dir($dirPfn) {
 
-    $recs = get-content $dirPfn
+    # Force array context in case file only has one line
+    $recs = @(get-content $dirPfn) 
     foreach ($rec in $recs) {
-        ($id, $file, [int]$key) = $rec -split "[\s+\|]"
+        #($id, $file, [int]$key) = $rec -split "[\s+\|]"
+        ($id, $file, [int]$key) = $rec -split "[\t\|]"
+        $file = $file.trim()
+        # debug
+        #write-host "proc-dir: file: $file  key: $key"
         if ($key -lt 0) { 
             $key += [math]::Pow(2,31)
         }
