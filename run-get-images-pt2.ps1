@@ -100,12 +100,18 @@ function Exec-Process-Results {
     $dirResFile = "${bStr}_${dbStr}_images_DIR.txt"
     $volResFile = "${bStr}_${dbStr}_images_VOL.txt"
     $statusFile = "${bStr}_${dbStr}_images_pt2_STATUS.txt"
+
+    #debug
+    #write-host "status file without path = $statusFile"
+
     #$localResFilePFN = "$dcbDir\$CF_LocaldcbDir
     $dirResFilePFN = "$($runEnv.SearchResultsDir)\$dirResFile"
     $volResFilePFN = "$($runEnv.SearchResultsDir)\$volResFile"
     $script:resFilePFN = "$($runEnv.SearchResultsDir)\$resFile"
     $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
 
+    # debug
+    #write-host "pgm logs = $($runEnv.ProgramLogsDir)"
     write-host $script:statusFilePFN
 
     CF-Initialize-Log $script:statusFilePFN
