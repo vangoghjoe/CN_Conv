@@ -1,5 +1,5 @@
 #####
-$CF_DEBUG = $false
+$CF_DEBUG = $true
 #####
 
 
@@ -85,7 +85,7 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
-function CF-Load-Driver-File($driverPFN, $pieceNum = 1) {
+function CF-Load-Driver-File($driverPFN, $pieceNum = 2) {
    $script:driverIDs = @{}
 
    $recs = get-content $driverPFN

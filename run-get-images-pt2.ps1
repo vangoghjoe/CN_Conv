@@ -67,6 +67,7 @@ function Process-Dir($dirPfn) {
 
     $recs = get-content $dirPfn
     foreach ($rec in $recs) {
+        write-host "$rec" # debug
         ($id, $file, [int]$key) = $rec -split "[\s+\|]"
         if ($key -lt 0) { 
             $key += [math]::Pow(2,31)
@@ -126,7 +127,7 @@ function Exec-Process-Results {
         }
     }
     catch {
-        CF-Write-Log $script:statusFilePFN "|ERROR|$error[0]"
+        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
         $script:rowHasError = $true
     }
     CF-Finish-Log $script:statusFilePFN 
@@ -176,19 +177,16 @@ function Main {
 
             # Check against driver file, if using
             if ($DriverFile) {
-                write-host "in driver check: $($row.dbid)"
                 if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                    write-host "not in driver: $($row.dbid)"
                     continue
                 }
-                write-host "in driver: $($row.dbid)"
             }
             Exec-Process-Results $row $runEnv  $CN_EXE 
         }
     }
     catch {
         write-host $error[0]
-        CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$error[0]"
+        CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
