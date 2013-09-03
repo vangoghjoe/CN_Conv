@@ -27,6 +27,7 @@ param(
     $BatchID,
     $ignoreStatus = $false,
     $outFile,
+    $DriverFile,
     $startRow,
     $endRow
 )
@@ -42,6 +43,12 @@ function Main {
     try {
         # Inits 
         $ttlSize = $numFiles = 0
+
+        # Load driver file, if using
+        if ($DriverFile) {
+            CF-Load-Driver-File $DriverFile
+        }
+
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
         # Setup start/stop rows (assume user specifies as 1-based)
@@ -59,6 +66,15 @@ function Main {
                 continue
             }
 
+            # Check against driver file, if using
+            if ($DriverFile) {
+                write-host "in driver check: $($row.dbid)"
+                if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
+                    write-host "not in driver: $($row.dbid)"
+                    continue
+                }
+                write-host "in driver: $($row.dbid)"
+            }
             # process this row  (sorry, just here in one big blob of a function)
             $dcb = $row.orig_dcb
             $dir = [system.io.path]::GetDirectoryName($dcb)
@@ -85,6 +101,7 @@ function Main {
     write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow"
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 }     
+
 
 Main
 

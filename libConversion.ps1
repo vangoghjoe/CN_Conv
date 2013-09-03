@@ -51,6 +51,7 @@ $CF_PGMS = @{
 "run-get-images" = @("st_get_images", "images");
 "run-get-images-pt2" = @("st_get_images2","images_pt2");
 "run-get-natives" = @("st_get_natives","natives")
+"run-get-db-sizes" = @("st_get_natives","natives","db-sizes")
 
 }
 

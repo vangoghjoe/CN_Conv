@@ -75,18 +75,25 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
         #write-host "stub = $pgmStatFileStub"
         #write-host "statfile = $pgmStatusFilePFN"
 
-        # Get status from log
-        # If log not there at all, have to assume it didn't run, so status is empty
-        if (-not (test-path $pgmStatusFilePFN)) {
+        # if didn't have good backup, shouldn't have run the other code,
+        # so take it out of error files
+        if ($dbRow.backup_done -ne "1") {
             $dbRow.$pgmStatFld = ""
         }
-        elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
-            $dbRow.$pgmStatFld = $CF_STATUS_GOOD
-            CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
-        }
         else {
-            $dbRow.$pgmStatFld = $CF_STATUS_FAILED
-            CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
+            # Get status from log
+            # If log not there at all, have to assume it didn't run, so status is empty
+            if (-not (test-path $pgmStatusFilePFN)) {
+                $dbRow.$pgmStatFld = ""
+            }
+            elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
+                $dbRow.$pgmStatFld = $CF_STATUS_GOOD
+                CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
+            }
+            else {
+                $dbRow.$pgmStatFld = $CF_STATUS_FAILED
+                CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
+            }
         }
     }
     catch {
