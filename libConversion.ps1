@@ -1,12 +1,17 @@
 #####
-$CF_DEBUG = $false
+$CF_DEBUG = $true
 #####
+
 
 
 if ($(hostname) -eq "LNGHBEL-5009970") {
     $CF_LNRoot = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN"
     $CF_CN_V8_EXE = "C:\Program Files\Dataflight\Concordance\Concordance.exe" 
     $CF_CN_V10_EXE = "C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe"
+
+    # SQL connection string
+    $global:connectionstring = "Server=LNGHBEL-5009970\SQLEXPRESS; Database=FYI_Conversions;"
+    $global:connectionstring += ("User Id=conv_user; Password=fr33d0m!;" )
 }
 elseif ($(hostname) -match "FYI") {
     $CF_LNRoot = "W:\WSS_TRGS\Non_Billable\DBA_Docs\20130716-Conversion\_LN"
@@ -17,6 +22,11 @@ else {
     $CF_LNRoot = "W:\_LN_TEST"
     $CF_CN_V8_EXE = "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe" 
     $CF_CN_V10_EXE = "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe" 
+    # TO HL105SQL03 (just in case)
+    #$global:connectionstring = "Server=HL105SPRSQL03\FYI; Database=FYI_Conversions; Integrated Security = True"
+    # NOTE: Using Windows Auth, so the user probably needs to be in the Domain Administrator group,
+    # so they automatically get sysadmin access
+    $global:connectionstring = "Server=HL105SPRCON01\SQLEXPRESS; Database=FYI_Conversions; Integrated Security = True"
 }
 
 $CF_ConvAdminDir = "$CF_LNRoot\Conversion_Admin"
@@ -185,7 +195,7 @@ function CF-Initialize-Log ($logPfn) {
 # Takes a status file, pulls out any errors,
 # adds some info to each error, and appends it to the global err log
 function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog) {
-    $recs = get-content $pgmStatusFilePFN
+    $recs = @(get-content $pgmStatusFilePFN)
     $buf = ""
 
     # Error recs look like:
@@ -201,9 +211,26 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
         if ($p[2] -eq "ERROR") {
             $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $p[0]) -join "|"
             $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
-            CF-Write-Log $errLog $msg
+            CF-Write-File $errLog $msg
         }
     }
+}
+
+# adds some info to each error, and appends it to the pgm's good log
+# pgm | dbid | clientid | orig_dcb | TS
+function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $goodlog) {
+    $recs = @(get-content $pgmStatusFilePFN)
+    if ($recs.length) {
+        $lastLine = $recs[-1]
+        $p = $lastLine -split "\|"
+        $TS = $p[0]
+    }
+    else {
+        $TS = "00:00:00"
+    }
+
+    $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $TS) -join "|"
+    CF-Write-File $goodlog $msg
 }
 
 function CF-Resolve-Error ($ErrorRecord=$Error[0])
@@ -230,6 +257,7 @@ function CF-Write-Log ($logPfn, $msg) {
     $msg | out-file -encoding ASCII -append -filepath $logPfn
 }
 
+# Simply appends a line to a file (badly named)
 function CF-Write-File($file, $msg) {
     $msg | out-file -encoding ASCII -append -filepath $file
 }
@@ -253,12 +281,18 @@ function CF-IsPath ($str) {
 
 function CF-Log-Says-Ran-Successfully ($logPFN) {
     if (Test-Path $logPFN) {
-        $logRecs = get-content $logPfn
-        $lastLine = $logRecs[$logRecs.length - 1]
-        if ($lastLine -match "EXIT STATUS|OK") {
-            return $true;
+        $logRecs = @(get-content $logPfn)
+        if ($logRecs.length) {
+            $lastLine = $logRecs[$logRecs.length - 1]
+            if ($lastLine -match "EXIT STATUS|OK") {
+                return $true;
+            }
+            else {
+                return $false;
+            }
         }
         else {
+            # empty file => failed
             return $false;
         }
     }
@@ -492,3 +526,21 @@ function CF-Testme {
     
 }
 
+# SQL
+
+function Create-SqlConnection()
+{
+	$conn = New-Object ('System.Data.SqlClient.SqlConnection');
+	$conn.ConnectionString = $global:connectionstring;
+	$conn.Open();
+    $cmd = New-Object System.Data.SqlClient.SqlCommand
+    $cmd.Connection = $conn;    
+    return $conn;
+}
+
+$conn = Create-SqlConnection
+$cmd = New-Object System.Data.SqlClient.SqlCommand
+$cmd.Connection = $conn;
+$cmd.CommandType = [System.Data.CommandType] "Text";
+$cmd.CommandText = "insert into DCBs (orig_dcb) values ('C:\mtsadmin cdefg')"
+[Void] $cmd.ExecuteNonQuery()
