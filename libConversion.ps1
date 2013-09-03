@@ -85,7 +85,9 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
-function CF-Load-Drive($driverPFN, $pieceNum) {
+function CF-Load-Driver-File($driverPFN, $pieceNum = 1) {
+   $script:driverIDs = @{}
+
    $recs = get-content $driverPFN
    foreach ($rec in $recs) {
         $p = $rec -split "\|"

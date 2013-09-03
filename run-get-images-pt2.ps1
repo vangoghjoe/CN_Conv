@@ -26,6 +26,7 @@ One or more examples
 
 param(
     $BatchID,
+    $DriverFile,
     $CN_Ver
 )
 
@@ -150,6 +151,11 @@ function Main {
 
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
          
+        # Load driver file, if using
+        if ($DriverFile) {
+            CF-Load-Driver-File $DriverFile
+        }
+
         # going to write to batchResult File
         # status to batchStatus = 1 per DB per pgm
         #  steps table in db can have separate field for step name and pgm-that-does-step
@@ -160,6 +166,16 @@ function Main {
             
             if ($row.batchid -ne $BatchID) {   
                 continue
+            }
+
+            # Check against driver file, if using
+            if ($DriverFile) {
+                write-host "in driver check: $($row.dbid)"
+                if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
+                    write-host "not in driver: $($row.dbid)"
+                    continue
+                }
+                write-host "in driver: $($row.dbid)"
             }
             Exec-Process-Results $row $runEnv  $CN_EXE 
         }
