@@ -85,6 +85,18 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
+function CF-Load-Drive($driverPFN, $pieceNum) {
+   $recs = get-content $driverPFN
+   foreach ($rec in $recs) {
+        $p = $rec -split "\|"
+        $script:driverIDs[$p[$pieceNum]] = ""
+   }
+}
+
+function CF-Is-DBID-in-Driver ($dbid) {
+    return $script:driverIDs.ContainsKey($dbid)
+}
+
 ### Given a dir, returns @($bytes, $numFiles), where
 #  $bytes =    total size of all files in the dir and any subdirs
 #  $numFiles = num files  " " "
@@ -186,7 +198,7 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
         $p = $rec -split "\|"
         if ($p[2] -eq "ERROR") {
             $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $p[0]) -join "|"
-            $msg += $p[3 .. ($p.length-1)] -join "|"
+            $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
             CF-Write-Log $errLog $msg
         }
     }
