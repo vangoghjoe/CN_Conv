@@ -27,7 +27,7 @@ param(
     $BatchID,
     $ignoreStatus = $false,
     $DriverFile,
-    $Backups,
+    [string] $FileStub,
     $startRow,
     $endRow
 )
@@ -154,12 +154,13 @@ function Main {
         foreach ($pgm in $pgms) {
             # The log of the munged error lines from all the pgms we're looking at
             # It will also go in the curr dir
-            $script:collectedErrLog = "errors-$($runEnv.bstr)-${pgm}.txt"
+            if ($FileStub) { $FileStub = "-${FileStub}-"
+            $script:collectedErrLog = "errors-$($runEnv.bstr)-${FileStub}${pgm}.txt"
             CF-Initialize-Log $collectedErrLog
             CF-Write-File $collectedErrLog "PGM | DB_ID | CLIENT_ID | DCB | Timestampt | Err Msg" 
 
             # the Good log
-            $script:collectedGoodLog = "good-$($runEnv.bstr)-${pgm}.txt"
+            $script:collectedGoodLog = "good-$($runEnv.bstr)-${FileStub}${pgm}.txt"
             CF-Initialize-Log $collectedGoodLog
             CF-Write-File $collectedGoodLog "PGM | DB_ID | CLIENT_ID | DCB | Timestamp" 
 
