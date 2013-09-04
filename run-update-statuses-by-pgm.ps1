@@ -142,6 +142,9 @@ function Main {
 
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
+        # snippet to put in error*/good* files
+        if ($FileStub) { $FileStub = "-${FileStub}-" }
+
         # Setup start/stop rows (assume user specifies as 1-based)
         if ($startRow -eq $null) { $startRow = 1 }
         if ($endRow -eq $null) { $endRow = $dcbRows.length } 
@@ -154,8 +157,7 @@ function Main {
         foreach ($pgm in $pgms) {
             # The log of the munged error lines from all the pgms we're looking at
             # It will also go in the curr dir  
-            if ($FileStub) { $FileStub = "-${FileStub}-" }
-            $script:collectedErrLog = "errors-$($runEnv.bstr)-${FileStub}${pgm}.txt"
+            $script:collectedErrLog = "errors-$($runEnv.bstr)${FileStub}${pgm}.txt"
             CF-Initialize-Log $collectedErrLog
             CF-Write-File $collectedErrLog "PGM | DB_ID | CLIENT_ID | DCB | Timestampt | Err Msg" 
 
