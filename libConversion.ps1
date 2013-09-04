@@ -557,9 +557,11 @@ function Create-SqlConnection()
     return $conn;
 }
 
-$conn = Create-SqlConnection
-$cmd = New-Object System.Data.SqlClient.SqlCommand
-$cmd.Connection = $conn;
-$cmd.CommandType = [System.Data.CommandType] "Text";
-$cmd.CommandText = "insert into DCBs (orig_dcb) values ('C:\mtsadmin cdefg')"
-[Void] $cmd.ExecuteNonQuery()
+function Get-SQL-Cmd () {
+    $conn = Create-SqlConnection
+    $cmd = New-Object System.Data.SqlClient.SqlCommand
+    $cmd.Connection = $conn;
+    $cmd.CommandType = [System.Data.CommandType] "Text";
+    #$cmd.CommandText = "insert into DCBs (orig_dcb) values ('C:\mtsadmin cdefg')"
+    #[Void] $cmd.ExecuteNonQuery()
+}
