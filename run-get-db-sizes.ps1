@@ -68,12 +68,9 @@ function Main {
 
             # Check against driver file, if using
             if ($DriverFile) {
-                write-host "in driver check: $($row.dbid)"
                 if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                    write-host "not in driver: $($row.dbid)"
                     continue
                 }
-                write-host "in driver: $($row.dbid)"
             }
             # process this row  (sorry, just here in one big blob of a function)
             $dcb = $row.orig_dcb

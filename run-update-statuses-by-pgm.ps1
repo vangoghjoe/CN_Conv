@@ -174,12 +174,9 @@ function Main {
                 }
                 # Check against driver file, if using
                 if ($DriverFile) {
-                    write-host "in driver check: $($row.dbid)"
                     if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                        write-host "not in driver: $($row.dbid)"
                         continue
                     }
-                    write-host "in driver: $($row.dbid)"
                 }
 
                 Process-Cell $row $runEnv $pgm
