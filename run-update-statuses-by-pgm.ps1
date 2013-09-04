@@ -153,8 +153,8 @@ function Main {
         #
         foreach ($pgm in $pgms) {
             # The log of the munged error lines from all the pgms we're looking at
-            # It will also go in the curr dir
-            if ($FileStub) { $FileStub = "-${FileStub}-"
+            # It will also go in the curr dir  
+            if ($FileStub) { $FileStub = "-${FileStub}-" }
             $script:collectedErrLog = "errors-$($runEnv.bstr)-${FileStub}${pgm}.txt"
             CF-Initialize-Log $collectedErrLog
             CF-Write-File $collectedErrLog "PGM | DB_ID | CLIENT_ID | DCB | Timestampt | Err Msg" 
