@@ -1,8 +1,6 @@
 #####
-$CF_DEBUG = $true
+$CF_DEBUG = $false
 #####
-
-
 
 if ($(hostname) -eq "LNGHBEL-5009970") {
     $CF_LNRoot = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN"
@@ -47,12 +45,14 @@ $script:CF_DBEnv = @{}  # DB-specifc environment
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
 
 $CF_PGMS = @{
+# 0 = status field
+# 1 = root for status file
+# 2 = root search results (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "run-get-images" = @("st_get_images", "images");
-"run-get-images-pt2" = @("st_get_images2","images_pt2");
-"run-get-natives" = @("st_get_natives","natives")
-"run-get-db-sizes" = @("st_get_natives","natives","db-sizes")
-
+"run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL");
+"run-get-natives" = @("st_get_natives","natives","natives");
+"run-check-and-add-sizes-to-file" = @("st_get_natives","sizes",@("sizes-natives","sizes-images","miss-natives","miss-images"));
 }
 
 $CF_FIELDS = @(
@@ -96,7 +96,7 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
-function CF-Load-Driver-File($driverPFN, $pieceNum = 2) {
+function CF-Load-Driver-File($driverPFN, $pieceNum = 0) {
    $script:driverIDs = @{}
 
    $recs = get-content $driverPFN
@@ -140,6 +140,7 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
 
     $statusFile = "${bStr}_${dbStr}_$($runEnv.outFileStub)_STATUS.txt"
     $runEnv["StatusFile"] =  "$($runEnv.ProgramLogsDir)\$statusFile"
+    $runEnv["badbStr"] = "${bstr}_${dbStr}"
 }
 
 function CF-Init-RunEnv {
@@ -206,11 +207,11 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
     # Will make each it's own rec in the this global error log
     #
     # Output err struc:
-    # pgm | dbid | clientid | orig_dcb | TS | any other pieces 
+    # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
     foreach ($rec in $recs) {
         $p = $rec -split "\|"
         if ($p[2] -eq "ERROR") {
-            $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $p[0]) -join "|"
+            $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
             $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
             CF-Write-File $errLog $msg
         }
@@ -219,6 +220,8 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
 
 # adds some info to each error, and appends it to the pgm's good log
 # pgm | dbid | clientid | orig_dcb | TS
+# pgm | dbid | clientid | orig_dcb | TS
+# dbid | clientid | pgm | orig_dcb | TS 
 function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $goodlog) {
     $recs = @(get-content $pgmStatusFilePFN)
     if ($recs.length) {
@@ -230,7 +233,7 @@ function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $good
         $TS = "00:00:00"
     }
 
-    $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $TS) -join "|"
+    $msg = @( $dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $TS) -join "|"
     CF-Write-File $goodlog $msg
 }
 
@@ -302,10 +305,24 @@ function CF-Log-Says-Ran-Successfully ($logPFN) {
     }
 }
         
-    
+
 
 function CF-Make-DbStr ([int] $dbid) {
     return "{0:0000}" -f [int]$dbid
+}
+
+# $type = status or search or qc
+function CF-Make-Output-PFN-Name ($runEnv, $stub, $type) {
+    if ($type -eq "status") { 
+        $root = $runEnv.ProgramLogsDir 
+        $suf = "_STATUS" 
+    } 
+    elseif ($type -eq "search") { 
+        $root = $runEnv.SearchResultsDir 
+        $suf = "" 
+    } 
+    $file = $root + "\" + $runEnv.badbStr + "_" + $stub + $suf + ".txt"
+    return $file
 }
 
 function CF-Log-To-Master-Log {

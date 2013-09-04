@@ -1,27 +1,3 @@
-<#
-SYNOPSIS 
-
-.DESCRIPTION
-
-.PARAMETER Name
-
-.PARAMETER Extension
-
-.INPUTS
-None. You cannot pipe objects to this script
-
-.OUTPUTS
-
-.EXAMPLE
-One or more examples
-
-.EXAMPLE
-
-.LINK
-
-.LINK
-
-#>
 
 param(
     [Parameter(Mandatory=$true)]
@@ -29,6 +5,7 @@ param(
     [Parameter(Mandatory=$true)]
     $fileStub,
     $ignoreStatus = $false,
+    $DriverFile,
     $startRow,
     $endRow
 )
@@ -141,7 +118,14 @@ function Main {
 
     try {
         # Inits
+
+        # Load driver file, if using
+        if ($DriverFile) {
+            CF-Load-Driver-File $DriverFile
+        }
+
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
+
         #   Remove output files
         $outFile = "${fileStub}.txt"
         $missFile = "${fileStub}-miss.txt"
@@ -149,6 +133,7 @@ function Main {
         foreach ($file in @($outFile, $missFile, $errFile)) {
             rm $file 2>&1 > $null
         }
+
         #   Setup start/stop rows (assume user specifies as 1-based)
         if ($startRow -eq $null) { $startRow = 1 }
         if ($endRow -eq $null) { $endRow = $dcbRows.length } 
@@ -162,6 +147,16 @@ function Main {
             # and has the right status
             if ($row.batchid -ne $BatchID) {
                 continue
+            }
+
+            # Check against driver file, if using
+            if ($DriverFile) {
+                write-host "in driver check: $($row.dbid)"
+                if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
+                    write-host "not in driver: $($row.dbid)"
+                    continue
+                }
+                write-host "in driver: $($row.dbid)"
             }
 
             Process-Row $row $runEnv  
