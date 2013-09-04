@@ -26,6 +26,7 @@ One or more examples
 param(
     $BatchID,
     $ignoreStatus = $false,
+    $DriverFile,
     $Backups,
     $startRow,
     $endRow
@@ -75,10 +76,9 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
         #write-host "stub = $pgmStatFileStub"
         #write-host "statfile = $pgmStatusFilePFN"
 
-        # if didn't have good backup, shouldn't have run the other code,
-        # so take it out of error files
-        if ($dbRow.backup_done -ne "1") {
-            $dbRow.$pgmStatFld = ""
+        # TODO: consider clearing it's status if the pgm's it depenends on haven't run
+        # For now, just leave the stub of the if/else
+        if ( 0 ) {
         }
         else {
             # Get status from log
@@ -103,7 +103,6 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
             if ($dbRow.pgmStatFld -ne $CF_STATUS_GOOD) {
                 $resFile = CF-Make-Output-PFN-Name $runEnv $CF_PGMS.$pgm[2] "search"
                 # debug
-                write-host "pgm: $pgm  resultsFile to kill = $resFile"
                 write $resFile >> $script:resultsToRm 
                 #rm $resFile 2>&1 > $null
             }
@@ -125,7 +124,7 @@ function Main {
 
     try {
         # set up @pgms
-        $pgms = @("run-get-natives","run-get-images", "run-get-images-pt2")
+        $pgms = @("backup-for-archiving","run-get-natives","run-get-images", "run-get-images-pt2")
 
         # For this program, use a simple log file in curr dir to capture errors
         $script:statusFilePFN = "run-update-statuses-STATUS.txt"
@@ -135,6 +134,11 @@ function Main {
         # Once I'm confident in this list, can have the script do the remove
         $script:resultsToRm = "result-files-for-removal.txt"
         CF-Initialize-Log $resultsToRm
+
+        # Load driver file, if using
+        if ($DriverFile) {
+            CF-Load-Driver-File $DriverFile
+        }
 
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
@@ -167,6 +171,16 @@ function Main {
                 if ($row.batchid -ne $BatchID) {
                     continue
                 }
+                # Check against driver file, if using
+                if ($DriverFile) {
+                    write-host "in driver check: $($row.dbid)"
+                    if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
+                        write-host "not in driver: $($row.dbid)"
+                        continue
+                    }
+                    write-host "in driver: $($row.dbid)"
+                }
+
                 Process-Cell $row $runEnv $pgm
 
             }

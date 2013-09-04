@@ -48,10 +48,11 @@ $CF_PGMS = @{
 # 0 = status field
 # 1 = root for status file
 # 2 = root search results (can be array)
+# 3 = prev pgm it depends on (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
-"run-get-images" = @("st_get_images", "images");
-"run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL");
-"run-get-natives" = @("st_get_natives","natives","natives");
+"run-get-images" = @("st_get_images", "images", "backup-for-archiving");
+"run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
+"run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
 "run-check-and-add-sizes-to-file" = @("st_get_natives","sizes",@("sizes-natives","sizes-images","miss-natives","miss-images"));
 }
 
