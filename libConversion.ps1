@@ -1,5 +1,5 @@
 #####
-$CF_DEBUG = $true
+$CF_DEBUG = $false
 #####
 
 if ($(hostname) -eq "LNGHBEL-5009970") {
@@ -96,7 +96,7 @@ function CF-Put-DCB-Header-On-Clipboard() {
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
-function CF-Load-Driver-File($driverPFN, $pieceNum = 1) {
+function CF-Load-Driver-File($driverPFN, $pieceNum = 0) {
    $script:driverIDs = @{}
 
    $recs = get-content $driverPFN
@@ -207,11 +207,11 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
     # Will make each it's own rec in the this global error log
     #
     # Output err struc:
-    # pgm | dbid | clientid | orig_dcb | TS | any other pieces 
+    # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
     foreach ($rec in $recs) {
         $p = $rec -split "\|"
         if ($p[2] -eq "ERROR") {
-            $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $p[0]) -join "|"
+            $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
             $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
             CF-Write-File $errLog $msg
         }
@@ -220,6 +220,8 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
 
 # adds some info to each error, and appends it to the pgm's good log
 # pgm | dbid | clientid | orig_dcb | TS
+# pgm | dbid | clientid | orig_dcb | TS
+# dbid | clientid | pgm | orig_dcb | TS 
 function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $goodlog) {
     $recs = @(get-content $pgmStatusFilePFN)
     if ($recs.length) {
@@ -231,7 +233,7 @@ function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $good
         $TS = "00:00:00"
     }
 
-    $msg = @($pgm, $dbRow.dbid, $dbRow.clientid, $dbRow.orig_dcb, $TS) -join "|"
+    $msg = @( $dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $TS) -join "|"
     CF-Write-File $goodlog $msg
 }
 
