@@ -565,3 +565,8 @@ function Get-SQL-Cmd () {
     #$cmd.CommandText = "insert into DCBs (orig_dcb) values ('C:\mtsadmin cdefg')"
     #[Void] $cmd.ExecuteNonQuery()
 }
+
+function CF-Show-DCB-DB-File($file="DCBs") {
+    $dbFile = "$CF_DBDir\${file}.txt"
+    import-CSV -delimiter "`t" $dbfile | out-gridview
+}
