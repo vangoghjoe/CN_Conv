@@ -98,7 +98,6 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
 
         # if pgm = get-natives or get-images-pt2, remove their SearchResults files 
         # unless status = good
-        #write-host "pgm: $pgm" # debug
         if (($pgm -eq "run-get-natives") -or ($pgm -eq "run-get-images-pt2")) {
             if ($dbRow.pgmStatFld -ne $CF_STATUS_GOOD) {
                 $resFile = CF-Make-Output-PFN-Name $runEnv $CF_PGMS.$pgm[2] "search"
@@ -169,11 +168,12 @@ function Main {
             for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
                 $row = $dcbRows[$i]
                 CF-Init-RunEnv-This-Row $runEnv $row
-                
+
                 # Only process this row if it's in the right batch 
                 if ($row.batchid -ne $BatchID) {
                     continue
                 }
+
                 # Check against driver file, if using
                 if ($DriverFile) {
                     if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
