@@ -14,7 +14,6 @@ main()
     /* Inits */
     /*messageBox("toop of main","",0);*/
     g_hasError = FALSE;
-
     
     if ((Inits())==ERROR) { 
         finish_log();
@@ -59,9 +58,6 @@ Inits()
      */
 	  
 	/* get cmdline args */
-    g_dcb_pfn = getarg(2);
-	g_results_pfn = getarg(3);
-	g_log_pfn = getarg(4);
     g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
     g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
     g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");

@@ -570,3 +570,41 @@ function CF-Show-DCB-DB-File($file="DCBs") {
     $dbFile = "$CF_DBDir\${file}.txt"
     import-CSV -delimiter "`t" $dbfile | out-gridview
 }
+
+# $vers = "v8" or "v10"
+function CF-Get-CN-Exe($vers) {
+    $v8 = @( "C:\Program Files\Dataflight\Concordance\Concordance.exe", 
+             "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
+             "C:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
+           )
+
+    $v10 = @("C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe",
+             "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe"
+            )
+
+    # might be 8 or 9, I guess, though usually refer to both simply as 8
+    if ($vers -match "8") { $exes = $v8 }
+    else { $exes = $v10 }
+
+    foreach ($exe in $exes) {
+        if (test-path $exe) {
+            return $exe
+        }
+    }
+
+    throw "Can't find CN exe for version: $vers"
+}
+
+function CF-Get-CN-Info ($CN_Ver) {
+    if ($CN_Ver -match "8") {
+        $VStr = "v8"
+    }
+    else {
+        $VStr = "v10"
+    }
+    $CN_EXE = CF-Get-CN-Exe $Vstr
+
+    return @($Vstr, $CN_EXE)
+}
+    
+
