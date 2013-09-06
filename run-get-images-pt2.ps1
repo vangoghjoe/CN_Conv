@@ -27,6 +27,8 @@ One or more examples
 param(
     $BatchID,
     $DriverFile,
+    $startRow,
+    $endRow,
     $CN_Ver
 )
 
@@ -92,9 +94,7 @@ function Process-Dir($dirPfn) {
 function Exec-Process-Results {
     param (
         $dbRow,
-        $runEnv,
-        $CN_EXE,
-        $Vstr
+        $runEnv
     )
 
     $bStr = $runEnv.bStr
@@ -130,6 +130,13 @@ function Exec-Process-Results {
             Process-Vol $volResFilePFN
             Process-Dir $dirResFilePFN
         }
+        else {
+            # decided it should be an error to be asked to run when don't 
+            # have correct input files.
+            CF-Write-Log $script:statusFilePFN "|ERROR|The input VOL and/or DIR are missing."
+            $script:rowHasError = $true
+
+        }
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
@@ -156,11 +163,13 @@ function CheckFiles($dirPfn, $volPfn) {
 
 
 function Main {
+    # Bare inits to write to master log
     $runEnv = CF-Init-RunEnv $BatchID
-    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
+    CF-Log-To-Master-Log $runEnv.bstr "" "START" ""
 
     try {
-
+        # Inits
+        $startDate = $(get-date -format $CF_DateFormat)
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
          
         # Load driver file, if using
@@ -168,12 +177,13 @@ function Main {
             CF-Load-Driver-File $DriverFile
         }
 
-        # going to write to batchResult File
-        # status to batchStatus = 1 per DB per pgm
-        #  steps table in db can have separate field for step name and pgm-that-does-step
-        # if processing breadth first, step name can be ALL STEPS
-
-        for($i = 0 ; $i -lt $dcbRows.length; $i++) {
+        # Setup start/stop rows (assume user specifies as 1-based)
+        if ($startRow -eq $null) { $startRow = 1 }
+        if ($endRow -eq $null) { $endRow = $dcbRows.length } 
+        CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start CN=$Vstr row=$startRow  End row=$endRow"
+         
+        # DCB Rows Loop
+        for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
             $row = $dcbRows[$i]
             
             if ($row.batchid -ne $BatchID) {   
@@ -186,7 +196,7 @@ function Main {
                     continue
                 }
             }
-            Exec-Process-Results $row $runEnv  $CN_EXE 
+            Exec-Process-Results $row $runEnv 
         }
     }
     catch {
@@ -194,7 +204,14 @@ function Main {
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
 
-    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
+    # Wrap up
+    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP Start row=$startRow  End row=$endRow"
+    $endDate = $(get-date -format $CF_DateFormat)
+    write-host "*** Done: batch = $BatchID Start row=$startRow  End row=$endRow"
+    write-host "Start: $startDate"
+    write-host "End:   $endDate"
+    if (-not $DriverFile ) { $DriverFile = "None" }
+    write-host "Driver file = $DriverFile"
 }     
 
 Main
