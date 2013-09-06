@@ -3,7 +3,8 @@ param(
     [switch]$OrigDCB,
     [switch]$ConvDCB,
     [switch]$File,
-    [switch]$Dir
+    [switch]$Dir,
+    [switch]$Var
 )
 
 
@@ -46,8 +47,8 @@ function Main {
     }
 
     write-host "item = $item"
-    invoke-item $item
-
+    if ($Var) { return $item }
+    else {invoke-item $item }
 
 }
 
