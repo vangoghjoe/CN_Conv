@@ -403,6 +403,13 @@ function CF-Encode-CPL-Safe-Path {
     return $path.replace(" ", $CF_CPL_SPACE_STRING)
 }
         
+function CF-Decode-CPL-Safe-Path {
+    param (
+        $path
+    )
+    return $path.replace($CF_CPL_SPACE_STRING, " ")
+}
+        
 function CF-Make-Local-Conv-Dir {
     param (
         [string] $dcbPfn
