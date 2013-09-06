@@ -573,6 +573,10 @@ function CF-Show-DCB-DB-File($file="DCBs") {
 
 # $vers = "v8" or "v10"
 function CF-Get-CN-Exe($vers) {
+    if (-not ($CN_Ver)) {
+        throw "Must define CN_Ver when calling CF-Get-CN-Exe"
+    }
+
     $v8 = @( "C:\Program Files\Dataflight\Concordance\Concordance.exe", 
              "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
              "C:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
@@ -596,6 +600,10 @@ function CF-Get-CN-Exe($vers) {
 }
 
 function CF-Get-CN-Info ($CN_Ver) {
+    if (-not ($CN_Ver)) {
+        throw "Must define CN_Ver when calling CF-Get-CN-Info"
+    }
+
     if ($CN_Ver -match "8") {
         $VStr = "v8"
     }
