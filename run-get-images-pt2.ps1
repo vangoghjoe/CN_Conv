@@ -28,8 +28,7 @@ param(
     $BatchID,
     $DriverFile,
     $startRow,
-    $endRow,
-    $CN_Ver
+    $endRow
 )
 
 
