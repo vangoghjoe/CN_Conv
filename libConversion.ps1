@@ -573,13 +573,13 @@ function CF-Show-DCB-DB-File($file="DCBs") {
 
 # $vers = "v8" or "v10"
 function CF-Get-CN-Exe($vers) {
-    if (-not ($CN_Ver)) {
-        throw "Must define CN_Ver when calling CF-Get-CN-Exe"
+    if (-not ($vers)) {
+        throw "Must define `$vers when calling CF-Get-CN-Exe"
     }
 
-    $v8 = @( "C:\Program Files\Dataflight\Concordance\Concordance.exe", 
-             "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
-             "C:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
+    $v8 = @( "xC:\Program Files\Dataflight\Concordance\Concordance.exe", 
+             "zC:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
+             "yC:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
            )
 
     $v10 = @("C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe",
@@ -588,7 +588,8 @@ function CF-Get-CN-Exe($vers) {
 
     # might be 8 or 9, I guess, though usually refer to both simply as 8
     if ($vers -match "8") { $exes = $v8 }
-    else { $exes = $v10 }
+    elseif ($vers -match "10") { $exes = $v10 }
+    else { throw "Bad value for vers: $vers" }
 
     foreach ($exe in $exes) {
         if (test-path $exe) {
@@ -601,15 +602,13 @@ function CF-Get-CN-Exe($vers) {
 
 function CF-Get-CN-Info ($CN_Ver) {
     if (-not ($CN_Ver)) {
-        throw "Must define CN_Ver when calling CF-Get-CN-Info"
+        throw "Must define `$CN_Ver when calling CF-Get-CN-Info"
     }
 
-    if ($CN_Ver -match "8") {
-        $VStr = "v8"
-    }
-    else {
-        $VStr = "v10"
-    }
+    if ($CN_Ver -match "8") { $VStr = "v8" }
+    elseif ($CN_Ver -match "10") { $VStr = "v10" }
+    else { throw "Bad value for CN_Ver: $CN_Ver" }
+
     $CN_EXE = CF-Get-CN-Exe $Vstr
 
     return @($Vstr, $CN_EXE)
