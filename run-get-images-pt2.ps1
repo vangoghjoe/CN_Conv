@@ -41,6 +41,9 @@ param(
 # 0000000000||\\HL105SPRNTAP1F1\HLDATA\002509\000004\QVT_HL_PRODUCTION\QVT0001\IMAGES\001\|0
 # 0000000001||\\HL105SPRNTAP1F1\HLDATA\002509\000004\QVT_HL_PRODUCTION\QVT0001\IMAGES\002\|1
 
+# 9/6/13: Looks like sometimes the 2nd form, where the rec starts with the key,
+# might have info for a key that the first doesn't, so we'll look at both
+# and just make sure they don't conflict
 function Process-Vol($volPfn) {
 
     # would be faster with arrays, but don't have time to fuss with it
@@ -49,13 +52,39 @@ function Process-Vol($volPfn) {
     # Force array context in case file only has one line
     $recs = @(get-content $volPfn)  # need this to work if file only has one line
     foreach ($rec in $recs) {
-
+        $gotIt = $true
         $rec = $rec.Trim()
-        # ignore lines that don't look like paths
-        if (CF-IsPath $rec) {
-            ($path, [int]$key) = $rec -split "\|"
-            #write-host "proc-vol: path: $path  key: $key" #debug
-            $path = $path.Trim()        
+        # some recs may be corrupted.  that's ok, just move on and
+        # try to get the best we can.  We'll parse both formats
+        # in case the key/path we need is in only one of them.
+        # And we'll rely on the key look ups in the Image section
+        # to help and then the search for the file on the filesystem
+        # in other code to make sure have good values
+
+        try {
+            # if the rec starts with a path, parse it one way
+            if (CF-IsPath $rec) {
+                ($path, [int]$key) = $rec -split "\|"
+            }
+            # otherwise, its in the 2nd format.  
+            else {
+                ([int]$key, $vol, $path, $keyNum) = $rec -split "\|"
+             }
+        }
+        catch {
+            # note it in the status file, but don't consider it an error
+            CF-Write-Log $script:statusFilePFN "Warning parsing VOL file: $($error[0])"
+            $gotIt = $false
+        }
+        if ($gotIt) {
+            $path = $path.Trim()  
+            
+            # check for conflicts
+            if ($script:volPaths.containsKey($key)) {
+                if ($script:volPaths[$key] -ne $path) {
+                    throw "ERROR: Different paths for key '$key'"
+                }
+            }
             $script:volPaths[$key] = $path
         }
     }
@@ -144,17 +173,11 @@ function Exec-Process-Results {
     CF-Finish-Log $script:statusFilePFN 
 }
 
-# To return true, need every file to both exist and be non-zero
+# To return true, need every file to exist
 function CheckFiles($dirPfn, $volPfn) {
     foreach ($file in @($dirPfn, $volPfn)) {
         if (-not (test-path $file)) {
             return $false
-        }
-        else {
-            $len = (get-item $file).length
-            if ($len -le 0) { 
-                return $false 
-            }
         }
     }
     return $true
