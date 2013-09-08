@@ -27,6 +27,7 @@ param(
     $BatchID,
     $ignoreStatus = $false,
     $DriverFile,
+    [Parameter(mandatory=$true)]
     [string] $FileStub,
     $startRow,
     $endRow
