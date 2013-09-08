@@ -61,21 +61,21 @@ function Process-Vol($volPfn) {
         # to help and then the search for the file on the filesystem
         # in other code to make sure have good values
 
-        try {
-            # if the rec starts with a path, parse it one way
-            if (CF-IsPath $rec) {
-                ($path, [int]$key) = $rec -split "\|"
-            }
-            # otherwise, its in the 2nd format.  
-            else {
-                ([int]$key, $vol, $path, $keyNum) = $rec -split "\|"
-             }
+        #try {
+        # if the rec starts with a path, parse it one way
+        if (CF-IsPath $rec) {
+            ($path, [int]$key) = $rec -split "\|"
         }
-        catch {
-            # note it in the status file, but don't consider it an error
-            CF-Write-Log $script:statusFilePFN "Warning parsing VOL file: $($error[0])"
-            $gotIt = $false
-        }
+        # otherwise, its in the 2nd format.  
+        else {
+            ([int]$key, $vol, $path, $keyNum) = $rec -split "\|"
+         }
+        #}
+        #catch {
+            ## note it in the status file, but don't consider it an error
+            #CF-Write-Log $script:statusFilePFN "Warning parsing VOL file: $($error[0])"
+            #$gotIt = $false
+        #}
         if ($gotIt) {
             $path = $path.Trim()  
             
