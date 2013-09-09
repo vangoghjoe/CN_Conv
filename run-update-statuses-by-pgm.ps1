@@ -29,6 +29,11 @@ param(
     $DriverFile,
     [Parameter(mandatory=$true)]
     [string] $FileStub,
+    [switch]$pgmBackup,
+    [switch]$pgmNatives,
+    [switch]$pgmImages,
+    [switch]$pgmImages2,
+    [switch]$pgmSizesAll,
     $startRow,
     $endRow
 )
@@ -37,22 +42,63 @@ param(
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
 
+function Build-List-Of-Pgms() {
+    $pgms = @();
+    if ($pgmBackup) { $pgms += "backup-for-archiving"; }
+    if ($pgmNatives) { $pgms += "run-get-natives"; }
+    if ($pgmImages) { $pgms += "run-get-images"; }
+    if ($pgmImages2) { $pgms += "run-get-images2"; }
+    if ($pgmSizesAll) { 
+        $pgms += "run-check-and-add-sizes-to-file-natives"; 
+        $pgms += "run-check-and-add-sizes-to-file-images"; 
+    }
+    return $pgms;
+}
 
-#for each step: get-images get-natives
-#    need name of status file, name of status field
-#    if has error, 
-#        if not, set status ok 
-#    else
-#        write out the errors to a big file
-#            dcb | type | error message   (what if multiple lines?)
-#        set status to bad
-#    
-#for each step:  add images, add natives
-#    if has error
-#        if not, nothing to do
-#    else
-#        write out the errors to a big file
-#            dcb | type | error message   (what if multiple lines?)
+#"natives_bytes",
+#"natives_files_present",
+#"natives_files_missing",
+function Process-Sizes($dbRow, $runEnv, $pgm) {
+    # Inits
+    $bStr = $runEnv.bStr
+    $dbid = $dbRow.dbid
+    $dcbPfn = $dbRow.conv_dcb;
+    $dbStr = "{0:0000}" -f [int]$dbid
+
+    $pgmSizeFileStub = $CF_PGMS.$pgm[2];
+    $pgmSizeFile = "${bStr}_${dbStr}_${pgmSizeFileStub}.txt"
+    $pgmSizeFilePFN =  "$($runEnv.SearchResultsDir)\$pgmSizeFile"
+
+    # get type
+    if ($pgm -match "native") { $type = "natives" }
+    elseif ($pgm -match "image") { $type = "images" }
+
+    # get name of size file, will either have native or image in name
+    # status file like sizes_images_STATUS.txt
+    # size file like sizes_images.txt
+
+    # make names of statistics fields
+    $bytes_field = "${type}_bytes"
+    $files_present_field = "${type}_files_present"
+    $files_missing_field = "${type}_files_missing"
+
+    # read second line
+    if (-not (test-path $pgmSizeFilePFN)) { 
+        throw "Error: size file missing: $pgmSizeFilePFN"
+        return
+    }
+
+    $recs = get-content $pgmSizeFilePFN
+    $rec = $recs[1] # just need the 2nd line
+
+    # field struc: dbid | clientid | orig_dcb | type | total size | num present | num missing
+    $fields = $rec -split "\|"
+    $dbRow.$bytes_field = $fields[4]
+    $dbRow.$files_present_field = $fields[5]
+    $dbRow.$files_missing_field = $fields[6]
+}
+
+
 function Process-Cell($dbRow, $runEnv, $pgm) {
     # Inits
     CF-Init-RunEnv-This-Row $runEnv $dbRow
@@ -63,7 +109,7 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
     $dcbPfn = $dbRow.conv_dcb;
     $dbStr = "{0:0000}" -f [int]$dbid
 
-    write-host "DBID = $dbid"
+    write-host "DBID = $dbid  pgm = $pgm"
     try {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
@@ -79,6 +125,8 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
 
         # TODO: consider clearing it's status if the pgm's it depenends on haven't run
         # For now, just leave the stub of the if/else
+        # 2nd question: if get-natives or get-images2 aren't good, should it should remove
+        # any entries from the 
         if ( 0 ) {
         }
         else {
@@ -107,6 +155,11 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
                 #rm $resFile 2>&1 > $null
             }
         }
+
+        # get sizes 
+        if ($pgm -match "check-and-add") {
+            Process-Sizes $dbRow $runEnv $pgm
+        }
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
@@ -124,7 +177,7 @@ function Main {
 
     try {
         # set up @pgms
-        $pgms = @("backup-for-archiving","run-get-natives","run-get-images", "run-get-images-pt2")
+        $pgms = Build-List-Of-Pgms
 
         # For this program, use a simple log file in curr dir to capture errors
         $script:statusFilePFN = "run-update-statuses-STATUS.txt"
@@ -162,7 +215,7 @@ function Main {
             CF-Write-File $collectedErrLog "PGM | DB_ID | CLIENT_ID | DCB | Timestampt | Err Msg" 
 
             # the Good log
-            $script:collectedGoodLog = "good-$($runEnv.bstr)-${FileStub}${pgm}.txt"
+            $script:collectedGoodLog = "good-$($runEnv.bstr)${FileStub}-${pgm}.txt"
             CF-Initialize-Log $collectedGoodLog
             CF-Write-File $collectedGoodLog "PGM | DB_ID | CLIENT_ID | DCB | Timestamp" 
 

@@ -32,7 +32,6 @@ $CF_DBDir = "$CF_ConvAdminDir\DB"
 $CF_BatchesDir = "$CF_ConvAdminDir\Batches"
 $CF_ScriptDir = "$CF_LNRoot\Scripts"
 
-
 $CF_LocalConvDir = "_LN-Conversion"
 
 $CF_DBName = "FYI_Conversions"
@@ -53,7 +52,10 @@ $CF_PGMS = @{
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
-"run-check-and-add-sizes-to-file" = @("st_get_natives","sizes",@("sizes-natives","sizes-images","miss-natives","miss-images"));
+# run-check is a bit problematic: runs as one pgm, but in terms of outputs, its easier 
+# to treat as two separate ones.  
+"run-check-and-add-sizes-to-file-natives" = @("st_sizes_natives","sizes_natives","sizes_natives");
+"run-check-and-add-sizes-to-file-images" = @("st_sizes_images","sizes_images","sizes_images");
 }
 
 $CF_FIELDS = @(
