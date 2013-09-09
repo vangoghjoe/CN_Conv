@@ -149,8 +149,16 @@ function Exec-Process-Results {
     #write-host "pgm logs = $($runEnv.ProgramLogsDir)"
     write-host $script:statusFilePFN
 
-    CF-Initialize-Log $script:statusFilePFN
-    CF-Initialize-Log $script:resFilePFN 
+    # Oops, this may not be doing what I expected.
+    # TODO: see how used in other pgms
+    #CF-Initialize-Log $script:statusFilePFN
+    #CF-Initialize-Log $script:resFilePFN 
+
+    # instead, make sure we have an actual file, and that it's empty
+    # have to make sure we have a file, even if it's empty b/c there's no images,
+    # b/c subsequent pgms will be expecting it 
+    echo $null > $script:statusFilePFN
+    echo $null > $script:resFilePFN 
     
     $script:rowHasError = $false
     try {
