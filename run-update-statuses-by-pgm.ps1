@@ -290,7 +290,7 @@ function Main {
             $row.st_all = $CF_STATUS_GOOD
         }
         else {
-            $row.st_all = ""
+            $row.st_all = $CF_STATUS_FAILED
         }
 
     }
