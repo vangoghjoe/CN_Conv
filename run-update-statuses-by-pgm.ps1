@@ -265,14 +265,8 @@ function Main {
                 continue
             }
         }
-        #batchid	dbid	clientid	loadnr	orig_dcb	conv_dcb	orig_dir
-        #st_backup	st_backup_arch	st_get_natives	st_get_images	st_get_images2
-        #st_add_db	st_add_natives	st_db_sizes	db_bytes	db_files	natives_bytes
-        #natives_files_present	natives_files_missing	images_bytes
-        #images_files_present	images_files_missing	st_qc_tags	st_qc_compare_tags
-        #st_convert	st_get_arch_db_files	st_sizes_natives	st_sizes_images
-        #st_sizes
-        #
+
+        write-host "update st_all: DBID = $($row.dbid)"
 
         #if (($row.st_size_natives -eq $CF_STATUS_GOOD) -and 
             #($row.st_size_images -eq $CF_STATUS_GOOD)
