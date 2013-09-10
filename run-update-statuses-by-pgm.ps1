@@ -84,7 +84,7 @@ function Process-Sizes($dbRow, $runEnv, $pgm) {
 
     # read second line
     if (-not (test-path $pgmSizeFilePFN)) { 
-        throw "Error: size file missing: $pgmSizeFilePFN"
+        throw "Error: $type size file missing: $pgmSizeFilePFN"
         return
     }
 
@@ -157,7 +157,7 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
         }
 
         # get sizes 
-        if ($pgm -match "check-and-add") {
+        if (($pgm -match "check-and-add") -and ($dbRow.$pgmStatFld -eq $CF_STATUS_GOOD)) {
             Process-Sizes $dbRow $runEnv $pgm
         }
     }

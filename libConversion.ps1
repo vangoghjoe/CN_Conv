@@ -56,6 +56,7 @@ $CF_PGMS = @{
 # to treat as two separate ones.  
 "run-check-and-add-sizes-to-file-natives" = @("st_sizes_natives","sizes_natives","sizes_natives");
 "run-check-and-add-sizes-to-file-images" = @("st_sizes_images","sizes_images","sizes_images");
+"run-get-db-sizes" = @("st_db_sizes")
 }
 
 $CF_FIELDS = @(
