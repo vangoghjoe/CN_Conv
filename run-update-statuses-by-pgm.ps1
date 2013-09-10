@@ -283,8 +283,8 @@ function Main {
             ($row.st_get_images -eq $CF_STATUS_GOOD) -and
             ($row.st_get_images2 -eq $CF_STATUS_GOOD) -and
             ($row.st_db_sizes -eq $CF_STATUS_GOOD) -and
-            ($row.st_size_images -eq $CF_STATUS_GOOD) -and
-            ($row.st_size_natives -eq $CF_STATUS_GOOD)
+            ($row.st_sizes_images -eq $CF_STATUS_GOOD) -and
+            ($row.st_sizes_natives -eq $CF_STATUS_GOOD)
            )
         {
             $row.st_all = $CF_STATUS_GOOD
