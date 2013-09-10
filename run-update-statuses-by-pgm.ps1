@@ -293,8 +293,9 @@ function Main {
             $row.st_all = ""
         }
 
-        CF-Write-DB-File "DCBs" $dcbRows
     }
+    # one last to make sure got all errors
+    CF-Write-DB-File "DCBs" $dcbRows
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
 
