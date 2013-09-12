@@ -1,8 +1,0 @@
-#TYPE System.Management.Automation.PSCustomObject
-"batchid"	"dbid"	"clientid"	"loadnr"	"orig_dcb"	"conv_dcb"	"orig_dir"
-"4"	"1"	"9"	"1"	"C:\conversions\orig\v8\Cowco_v8\Cowco.dcb"	"C:\Conversions-W\conversions\orig\v8\Cowco_v8\Cowco.dcb"	""
-"1"	"2"	"5"	"2"	"C:\conversions\orig\v8\Cowco_v8-3\Cowco.dcb"	"C:\Conversions-W\conversions\orig\v8\Cowco_v8-3\Cowco.dcb"	""
-"2"	"3"	"8"	"1"	"C:\conversions\orig\v8\Cowco_v8-4\Cowco.dcb"	"C:\Conversions-W\conversions\orig\v8\Cowco_v8-4\Cowco.dcb"	""
-"2"	"4"	""	""	"C:\conversions\orig\v8\Cowco_v8-5\Cowco.dcb"	"C:\Conversions-W\conversions\orig\v8\Cowco_v8-5\Cowco.dcb"	""
-"2"	"5"	""	""	"C:\conversions\orig\v8\Cowco_v8-6\Cowco.dcb"	"C:\Conversions-W\conversions\orig\v8\Cowco_v8-6\Cowco.dcb"	""
-"3"	"6"	""	""	"C:\conversions\orig\v8\cowco_v8_copy\cowco_v8_copy.dcb"	"C:\Conversions-W\conversions\orig\v8\cowco_v8_copy\cowco_v8_copy.dcb"	""

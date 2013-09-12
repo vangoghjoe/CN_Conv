@@ -1,9 +1,0 @@
-pgm	st_field	file_suffix
-backup-list-of-dcbs.ps1	st_backup	
-run-get-images.ps1	st_get_images	images_STATUS.txt
-run-get-images-pt2.ps1	st_get_images2	
-run-get-natives.ps1	st_get_natives	
-run-qc-tags.ps1	st_qc_tags	
-run-qc-compare-tags.ps1	st_qc_compare_tags	
-backup-for-archiving.ps1	st_backup_arch	
-run-convert-one-dcb.ps1	st_convert	
