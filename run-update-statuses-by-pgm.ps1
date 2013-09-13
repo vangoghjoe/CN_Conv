@@ -34,6 +34,7 @@ param(
     [switch]$pgmImages,
     [switch]$pgmImages2,
     [switch]$pgmSizesAll,
+    [switch]$incBlankStatus,
     $startRow,
     $endRow
 )
@@ -109,6 +110,7 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
     $dcbPfn = $dbRow.conv_dcb;
     $dbStr = "{0:0000}" -f [int]$dbid
 
+    $script:rowHasError = $false
     write-host "DBID = $dbid  pgm = $pgm"
     try {
         # Calc status field and status file
@@ -134,6 +136,9 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
             # If log not there at all, have to assume it didn't run, so status is empty
             if (-not (test-path $pgmStatusFilePFN)) {
                 $dbRow.$pgmStatFld = ""
+                if ($incBlankStatus) {
+                    CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
+                }
             }
             elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
                 $dbRow.$pgmStatFld = $CF_STATUS_GOOD

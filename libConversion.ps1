@@ -1,5 +1,5 @@
 #####
-$CF_DEBUG = $false
+$CF_DEBUG = $true
 #####
 
 if ($(hostname) -eq "LNGHBEL-5009970") {
@@ -200,26 +200,33 @@ function CF-Initialize-Log ($logPfn) {
 
 # Takes a status file, pulls out any errors,
 # adds some info to each error, and appends it to the global err log
-function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog) {
-    $recs = @(get-content $pgmStatusFilePFN)
-    $buf = ""
+function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false) {
+    if ($forBlankStatus) {
+        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
+        $msg += ("| BLANK STATUS FIELD")
+    }
+    else {
+        $recs = @(get-content $pgmStatusFilePFN)
+        $buf = ""
 
-    # Error recs look like:
-    # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
-    #
-    # Not sure if there can be more than one error in a given STAT file, but will assume there can be
-    # Will make each it's own rec in the this global error log
-    #
-    # Output err struc:
-    # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
-    foreach ($rec in $recs) {
-        $p = $rec -split "\|"
-        if ($p[2] -eq "ERROR") {
-            $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
-            $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
-            CF-Write-File $errLog $msg
+        # Error recs look like:
+        # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
+        #
+        # Not sure if there can be more than one error in a given STAT file, but will assume there can be
+        # Will make each it's own rec in the this global error log
+        #
+        # Output err struc:
+        # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
+        foreach ($rec in $recs) {
+            $p = $rec -split "\|"
+            if ($p[2] -eq "ERROR") {
+                $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
+                $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                CF-Write-File $errLog $msg
+            }
         }
     }
+    CF-Write-File $errLog $msg
 }
 
 # adds some info to each error, and appends it to the pgm's good log
