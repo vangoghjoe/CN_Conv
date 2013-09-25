@@ -642,4 +642,12 @@ function CF-Get-CN-Info ($CN_Ver) {
     return @($Vstr, $CN_EXE)
 }
     
-
+function CF-Strip-Last-Slash ($path) {
+    $len = $path.length
+    if ($path.substring($len-1, 1) -eq '\') {
+        return $path.substring(0, $len-1)
+    }
+    else {
+        return $path
+    }
+}
