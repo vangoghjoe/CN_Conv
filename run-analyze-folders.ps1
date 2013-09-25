@@ -69,11 +69,11 @@ function Main {
     echo $null > $CF_CM_NO_COLLISIONS
     
     $CMnum = 0
-    if ($startRow -eq $null) { $startRow = 0 }
+    if ($startRow -eq $null) { $startRow = 1 }
     if ($endRow -eq $null) { $endRow = 999999999 }
     foreach ($CM in $CMs_NA_h.keys) {
         $CMnum++
-        if (($CMnum < $startRow) -or ($CMnum>$endRow) {
+        if (($CMnum -lt $startRow) -or ($CMnum -gt $endRow)) {
             continue
         }
 
