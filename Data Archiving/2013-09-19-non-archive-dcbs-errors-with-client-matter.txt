@@ -1,0 +1,165 @@
+570|002943.000002|X:\002943\000002\HL_Review\PRIOR\RIM_REVIEW.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+615|019061.000005|X:\019061\000005\Trans1_Prod_Relativity\original order\Trans1_Prod_Relativity.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+631|021728.000007|X:\021728\000007\Florida_DOE - Copy\FLORIDA_DOE_DOCUMENTS.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+676|025274.000015|X:\025274\000015\BIV_VEN_EMAIL_REVIEW\BIV_VEN_EMAIL_REVIEW-MOVED-DONT-use.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+682|025274.000015|X:\025274\000015\BIV_VEN_EMAIL_REVIEW\DANILA_WORK\New folder\NEW_BIV_VENZ_EMAIL_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+695|025274.000015|X:\025274\000015\OFR Response to 3rd RFP\OFR RESPONSE TO 3RD RFP.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+701|025593.000008|X:\025593\000008\Dendreon_Privileged_Log - Copy\DENDREON_PRIVILEGED_LOG.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+703|025593.000008|X:\025593\000008\Dendreon_Production\C-4b8adb8f-ceef-4d5d-a6eb-d0fc187d6d1f.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+708|025593.000008|X:\025593\000008\Produced_to SEC\DENDREON_SEC_PROD.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+710|025593.000008|X:\025593\000008\Resore\20121204\Dendreon_Attorney_Review\C-a9f36dc5-f185-4c6c-8fd3-89ac8c7b58c2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+736|025593.000008|X:\025593\000008\Temp_Productions\DNDN017\DNDN017_TEMP PROD_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+737|025593.000008|X:\025593\000008\Temp_Productions\DNDN018\DNDN018_TEMP PROD_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+739|025593.000008|X:\025593\000008\Temp_Productions\DNDN019\additional\TMP REDACTED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+755|025593R.000008|X:\025593R\000008\Dendreon_Attorney_Review\Backup-20120830\C-a9f36dc5-f185-4c6c-8fd3-89ac8c7b58c2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+753|025593R.000008|X:\025593R\000008\Dendreon_Attorney_Review\C-a9f36dc5-f185-4c6c-8fd3-89ac8c7b58c2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+764|025593R.000008|X:\025593R\000008\Dendreon_Attorney_Review_2\C-e8e6e8d6-3f82-4236-aa13-3b912a1e04b8.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+770|025593R.000008|X:\025593R\000008\Dendreon_Email_review - Copy\DENDREON_EMAIL_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+776|026193.000010|X:\026193\000010\ACL_Zinn_Claimant_Exhibits_DB\CLAIMANT EXHIBITS_DB.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+816|029018.000041|X:\029018\000041\Autobahn_Discovery\AUTOBAHN _DISCOVERY.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+832|029046.000001|X:\029046\000001\HL_Review\Pulled_From_ML005\PULLED FROM ML005.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+834|029046.000001|X:\029046\000001\HL_Review\Pulled_From_ML007\PULLED FROM ML007.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+833|029046.000001|X:\029046\000001\HL_Review\Pulled_from_ML006\PULLED FROM ML006.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+838|029517.000001|X:\029517\000001\Hd - Interview Memoranda\Hd - Interview Memoranda.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+854|030629.000047|X:\030629\000047\Motorola_HighPoint_Docs_Produced_by_Avaya_Production\Admin\20130809\DOCS_PRODUCED BY_AVAYA_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+853|030629.000047|X:\030629\000047\Motorola_HighPoint_Docs_Produced_by_Avaya_Production\DOCS_PRODUCED BY_AVAYA_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+878|030629.000047|X:\030629\000047\Motorola_HighPoint_Sprint_HP_Review_DB\C-08acb74b-eaa1-489a-8580-9a62cd4b3f23.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+900|030699.000002|X:\030699\000002\DAS001\Overlay\STEINBERG OVERLAY.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+904|031010.000010|X:\031010\000010\HL_Production\Dun_Bradstreet_Productions\CEP_Initial Format QC\1A.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+905|031010.000010|X:\031010\000010\HL_Production\Dun_Bradstreet_Productions\CEP_Initial Format QC\FORMAT_QC.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+906|031010.000010|X:\031010\000010\HL_Production\Dun_Bradstreet_Productions\LS Work\LOAD_NEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+907|031010.000010|X:\031010\000010\HL_Production\Dun_Bradstreet_Productions\LS Work\MASTER_CHECK.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+908|031010.000010|X:\031010\000010\HL_Production\Dun_Bradstreet_Productions\LS Work\PROD_COPY\MASTER_CHECK.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+915|031816.000002|X:\031816\000002\Saft_Review\SAFT - REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+940|034973.000001|X:\034973\000001\Megace ES INDs and NDA\Megace ES INDs and NDA.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+942|034975.000001|X:\034975\000001\Jill_Dailey_Production - Copy\JILL_DAILEY_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+986|036277.000001|X:\036277\000001\PCA_PROD\LS Work\IMPORT_NEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+987|036277.000001|X:\036277\000001\PCA_PROD\LS Work\overlay\PCA_PROD.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+996|036365.000030|X:\036365\000030\HL_Production\20120914_PRODUCTION _QC\20120914_PROD_QC.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1056|036867.000001|X:\036867\000001\HL_Review\TAPS_REVIEW_JUN2012\prior\C-31d338d6-b774-4eb6-b112-8f61567e20c2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1087|037704.000001|X:\037704\000001\ADMIN\AEG_EMAIL - Copy\Aeg_Email.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1107|038342.000009|X:\038342\000009\z_2012-04-09 Voldman Full-Set\Z_2012-04-09 VOLDMAN FULL-SET.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1127|038345.000001|X:\038345\000001\FOUNDRY_CLIENT_MATERIALS_CHRIMAR\FOUNDRY CLIENT MATERIALS CHRIMAR.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1135|038873.000001|X:\038873\000001\Gesele_Sec_Investigation_Review2\Gesele_Sec_Investigation_Review.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1145|039371.000001|X:\039371\000001\Old_Neil_Gmail_PST_Review\NEIL_EMAIL PST _REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1148|039522.000001|X:\039522\000001\GigOptix_All_Terms_Review\C-a020bd78-8b67-4e1d-89fa-5219f594aec3.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1149|039522.000001|X:\039522\000001\GigOptix_All_Terms_Review\C-a2fd6972-9208-4cee-b923-3e14c1ce406a.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1154|039709.000002|X:\039709\000002\HL_Review\Review\New Folder\REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1171|040288.000001|X:\040288\000001\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 2\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1172|040288.000001|X:\040288\000001\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 3\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 3.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1173|040288.000001|X:\040288\000001\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 4\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 4.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1174|040288.000001|X:\040288\000001\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 5\JSR_MICRO_QBE_FOREIGN_INSUREDS_DEC_PAGES_PART 5.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1179|040288.000001|X:\040288\000001\JSR_MICRO_QBE_OTHER_US_INSUREDS_PART 2\JSR_MICRO_QBE_OTHER_US_INSUREDS_PART 2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1180|040288.000001|X:\040288\000001\JSR_MICRO_QBE_OTHER_US_INSUREDS_PART 3\JSR_MICRO_QBE_OTHER_US_INSUREDS_PART 3.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1165|040288.000001|X:\040288\000001\Japanese Language Docs Received 20121008\Japanese Language Docs Received 20121008.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1166|040288.000001|X:\040288\000001\Japanese Language Docs Received 20121008_Production\JAPANESE LANGUAGE DOCS RECEIVED 20121008_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1186|040288.000001|X:\040288\000001\Marsh August 2012 Document Production\Marsh August 2012 Document Production.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1202|057212.000518|X:\057212\000518\BANK OF AMERICA - PARMALAT\BANK OF AMERICA - PARMALAT.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1233|058559.000029|X:\058559\000029\Advance_Combined\ADMIN\20120620\BK_SEC-OLD\Advance Combined.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1234|058559.000029|X:\058559\000029\Advance_Combined\ADMIN\20120620\EXPORT\ADVANCE COMBINED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1232|058559.000029|X:\058559\000029\Advance_Combined\ADVANCE COMBINED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1238|058559.000029|X:\058559\000029\BMS_AVAPRO\BMS AVAPRO.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1248|058559.000029|X:\058559\000029\BMS_Interview_Memos\BMS Interview Memos.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1323|059850.000016|X:\059850\000016\HL_Review\Dreher_Part_One\Dreher Part One Unfiltered.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1324|059850.000016|X:\059850\000016\HL_Review\Dreher_Part_Two\Dreher Part Two Unfiltered.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1325|059850.000016|X:\059850\000016\HL_Review\Gillespie\FOSS GILLESPIE UNFILTERED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1326|059850.000016|X:\059850\000016\HL_Review\MKEON\BOND MCKEON PFEFFER UNFILTERED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1327|059850.000016|X:\059850\000016\HL_Review\Saltsman\Saltsman Schreeves Schulman.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1328|059850.000016|X:\059850\000016\HL_Review\Tupper\Tupper Unfiltered.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1340|061035.000067|X:\061035\000067\HL_Production - Copy\061035_000067_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1338|061035.000067|X:\061035\000067\HL_Production\LS Work\B-up\20130822\061035_000067_PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1335|061035.000067|X:\061035\000067\HL_Production\LS Work\PROD089.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1336|061035.000067|X:\061035\000067\HL_Production\LS Work\PROD090.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1337|061035.000067|X:\061035\000067\HL_Production\LS Work\PROD091.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1347|061118.000234|X:\061118\000234\HL_Production\GU002_Final\GU002 FINAL.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1363|061916.000038|X:\061916\000038\HL_Review\HWL001\B-up\Feb 18\HWL001.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1364|061916.000038|X:\061916\000038\HL_Review\HWL001\B-up\Jan 19 Copy\Hwl001.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1365|061916.000038|X:\061916\000038\HL_Review\HWL001\B-up\Live Database until 600 Jan 20\Hwl001.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1366|061916.000038|X:\061916\000038\HL_Review\HWL001\B-up\Live Database untill 500 Jan 30\HWL001.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1372|061916.000038|X:\061916\000038\HL_Review\HWL001\WIP\ReplacementDB\zzzprior-do not use\Hwl001.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1396|062376.000050|X:\062376\000050\HL_Prod\Copy of PROD_QC\PROD002\PROD002_QC.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1402|062376.000050|X:\062376\000050\HL_Prod\PROD_QC\PROD005 - Copy (2)\PROD005.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1401|062376.000050|X:\062376\000050\HL_Prod\PROD_QC\PROD005 - Copy\PROD005.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1414|062376.000050|X:\062376\000050\HL_Prod\PROD_QC\PROD014 - Copy\PROD014.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1441|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\20120918 - Copy\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1459|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120604\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1460|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120605\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1461|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120606\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1462|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120622\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1463|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120719\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1464|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120828\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1465|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120828_BK\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1466|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120912\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1468|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120918 - Copy\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1467|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\20120918\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1470|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120604\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1471|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120605\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1472|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120606\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1473|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120622\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1474|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120719\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1475|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120828\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1476|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120828_BK\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1477|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120912\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1478|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\Admin\20120918\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1469|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\Admin\Kentucky_Review_Restore\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1458|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1479|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Kentucky_Review_Restore 2-15-13\WorkingSet\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1481|062376.000050|X:\062376\000050\HL_Review\Kentucky_Review\Admin\Restore_20130214 - Copy\KENTUCKY_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1485|062400.000040|X:\062400\000040\HL_Production\IBWA_Production\Ibwa Production.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1540|068235.000134|X:\068235\000134\WLP_MDL_2074_Review\Wlp Mdl 2074.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1543|068235.000141|X:\068235\000141\Green_Review\WELLPOINT - GREEN.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1544|068235.000141|X:\068235\000141\Jorling_Production\JORLING PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1546|068235.000141|X:\068235\000141\McAffry-Mell_Review\CINCINNATI CONTRACTS.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1549|068235.000141|X:\068235\000141\Reiser_Co-Defendants_Production\CO-DEFENDANTS PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1550|068235.000141|X:\068235\000141\Reiser_Review\WELLPOINT - REISER.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1552|068235.000141|X:\068235\000141\Stapp_Review\WELLPOINT - STAPP.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1553|068235.000141|X:\068235\000141\Stapp_Wellpoint_Production\WP PRODUCTION.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1575|068235.000153|X:\068235\000153\GOLD_WORKING\LitSupp\Exports - 081512\EXPORT1.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1576|068235.000153|X:\068235\000153\GOLD_WORKING\LitSupp\Exports - 081512\EXPORT2.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1577|068235.000153|X:\068235\000153\GOLD_WORKING\LitSupp\Exports - 081512\EXPORT3.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1578|068235.000153|X:\068235\000153\GOLD_WORKING\LitSupp\Exports - 081512\EXPORT4.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1579|068235.000153|X:\068235\000153\GOLD_WORKING\LitSupp\Exports - 081512\prior3\EXPORT3.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1562|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\B-up\2012-08-23 - sorted copy\GOLD_PRODUCTIONS_COMBINED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1564|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\CID ranges to edit\CID_EDIT.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1565|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\CID ranges to edit\MORE_CID.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1569|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\State prod revised - STA 1-3813\STA1-3813.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1570|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\State prod revised - STA 3814 - 6783.001\REMAINING_STA.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1568|068235.000153|X:\068235\000153\Gold_Productions_Combined\LitSupp\State prod revised - ocr overlay\OCR_OVERLAY.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1586|068235.000153|X:\068235\000153\REVISED_GOLD_WP_PRODUCED\LitSupp\prior 8-15\REVISED_GOLD_WP_PRODUCED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1603|068235.000161|X:\068235\000161\Wellpoint_Email_Review - Copy\Wellpoint_Email_Review.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1604|068235.000161|X:\068235\000161\Wellpoint_Email_Review - Copy\loadxref\LOADXREF.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1619|068235.000161|X:\068235\000161\zzzWellpoint_MFN_Electronic_Review_2012 - Copy\IMPORT\IMPORT.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1620|068235.000161|X:\068235\000161\zzzWellpoint_MFN_Electronic_Review_2012 - Copy\ORIGINAL-DISREGARD\Wellpoint_MFN_Electronic_Review_2012.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1618|068235.000161|X:\068235\000161\zzzWellpoint_MFN_Electronic_Review_2012 - Copy\WELLPOINT_MFN_ELECTRONIC_REVIEW_2012.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1639|068738.000055|X:\068738\000055\PE_Production - Copy (2)\Pe_Production_Documents.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1638|068738.000055|X:\068738\000055\PE_Production - Copy\Pe_Production_Documents.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1635|068738.000055|X:\068738\000055\PE_Production\Backup-20120525 BEFORE DE_DUPE\Pe_Production_Documents.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1649|068738.000055|X:\068738\000055\Review_Elec_Hutnak - Copy (2)\NGS_ELEC_REV_HUTNAK.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1648|068738.000055|X:\068738\000055\Review_Elec_Hutnak - Copy\NGS_ELEC_REV_HUTNAK.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1644|068738.000055|X:\068738\000055\Review_Electronic\_ADM_TEST\20120430\C-48f59d5e-12a0-4f96-99f3-0301a611605e.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1668|069138.000006|X:\069138\000006\Educational_Housing_Services_Silver_Privileged_Documents\EDUCATIONAL HOUSING SERVICES - SILVER'S PRIVILEGED DOCUMENTS.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1667|069138.000006|X:\069138\000006\Educational_Housing_Services_Silver_docs_not_produced_AND_not_privileged\EDUCATIONAL HOUSING SERVICES -SILVER'S DOCS NOT PRODUCED & NOT PRIVILEGED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1680|080653.000040|X:\080653\000040\Pre_Deposition_Harvey_Gentry - Copy\PRE_DEPOSITION_HARVEY_GENTRY.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1685|080653.000040|X:\080653\000040\RELATORS - Copy\Relators.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1687|080653.000040|X:\080653\000040\SUN_DOJS_AUDIT_DATA\C-79e68b41-3e56-4c21-be3c-23c43330747c.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1690|080653.000040|X:\080653\000040\SUN_PRODUCTION\C-92b7cdb2-249a-4ff5-86f5-4d8955ca6916.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1692|080653.000063|X:\080653\000063\Acceleron_Omnibus_Production\Acceleron_Omnibus_Production _6_24_2010.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1764|081429.000009|X:\081429\000009\Deloitte_AHM_Manual_Audit_Files_Review_DB\MANUAL AUDIT FILES_REVIEW_DB.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1791|086335.000255|X:\086335\000255\Production\Concordance - 20120313 Copy\PRODUCED.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1792|086335.000255|X:\086335\000255\Production\Concordance - 20120313 Copy\redlines\Produced-Redlines.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1794|086335.000255|X:\086335\000255\Transcript_Database\Concordance\ST VINCENTS TRANSCRIPT DATABASE.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1802|088136.000003|X:\088136\000003\08_04_10_V1.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1807|088136.000003|X:\088136\000003\ANGIOSCORE_PRODUCTIONS\Data\Custom LFP Data\ANG016.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1808|088136.000003|X:\088136\000003\ANGIOSCORE_PRODUCTIONS\Data\Custom LFP Data\Backup\ANG016.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1823|090268.000040|X:\090268\000040\Gavilan Native 7-22-11\GAVNATIVE_072211.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1824|090268.000040|X:\090268\000040\Gavilan Native MSG\GAV_NATIVE_MSG.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1825|090268.000040|X:\090268\000040\Gavilan Production MSG\GAVILANPROD_MSG.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1827|090334.000001|X:\090334\000001\EEOC PLEADINGS\EEOC PLEADINGS.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1828|090334.000001|X:\090334\000001\OFFICIAL PERSONNEL FILES\OFFICIAL PERSONNEL FILES.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1831|090334.000001|X:\090334\000001\SECRET SERVICE BID HISTORIES\SECRET SERVICE BID HISTORIES.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1830|090334.000001|X:\090334\000001\SECRET SERVICE\SECRET SERVICE.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1859|090334.010383|X:\090334\010383\090334_NonBill_10383_CT_CSD_Database\Ct Csd Database.Dcb|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1867|098837.000006|X:\098837\000006\HL_Review\BW_Doc_Review - Copy (4)\BW_DOC_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1868|098837.000006|X:\098837\000006\HL_Review\BW_Doc_Review - Copy (4)\backup 20120312\BW_DOC_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1869|098837.000006|X:\098837\000006\HL_Review\BW_Doc_Review -DO NOT DELETE THIS COPY\BW_DOC_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
+1870|098837.000006|X:\098837\000006\HL_Review\BW_Doc_Review -DO NOT DELETE THIS COPY\backup 20120312\BW_DOC_REVIEW.DCB|run-get-natives|Unable to open dcb|run-get-images|Unable to open dcb
