@@ -52,6 +52,8 @@ $CF_PGMS = @{
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
+"run-get-natives-folders" = @("st_get_folders_natives","folders_natives","folders_natives","");
+"run-get-images-folders" = @("st_get_folders_images","folders_images","folders_images","");
 # run-check is a bit problematic: runs as one pgm, but in terms of outputs, its easier 
 # to treat as two separate ones.  
 "run-check-and-add-sizes-to-file-natives" = @("st_sizes_natives","sizes_natives","sizes_natives");
@@ -586,6 +588,12 @@ function Get-SQL-Cmd () {
 function CF-Show-DCB-DB-File($file="DCBs") {
     $dbFile = "$CF_DBDir\${file}.txt"
     import-CSV -delimiter "`t" $dbfile | out-gridview
+}
+
+function CF-Get-Client-Matter ($dcb) {
+    $p= $dcb -split "\\"
+    $clMtr = $p[1] + "\" + $p[2]
+    return $clMtr
 }
 
 # $vers = "v8" or "v10"

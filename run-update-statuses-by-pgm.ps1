@@ -34,6 +34,8 @@ param(
     [switch]$pgmImages,
     [switch]$pgmImages2,
     [switch]$pgmSizesAll,
+    [switch]$pgmFoldersNatives,
+    [switch]$pgmFoldersImages,
     [switch]$incBlankStatus,
     $startRow,
     $endRow
@@ -49,6 +51,8 @@ function Build-List-Of-Pgms() {
     if ($pgmNatives) { $pgms += "run-get-natives"; }
     if ($pgmImages) { $pgms += "run-get-images"; }
     if ($pgmImages2) { $pgms += "run-get-images2"; }
+    if ($pgmFoldersNatives) { $pgms += "run-get-natives-folders"; }
+    if ($pgmFoldersImages) { $pgms += "run-get-images-folders"; }
     if ($pgmSizesAll) { 
         $pgms += "run-check-and-add-sizes-to-file-natives"; 
         $pgms += "run-check-and-add-sizes-to-file-images"; 
