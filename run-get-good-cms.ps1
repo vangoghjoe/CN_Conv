@@ -114,24 +114,3 @@ function Main {
 
 Main
 
-
-# generate list of client-matters from to-be-archived (TBA) dcbs (Batch 3)
-# in batch 4, 
-# how tell if a CM is analyzed?
-#
-# 
-# take NA row
-#  is it in the bad CM's?  if yes, skip
-#  has it passed?  
-#    yes - add it to the NA dbid list for it's CM
-#    no - delete it's CM from the good CM's; add CM to bad CM's
-#
-# take a good CM
-#   take a dbid
-#     add its folders to the hash of folders for that CM
-#   take a     
-# generate list of folders for TBA in a CM
-#  combine images and natives
-# generate list of folders for NA in a CM
-#  combine images and natives
-# for a CM, need list of folders in TBA and list of folders in NA and need to see if any TBA folders are in NA folders
