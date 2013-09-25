@@ -51,7 +51,7 @@ function Load-TBA-CMs($dcbRows) {
         #$row = $dcbRows[$i]
         #if ($row.batchid -ne "3") { continue }
 
-    $tbaCMsFile = "Data Archiving/client-matters-TBA-DEV.txt"
+    $tbaCMsFile = "Data Archiving/client-matters-TBA.txt"
     $CMs = get-content $tbaCMsFile
     $h = @{}
     foreach ($CM in $CMs) { $h[$CM] = "" }
