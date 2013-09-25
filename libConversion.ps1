@@ -42,6 +42,8 @@ $script:CF_BatchEnv = @{}  # Environment for whole batch
 $script:CF_DBEnv = @{}  # DB-specifc environment
 
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
+$CF_BAD_CMs = "Data Archiving/client-matters-failed.txt"
+$CF_GOOD_CMs = "Data Archiving/client-matters-good-with-dbids.txt"
 
 $CF_PGMS = @{
 # 0 = status field
