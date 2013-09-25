@@ -46,6 +46,8 @@ $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL'
 $CF_BAD_CM_NA_Dbids = "Data Archiving/client-matters-bad-NA-with-dbids.txt"
 $CF_GOOD_CM_NA_Dbids = "Data Archiving/client-matters-good-NA-with-dbids.txt"
 $CF_CM_TBA_Dbids = "Data Archiving/client-matters-TBA-with-dbids.txt"
+$CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
+$CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
 $CF_PGMS = @{
 # 0 = status field
