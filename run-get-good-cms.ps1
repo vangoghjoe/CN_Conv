@@ -51,28 +51,13 @@ function Load-TBA-CMs($dcbRows) {
         #$row = $dcbRows[$i]
         #if ($row.batchid -ne "3") { continue }
 
-    $tbaCMsFile = "Data Archiving/client-matters-TBA.txt"
+    $tbaCMsFile = "Data Archiving/client-matters-TBA-DEV.txt"
     $CMs = get-content $tbaCMsFile
     $h = @{}
     foreach ($CM in $CMs) { $h[$CM] = "" }
     return $h
 }
 
-function Write-Out-Bad-CMs($badCMs_h) {
-    echo $null > $CF_BAD_CMs
-    foreach ($CM in $badCMs_h.keys) {
-        CF-Write-File $CF_BAD_CMs $CM
-    }
-}
-
-function Write-Out-Good-CMs($goodCMs_h) {
-    echo $null > $CF_GOOD_CMs
-    foreach ($CM in $goodCMs_h.keys) {
-        foreach ($dbid in $goodCMs_h[$CM]) {
-            CF-Write-File $CF_GOOD_CMs "$CM|$dbid"
-        }
-    }
-}
 
 function Main {
     #CF-Log-To-Master-Log $runEnv.bstr "" "START" "Start row=$startRow  End row=$endRow"
@@ -105,28 +90,22 @@ function Main {
         #  has it passed?  
         if (Row-Has-Been-Analyzed($row)) {
         #    yes - add it to the NA dbid list for it's CM
-            if (-not ($goodCMs_h.ContainsKey($clMtr))) {
-                $goodCMs_h[$clMtr] = @($dbid)
-            }
-            else {
-                $goodCMs_h[$clMtr] += $dbid
-            }
+            CF-Add-Arr-Item-To-Hash $goodCMs_h $clMtr $dbid
         }
         #    no - delete it's CM from the good CM's; add CM to bad CM's
         else {
             $goodCMs_h.remove($clMtr)
-            $badCMs_h[$clMtr] = ""
+            CF-Add-Arr-Item-To-Hash $badCMs_h $clMtr $dbid
         }
     }
 
-    Write-Out-Bad-CMs $badCMs_h
-    Write-Out-Good-CMs $goodCMs_h
+    CF-Write-Out-CM-Dbids $CF_BAD_CM_NA_Dbids $badCMs_h
+    CF-Write-Out-CM-Dbids $CF_GOOD_CM_NA_Dbids $goodCMs_h
 
         # take a good CM
         #   take a dbid
         #     add its folders to the hash of folders for that CM
         #   take a     
-
 
     #$dcbRows
     #CF-Write-DB-File "DCBs" $dcbRows

@@ -1,0 +1,25 @@
+
+how might the comparison work
+
+CM
+DBID
+Type = TBA or NA
+run - status = good or bad
+overlap status =  good or bad
+
+CM
+DBID
+Folder
+Type = native or image
+TBA = 0 or 1
+
+foreach CM where type = TBA
+    select * from Folder tba 
+    join 
+    Folder na
+    on tba.folder = na.folder
+    where tba.CM = $CM and tba.tba = 1
+    and na.CM = $CM and na.tba = 0
+    
+
+

@@ -42,8 +42,9 @@ $script:CF_BatchEnv = @{}  # Environment for whole batch
 $script:CF_DBEnv = @{}  # DB-specifc environment
 
 $CF_CPL_SPACE_STRING = "LN_SPACE_XYZ" ; # replace spaces in path for use in CPL's
-$CF_BAD_CMs = "Data Archiving/client-matters-failed.txt"
-$CF_GOOD_CMs = "Data Archiving/client-matters-good-with-dbids.txt"
+$CF_BAD_CM_NA_Dbids = "Data Archiving/client-matters-bad-NA-with-dbids.txt"
+$CF_GOOD_CM_NA_Dbids = "Data Archiving/client-matters-good-NA-with-dbids.txt"
+$CF_GOOD_CM_TBA_Dbids = "Data Archiving/client-matters-good-TBA-with-dbids.txt"
 
 $CF_PGMS = @{
 # 0 = status field
@@ -651,5 +652,24 @@ function CF-Strip-Last-Slash ($path) {
     }
     else {
         return $path
+    }
+}
+
+function CF-Add-Arr-Item-To-Hash($hash, $key, $item) {
+    if (-not ($hash.ContainsKey($key))) {
+        $hash[$key] = @($item)
+    }
+    else {
+        $hash[$key] += $item
+    }
+    return $hash
+}
+
+function CF-Write-Out-CM-Dbids($outFile, $CMs_h) {
+    echo $null > $outFile
+    foreach ($CM in $CMs_h.keys) {
+        foreach ($dbid in $CMs_h[$CM]) {
+            CF-Write-File $outFile "$CM|$dbid"
+        }
     }
 }
