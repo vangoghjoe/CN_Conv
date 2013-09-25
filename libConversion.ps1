@@ -594,7 +594,8 @@ function CF-Show-DCB-DB-File($file="DCBs") {
 
 function CF-Get-Client-Matter ($dcb) {
     $p= $dcb -split "\\"
-    $clMtr = $p[1] + "\" + $p[2]
+    $clMtr = "$($p[1]).$($p[2])"
+    write-host $clMtr
     return $clMtr
 }
 
