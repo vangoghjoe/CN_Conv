@@ -57,8 +57,10 @@ function Main {
 
 
     $sqlCmd = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
-
-
+    
+    # truncate destination table
+    $sqlCmd.CommandText = "truncate table Folders"
+    $sqlCmd.ExecuteNonQuery()
     
     if ($startRow -eq $null) { $startRow = 1 }
     if ($endRow -eq $null) { $endRow = 999999999 }
@@ -69,15 +71,14 @@ function Main {
             continue
         }
 
-        write-host "$(get-date): CM = $CM ($CMnum)"
 
         # Set up dbid vars
         $batchid = $row.batchid
         $dbid = $row.dbid
         $runEnv = CF-Init-RunEnv $batchid
         $clMtr = $row.client_matter
-        if ($batchid = 3) { $tba = 1; } else { $tba = 0 }
-        write-host "  $(get-date): TBA dbid = $dbid" # DEBUG
+        if ($batchid -eq 3) { $tba = 1; } else { $tba = 0 }
+        write-host "  $(get-date): bid = $batchid CM = $clMtr TBA dbid = $dbid" # DEBUG
 
         # init filenames
         $bStr = $runEnv.bStr
@@ -100,11 +101,11 @@ function Main {
                     # than one dbid, but we only need one dbid,
                     # b/c just doing it to QC the process
                     #$TBA_folders_h[$folderUp] = $dbid  
-                    $qry = "insert into Folders (dbid, clientmatter, type, tba, folder) "
-                    $qry += "values ($dbid, '$clMtr', '$type', $tba, '$folder')"
+                    $qry = "insert into Folders (batchid, dbid, clientmatter, type, tba, folder) "
+                    $qry += "values ($batchid, $dbid, '$clMtr', '$type', $tba, '$folder')"
                     $sqlCmd.CommandText = $qry
-                    write-host "   $qry"
-                    #$sqlCmd.ExecuteNonQuery()
+                    #write-host "   $qry"
+                    $sqlCmd.ExecuteNonQuery() > $null
                 }
             }
         }
