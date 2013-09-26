@@ -8,7 +8,7 @@ if ($(hostname) -eq "LNGHBEL-5009970") {
     $CF_CN_V10_EXE = "C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe"
 
     # SQL connection string
-    $global:connectionstring = "Server=LNGHBEL-5009970\SQLEXPRESS; Database=FYI_Conversions;"
+    $global:connectionstring = "Server=LNGHBEL-5009970\SQLEXPRESS; Database=<DATABASE>;"
     $global:connectionstring += ("User Id=conv_user; Password=fr33d0m!;" )
 }
 elseif ($(hostname) -match "FYI") {
@@ -24,8 +24,11 @@ else {
     #$global:connectionstring = "Server=HL105SPRSQL03\FYI; Database=FYI_Conversions; Integrated Security = True"
     # NOTE: Using Windows Auth, so the user probably needs to be in the Domain Administrator group,
     # so they automatically get sysadmin access
-    $global:connectionstring = "Server=HL105SPRCON01\SQLEXPRESS; Database=FYI_Conversions; Integrated Security = True"
+    $global:connectionstring = "Server=HL105SPRCON01\SQLEXPRESS; Database=<DATABASE>; Integrated Security = True"
 }
+
+$CF_DATA_ARCH_DB = "Hogan_Data_Archiving"
+
 
 $CF_ConvAdminDir = "$CF_LNRoot\Conversion_Admin"
 $CF_DBDir = "$CF_ConvAdminDir\DB"
@@ -572,21 +575,23 @@ function CF-Testme {
 
 # SQL
 
-function Create-SqlConnection()
+function CF-Create-SqlConnection($database = "FYI_Conversions")
 {
 	$conn = New-Object ('System.Data.SqlClient.SqlConnection');
-	$conn.ConnectionString = $global:connectionstring;
+    $cnstring = $global:connectionstring -replace "<DATABASE>", $database
+	$conn.ConnectionString = $cnstring
 	$conn.Open();
     $cmd = New-Object System.Data.SqlClient.SqlCommand
     $cmd.Connection = $conn;    
     return $conn;
 }
 
-function Get-SQL-Cmd () {
-    $conn = Create-SqlConnection
+function CF-Get-SQL-Cmd ($database="FYI_Conversions") {
+    $conn = CF-Create-SqlConnection $database
     $cmd = New-Object System.Data.SqlClient.SqlCommand
     $cmd.Connection = $conn;
     $cmd.CommandType = [System.Data.CommandType] "Text";
+    return $cmd
     #$cmd.CommandText = "insert into DCBs (orig_dcb) values ('C:\mtsadmin cdefg')"
     #[Void] $cmd.ExecuteNonQuery()
 }
