@@ -96,7 +96,7 @@ function Main {
             if (test-path $srcFile) {
                 $folders = @(get-content $srcFile)
                 foreach ($folder in $folders) {
-                    $folderUp = $folder.toUpper()
+                    $folder = $folder -replace "'", "''"
                     # the same folder might be used by more 
                     # than one dbid, but we only need one dbid,
                     # b/c just doing it to QC the process
