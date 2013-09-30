@@ -1,4 +1,4 @@
-CREATE TABLE ClientMatters
+CREATE TABLE ClientMattersTBA
   (
      ID                INT IDENTITY(1, 1) NOT NULL,
      ClientMatter      NVARCHAR(50),
@@ -7,12 +7,12 @@ CREATE TABLE ClientMatters
      has_overlaps      BIT
   ) 
 
-TRUNCATE TABLE ClientMatters
-INSERT INTO ClientMatters
+TRUNCATE TABLE ClientMattersTBA
+INSERT INTO ClientMattersTBA
             (ClientMatter)
 SELECT DISTINCT( ClientMatter )
 FROM   DCBs 
 WHERE  batchid = 3
 
-UPDATE ClientMatters
+UPDATE ClientMattersTBA
 SET    Tba = 1

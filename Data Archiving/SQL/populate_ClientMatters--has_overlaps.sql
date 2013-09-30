@@ -4,7 +4,7 @@ DECLARE @clientmatter NVARCHAR(30);
 DECLARE @has_overlap BIT;
 DECLARE mycursor CURSOR FOR
   SELECT clientmatter
-  FROM   clientmatters;
+  FROM   clientmattersTBA;
 
 OPEN mycursor;
 
@@ -27,7 +27,7 @@ WHILE @@FETCH_STATUS = 0
       ELSE
         SET @has_overlap = 0;
 
-      UPDATE ClientMatters
+      UPDATE ClientMattersTBA
       SET    has_overlaps = @has_overlap
       WHERE  ClientMatter = @clientmatter
 
