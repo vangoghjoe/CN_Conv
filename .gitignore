@@ -2,3 +2,4 @@
 *.cpt
 Powershell learning/
 .git-ssh/
+.*.sw?
