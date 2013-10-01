@@ -1,12 +1,14 @@
 
 how might the comparison work
 
+Client Matters
 CM
 DBID
-Type = TBA or NA
+TBA = TBA or NA
 run - status = good or bad
 overlap status =  good or bad
 
+FOLDERS
 CM
 DBID
 Folder
@@ -21,8 +23,4 @@ foreach CM where type = TBA
     where tba.CM = $CM and tba.tba = 1
     and na.CM = $CM and na.tba = 0
     
-For the list of folders, what do I need:
-id
-dbid
-clientmatter
 
