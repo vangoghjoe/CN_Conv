@@ -12,22 +12,31 @@ function Main {
     $sqlCmdW.CommandText = "update folders set bexists = @exists WHERE ID='$id'"
     
     $sqlCmdR = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
-    $sqlCmdR.CommandText = "SELECT TOP 1 ID,Folder from Folders"
+    $sqlCmdR.CommandText = "SELECT TOP 10 ID,Folder from Folders"
     $reader = $sqlCmdR.ExecuteReader() #> $null
+	echo "finished read query ... whew!"
+    $ct = 0
     while ($reader.Read()) {
+        $ct++
         $id = $reader.GetValue(0)
         $path = $reader.GetValue(1)
-        $exists = [int] $(test-path $path)
-        echo "exists = $exists for $path"
+        try {
+            $exists = [int] $(test-path -ea stop $path)
+        }
+        catch {
+            $exists = -1
+        }
+        if ($ct % 3 -eq 0) { echo "ID= $id : $ct : $exists : $path" }
 
         $sqlCmdW.CommandText = "update folders set bexists = $exists WHERE ID='$id'"
 
         #$p = $sqlCmdW.Parameters.AddWithValue("@exists",$exists) 
         #$sqlCmdW.Parameters.Add("@exists",$exists) 
 
-        $sqlCmdW.ExecuteNonQuery()
+        $sqlCmdW.ExecuteNonQuery() > $null
     }
     $reader.Close()
 }
 
 Main
+
