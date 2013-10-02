@@ -8,14 +8,24 @@ param(
 
 
 function Main {
-    $sqlCmd = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
+    $sqlCmdW = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
+    $sqlCmdW.CommandText = "update folders set bexists = @exists WHERE ID='$id'"
     
-    $sqlCmd.CommandText = "SELECT TOP 10 ID,Folder from Folders"
-    $sqlCmd.ExecuteNonQuery() > $null
-
-    $reader = $sqlCmd.ExecuteReader() #> $null
+    $sqlCmdR = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
+    $sqlCmdR.CommandText = "SELECT TOP 1 ID,Folder from Folders"
+    $reader = $sqlCmdR.ExecuteReader() #> $null
     while ($reader.Read()) {
-        echo "$($reader.GetValue(0)): $($reader.GetValue(1))"
+        $id = $reader.GetValue(0)
+        $path = $reader.GetValue(1)
+        $exists = [int] $(test-path $path)
+        echo "exists = $exists for $path"
+
+        $sqlCmdW.CommandText = "update folders set bexists = $exists WHERE ID='$id'"
+
+        #$p = $sqlCmdW.Parameters.AddWithValue("@exists",$exists) 
+        #$sqlCmdW.Parameters.Add("@exists",$exists) 
+
+        $sqlCmdW.ExecuteNonQuery()
     }
     $reader.Close()
 }
