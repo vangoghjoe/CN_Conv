@@ -16,6 +16,7 @@ function Main {
     #$sqlCmdR.CommandText = "SELECT ID,Folder from Folders"
     $sqlCmdR.CommandText = "SELECT ID,Folder from Folders WHERE bExists is null"
 
+    $sqlCmdR.CommandText = "SELECT ID,Folder from Folders"
     $reader = $sqlCmdR.ExecuteReader() #> $null
     echo "finished read query ... whew!"
 
@@ -44,4 +45,7 @@ function Main {
 
 Main
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 0d57f5e8aa321be053b1d8828263f8fea38c9b10
