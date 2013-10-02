@@ -12,9 +12,16 @@ function Main {
     $sqlCmdW.CommandText = "update folders set bexists = @exists WHERE ID='$id'"
     
     $sqlCmdR = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
+<<<<<<< HEAD
     $sqlCmdR.CommandText = "SELECT TOP 10 ID,Folder from Folders"
     $reader = $sqlCmdR.ExecuteReader() #> $null
 	echo "finished read query ... whew!"
+=======
+    $sqlCmdR.CommandText = "SELECT ID,Folder from Folders"
+    $reader = $sqlCmdR.ExecuteReader() #> $null
+    echo "finished read query ... whew!"
+
+>>>>>>> 0d57f5e8aa321be053b1d8828263f8fea38c9b10
     $ct = 0
     while ($reader.Read()) {
         $ct++
@@ -26,7 +33,7 @@ function Main {
         catch {
             $exists = -1
         }
-        if ($ct % 3 -eq 0) { echo "ID= $id : $ct : $exists : $path" }
+        if ($ct % 50 -eq 0) { echo "ID= $id : $ct : $exists : $path" }
 
         $sqlCmdW.CommandText = "update folders set bexists = $exists WHERE ID='$id'"
 
@@ -40,3 +47,7 @@ function Main {
 
 Main
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0d57f5e8aa321be053b1d8828263f8fea38c9b10

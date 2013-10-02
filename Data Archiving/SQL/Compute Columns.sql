@@ -6,7 +6,8 @@
 
 -- *** CM.bCMClosed
 -- Init
-UPDATE bCMClosed FROM ClientMattersTBA SET bCMClosed = 0
+-- ALTER TABLE clientMattersTBA add bCMClosed bit
+UPDATE ClientMattersTBA SET bCMClosed = 0
 -- Compute
  update ClientMattersTBA set bCMClosed = 1 
  where clientmatter in
@@ -73,7 +74,7 @@ WHILE @@FETCH_STATUS = 0
 
       UPDATE ClientMattersTBA
       SET    bCMFolderInfoComplete = @isComplete
-      WHERE  ClientMatter = @dbid
+      WHERE  ClientMatter = @clientmatter
 
       FETCH NEXT FROM mycursor INTO @clientmatter
   END
@@ -94,3 +95,6 @@ WHERE bCMFolderInfoComplete = 1
 -- Init
 -- Compute
 -- Report
+
+-- ** number of CM's
+SELECT COUNT(*) AS 'Num CMs' FROM ClientMattersTBA
