@@ -12,7 +12,10 @@ function Main {
     $sqlCmdW.CommandText = "update folders set bexists = @exists WHERE ID='$id'"
     
     $sqlCmdR = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
-    $sqlCmdR.CommandText = "SELECT ID,Folder from Folders"
+
+    #$sqlCmdR.CommandText = "SELECT ID,Folder from Folders"
+    $sqlCmdR.CommandText = "SELECT ID,Folder from Folders WHERE bExists is null"
+
     $reader = $sqlCmdR.ExecuteReader() #> $null
     echo "finished read query ... whew!"
 

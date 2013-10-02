@@ -86,9 +86,63 @@ DEALLOCATE mycursor
 SELECT COUNT(*) as 'CM.bCMFolderInfoComplete' FROM ClientMattersTBA 
 WHERE bCMFolderInfoComplete = 1
 
--- *** 
+-- *** DCB.bReadyForArchive
 -- Init
+if not exists(select * from sys.columns 
+            where Name = 'bReadyForArchive' and Object_ID = Object_ID('DCBs'))
+	ALTER TABLE DCBs ADD bReadyForArchive bit
+UPDATE DCBs set bReadyForArchive = 0
+	
+	           
 -- Compute
+UPDATE DCBs SET bReadyForArchive = 1 WHERE bCMClosed = 1
+
+-- *** CM.bCMFolderInfoComplete
+-- Init
+UPDATE ClientMattersTBA SET bCMFolderInfoComplete = 0
+-- Compute
+-- Calc CM.bCMFolderInfoComplete
+DECLARE @dbid int;
+DECLARE @clientmatter varchar(25);
+DECLARE @isComplete BIT;
+DECLARE @cmNum int;
+DECLARE @myDate as varchar(30);
+
+-- Initialize all to 0 first
+UPDATE DCBs SET bReadyForArchive = 0
+
+DECLARE mycursor CURSOR FOR
+	SELECT dbid, clientmatter FROM DCBs
+OPEN mycursor;
+
+FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
+set @cmNum = 0
+WHILE @@FETCH_STATUS = 0
+  BEGIN
+      SET @cmNum = @cmNum + 1
+      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
+      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
+      RAISERROR( @mydate ,0,1) WITH NOWAIT;
+
+	  if EXISTS(
+		select * from ClientMattersTBA where ClientMatter = @clientmatter and bCMclosed = 1		
+	  )
+		BEGIN
+			IF EXISTS (
+				SELECT * FROM DCBs 
+				WHERE 
+				dbid = @dbid AND 
+				btba_orig = 1 AND
+				bdbfolderinfocomplete = 1
+				isnull(bhas_overlaps,1) = 0  --hmm, null = 0 would fail, so probably don't need isnull()
+			)
+				UPDATE DCBs set bReadyForArchive = 1
+      FETCH NEXT FROM mycursor INTO @clientmatter
+  END
+
+CLOSE mycursor
+
+DEALLOCATE mycursor
 -- Report
 
 -- *** 
@@ -98,3 +152,7 @@ WHERE bCMFolderInfoComplete = 1
 
 -- ** number of CM's
 SELECT COUNT(*) AS 'Num CMs' FROM ClientMattersTBA
+
+-- ** number of DCBs with overlaps
+SELECT COUNT(*) AS 'DBs with Overlaps' FROM DCBs where bHasOverlaps = 1
+
