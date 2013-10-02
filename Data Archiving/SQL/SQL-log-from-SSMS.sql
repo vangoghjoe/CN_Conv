@@ -87,51 +87,104 @@
 --select * from @dcbs;
 --select * from @folders;
 
-DECLARE @dbid int;
-DECLARE @clientmatter varchar(25);
-DECLARE @has_overlap BIT;
-DECLARE @cmNum int;
-DECLARE @myDate as varchar(30);
-DECLARE mycursor CURSOR FOR
-  SELECT dbid, clientmatter
-  FROM   DCBs
-	WHERE btba = 1
-	AND bDBFolderInfoComplete = 1
-    AND isnull(bCMClosed,0) = 0
+--DECLARE @dbid int;
+--DECLARE @clientmatter varchar(25);
+--DECLARE @has_overlap BIT;
+--DECLARE @cmNum int;
+--DECLARE @myDate as varchar(30);
+--DECLARE mycursor CURSOR FOR
+--  SELECT dbid, clientmatter
+--  FROM   DCBs
+--	WHERE btba = 1
+--	AND bDBFolderInfoComplete = 1
+--    AND isnull(bCMClosed,0) = 0
+--	AND bHasOverlaps is null
 
-OPEN mycursor;
+--OPEN mycursor;
 
-FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
-set @cmNum = 0
-WHILE @@FETCH_STATUS = 0
-  BEGIN
-      SET @cmNum = @cmNum + 1
-      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
-      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
-      RAISERROR( @mydate ,0,1) WITH NOWAIT;
-      IF EXISTS (SELECT folder
-                 FROM   Folders
-                 WHERE  ClientMatter = @clientmatter
-                        AND dbid = @dbid
-                 INTERSECT
-                 SELECT folder
-                 FROM   Folders
-                 WHERE  ClientMatter = @clientmatter
-                        AND dbid != @dbid
-                        )
-        SET @has_overlap = 1;
-      ELSE
-        SET @has_overlap = 0;
+--FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
+--set @cmNum = 0
+--WHILE @@FETCH_STATUS = 0
+--  BEGIN
+--      SET @cmNum = @cmNum + 1
+--      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
+--      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
+--      RAISERROR( @mydate ,0,1) WITH NOWAIT;
+--      IF EXISTS (SELECT folder
+--                 FROM   Folders
+--                 WHERE  ClientMatter = @clientmatter
+--                        AND dbid = @dbid
+--                 INTERSECT
+--                 SELECT folder
+--                 FROM   Folders
+--                 WHERE  ClientMatter = @clientmatter
+--                        AND dbid != @dbid
+--                        )
+--        SET @has_overlap = 1;
+--      ELSE
+--        SET @has_overlap = 0;
 
-      UPDATE DCBs
-      SET    bHasOverlaps = @has_overlap
-      WHERE  dbid = @dbid
+--      UPDATE DCBs
+--      SET    bHasOverlaps = @has_overlap
+--      WHERE  dbid = @dbid
 
-      FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
-  END
+--      FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
+--  END
 
-CLOSE mycursor
+--CLOSE mycursor
 
-DEALLOCATE mycursor
+--DEALLOCATE mycursor
 
-select * from dcbs;
+--select * from dcbs;
+
+-- *******************************************
+ -- SELECT dbid, clientmatter
+ -- FROM   DCBs
+	--WHERE btba = 1
+	--AND bDBFolderInfoComplete = 1
+ --   AND isnull(bCMClosed,0) = 0
+	--AND bHasOverlaps is null
+--  --> 408
+-- *******************************************
+--select distinct(btba) from dcbs where bCMClosed = 1
+--select * from ErrorsScript where TBA = 'xx' and CMClosed = 'xx'
+
+select * from ClientMattersTBA where bCMClosed = 1
+select distinct(ClientMatter) from DCBs
+select distinct(clientmatter) from ErrorsScript where CMClosed is not null
+
+ 
+--SELECT DISTINCT(clientmatter) from ErrorsScript where CMClosed is not null
+--AND clientmatter not in 
+--(select distinct(clientmatter) from dcbs)
+-- --> 0  So, just a dbchk that we can match on all the CMs in the error list
+----  So now, can update the 
+--SELECT DISTINCT(clientmatter) from ErrorsScript where CMClosed is not null
+--AND clientmatter not in 
+--(select distinct(clientmatter) from ClientMattersTBA)
+-- -> 0 Just another check
+
+ update DCBs set bCMClosed = 1 
+ where clientmatter in
+ (SELECT DISTINCT(clientmatter) from ErrorsScript where CMClosed is not null)
+ -- --> 408 rows
+
+  update ClientMattersTBA set bCMClosed = 1 
+ where clientmatter in
+ (SELECT DISTINCT(clientmatter) from ErrorsScript where CMClosed is not null)
+
+ -- Talked to Jesse, he says if a CM is closed, mark all it's db's for archiving
+ -- Just for the heck of it, save the old TBA value, pre-closed-CM update
+ --alter table dcbs add TBA_orig bit
+ --exec sp_rename 'dcbs.tba_orig','bTBA_orig', 'column'
+ 
+ --update dcbs set bTBA_orig = bTBA
+
+ update DCBs set bCMClosed = 1 where clientmatter in
+ (select distinct(clientmatter) from ClientMattersTBA where bCMClosed = 1)
+
+ select 
+ (select distinct(clientmatter) from ClientMattersTBA where bCMClosed = 1)
+
+ exec sp_rename 'clientmatterstba.alldbs_analysisIsGood','bCMFolderInfoComplete','column'
+ select * from DCBs where bDBFolderInfoComplete is null

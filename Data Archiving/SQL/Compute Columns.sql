@@ -4,27 +4,43 @@
 -- Compute
 -- Report
 
+--********************************************************************************
 -- *** CM.bCMClosed
 -- Init
--- ALTER TABLE clientMattersTBA add bCMClosed bit
-UPDATE ClientMattersTBA SET bCMClosed = 0
+IF EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('ClientMattersTBA'))
+	ALTER TABLE ClientMattersTBA DROP COLUMN bCMClosed
+GO
+ALTER TABLE ClientMattersTBA ADD bCMClosed bit
+GO
+
 -- Compute
  update ClientMattersTBA set bCMClosed = 1 
  where clientmatter in
  (SELECT DISTINCT(clientmatter) from ErrorsScript where CMClosed is not null)
+GO
 -- Report
 SELECT COUNT(*) as 'CM.bCMClosed' FROM ClientMattersTBA WHERE bCMClosed = 1 
+GO
 
+--********************************************************************************
 -- *** DCB.bCMClosed
 -- Init
-UPDATE DCBs SET bCMClosed = 0 
+IF EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('DCBs'))
+	ALTER TABLE DCBs DROP COLUMN bCMClosed
+GO
+ALTER TABLE DCBs ADD bCMClosed bit
+GO
+
 -- Compute
 UPDATE DCBs SET bCMClosed = 1 WHERE clientmatter in
  (select distinct(clientmatter) from ClientMattersTBA where bCMClosed = 1)
+GO 
 --Report
 SELECT COUNT(*) AS 'DCB.bCMClosed' FROM DCBs WHERE bCMClosed = 1 
+GO
 
--- *** DCB.bFolderInfoComplete
+--********************************************************************************
+-- *** DCB.bDBFolderInfoComplete
 -- Init
 -- Compute
 ----- It's a computed field, nothing to compute
@@ -37,36 +53,34 @@ SELECT COUNT(*) AS 'DCB.bCMClosed' FROM DCBs WHERE bCMClosed = 1
 
 -- Report
 SELECT COUNT(*) AS 'DCB.bDBFolderInfoComplete' FROM DCBs WHERE bDBFolderInfoComplete = 1 
+GO
 
--- *** CM.bCMFolderInfoComplete
+--********************************************************************************
+-- ***********  CM.bCMFolderInfoComplete
 -- Init
 UPDATE ClientMattersTBA SET bCMFolderInfoComplete = 0
+GO
+
 -- Compute
 -- Calc CM.bCMFolderInfoComplete
-DECLARE @dbid int;
+DECLARE @isComplete int;
 DECLARE @clientmatter varchar(25);
-DECLARE @isComplete BIT;
-DECLARE @cmNum int;
-DECLARE @myDate as varchar(30);
 DECLARE mycursor CURSOR FOR
 SELECT ClientMatter FROM ClientMattersTBA
 
 OPEN mycursor;
 
 FETCH NEXT FROM mycursor INTO @clientmatter
-set @cmNum = 0
+
 WHILE @@FETCH_STATUS = 0
   BEGIN
-      SET @cmNum = @cmNum + 1
-      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
-      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
-      RAISERROR( @mydate ,0,1) WITH NOWAIT;
+
       -- if any aren't children arent' complete, it's not
       IF EXISTS (
 		SELECT * FROM DCBs WHERE 
 			clientmatter = @clientmatter
 			AND 
-			bdbFolderInfoComplete <> 1  -- safe b/c no nulls
+			bDBFolderInfoComplete <> 1  -- safe b/c no nulls
 	  )
         SET @isComplete = 0;
       ELSE
@@ -82,77 +96,74 @@ WHILE @@FETCH_STATUS = 0
 CLOSE mycursor
 
 DEALLOCATE mycursor
+GO
+
 -- Report
 SELECT COUNT(*) as 'CM.bCMFolderInfoComplete' FROM ClientMattersTBA 
 WHERE bCMFolderInfoComplete = 1
-
+GO
+--********************************************************************************
 -- *** DCB.bReadyForArchive
 -- Init
-if not exists(select * from sys.columns 
-            where Name = 'bReadyForArchive' and Object_ID = Object_ID('DCBs'))
+if not exists(
+	select * from sys.columns 
+    where Name = 'bReadyForArchive' and Object_ID = Object_ID('DCBs'))
+BEGIN
 	ALTER TABLE DCBs ADD bReadyForArchive bit
+END
+GO
 UPDATE DCBs set bReadyForArchive = 0
-	
+GO	
 	           
 -- Compute
+--  ++++  CASE 1: in a closed matter ++++
 UPDATE DCBs SET bReadyForArchive = 1 WHERE bCMClosed = 1
+GO
 
--- *** CM.bCMFolderInfoComplete
--- Init
-UPDATE ClientMattersTBA SET bCMFolderInfoComplete = 0
--- Compute
--- Calc CM.bCMFolderInfoComplete
+--  ++++  CASE 2: in an open matter ++++
 DECLARE @dbid int;
-DECLARE @clientmatter varchar(25);
-DECLARE @isComplete BIT;
-DECLARE @cmNum int;
-DECLARE @myDate as varchar(30);
-
--- Initialize all to 0 first
-UPDATE DCBs SET bReadyForArchive = 0
 
 DECLARE mycursor CURSOR FOR
-	SELECT dbid, clientmatter FROM DCBs
+	SELECT dbid FROM DCBs
+	WHERE isnull(bCMClosed,0) = 0
 OPEN mycursor;
 
-FETCH NEXT FROM mycursor INTO @dbid, @clientmatter
-set @cmNum = 0
+FETCH NEXT FROM mycursor INTO @dbid
 WHILE @@FETCH_STATUS = 0
-  BEGIN
-      SET @cmNum = @cmNum + 1
-      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
-      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
-      RAISERROR( @mydate ,0,1) WITH NOWAIT;
-
-	  if EXISTS(
-		select * from ClientMattersTBA where ClientMatter = @clientmatter and bCMclosed = 1		
-	  )
-		BEGIN
-			IF EXISTS (
-				SELECT * FROM DCBs 
-				WHERE 
-				dbid = @dbid AND 
-				btba_orig = 1 AND
-				bdbfolderinfocomplete = 1
-				isnull(bhas_overlaps,1) = 0  --hmm, null = 0 would fail, so probably don't need isnull()
-			)
-				UPDATE DCBs set bReadyForArchive = 1
-      FETCH NEXT FROM mycursor INTO @clientmatter
-  END
-
+BEGIN
+	IF EXISTS (
+		SELECT * FROM DCBs 
+		WHERE 
+			dbid = @dbid AND 
+			bTBA = 1 AND
+			bdbfolderinfocomplete = 1 AND
+			isnull(bHasOverlaps,1) = 0  --hmm, null = 0 would fail, so probably don't need isnull()
+	)
+	BEGIN
+		UPDATE DCBs set bReadyForArchive = 1
+	END			
+	FETCH NEXT FROM mycursor INTO @dbid
+END
 CLOSE mycursor
 
 DEALLOCATE mycursor
+GO
 -- Report
+SELECT COUNT(*) AS 'DCBs . num bReadyForArchive' 
+FROM DCBs
+WHERE bReadyForArchive = 1
+GO
 
 -- *** 
 -- Init
 -- Compute
 -- Report
 
+--********************************************************************************
 -- ** number of CM's
 SELECT COUNT(*) AS 'Num CMs' FROM ClientMattersTBA
 
+--********************************************************************************
 -- ** number of DCBs with overlaps
 SELECT COUNT(*) AS 'DBs with Overlaps' FROM DCBs where bHasOverlaps = 1
 

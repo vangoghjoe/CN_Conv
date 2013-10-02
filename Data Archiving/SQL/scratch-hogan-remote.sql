@@ -1,0 +1,1 @@
+select count(*) from DCBs where isnull(bTBA,0) = 1 --> 503 on T 10/1

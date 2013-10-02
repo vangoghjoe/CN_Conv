@@ -6,7 +6,7 @@ IF EXISTS(select * from sys.columns where name = 'bHasFoldersMalformed' and obje
 GO
 ALTER TABLE DCBs ADD bHasFoldersMalformed bit
 GO
-	
+
 ---- TEST DATA
 --insert into DCBs (dbid) values (10001), (10002),(10003),(10004)
 --insert into Folders	(DBID, bExists) values 
@@ -62,6 +62,6 @@ DEALLOCATE mycursor
 --delete from folders where dbid > 10000
 
 -- Report
-SELECT COUNT(*) AS 'DCBs.num HasFoldersMissing' 
+SELECT COUNT(*) AS 'DCBs.num bHasFoldersMalformed' 
 FROM DCBs 
 WHERE bHasFoldersMalformed = 1
