@@ -19,24 +19,14 @@ GO
 DECLARE @dbid int;
 DECLARE @clientmatter varchar(25);
 DECLARE @hasMissing BIT;
-DECLARE @cmNum int;
-DECLARE @myDate as varchar(30);
+
 DECLARE mycursor CURSOR FOR
   SELECT dbid 
   FROM DCBs
-
-
 OPEN mycursor;
-
 FETCH NEXT FROM mycursor INTO @dbid
-set @cmNum = 0
 WHILE @@FETCH_STATUS = 0
-  BEGIN
-      SET @cmNum = @cmNum + 1
-      SET @myDate = convert(varchar, GETDATE()) + ' ' + convert(varchar, @cmnum) 
-      SET @myDate = @myDate + ' ' + convert(varchar, @dbid); 
-      RAISERROR( @mydate ,0,1) WITH NOWAIT;
-      
+  BEGIN     
       IF EXISTS (
 		SELECT * FROM Folders 
 		WHERE DBID = @dbid

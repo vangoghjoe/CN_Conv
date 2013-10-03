@@ -7,10 +7,10 @@
 --********************************************************************************
 -- *** CM.bCMClosed
 -- Init
-IF EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('ClientMattersTBA'))
-	ALTER TABLE ClientMattersTBA DROP COLUMN bCMClosed
+IF NOT EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('ClientMattersTBA'))
+	ALTER TABLE ClientMattersTBA ADD bCMClosed bit
 GO
-ALTER TABLE ClientMattersTBA ADD bCMClosed bit
+UPDATE ClientMattersTBA SET bCMClosed = 0
 GO
 
 -- Compute
@@ -25,10 +25,10 @@ GO
 --********************************************************************************
 -- *** DCB.bCMClosed
 -- Init
-IF EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('DCBs'))
-	ALTER TABLE DCBs DROP COLUMN bCMClosed
+IF NOT EXISTS(select * from sys.columns where name = 'bCMClosed' and object_id=object_id('DCBs'))
+	ALTER TABLE DCBs ADD bCMClosed bit
 GO
-ALTER TABLE DCBs ADD bCMClosed bit
+UPDATE DCBs set bCMClosed = 0
 GO
 
 -- Compute
@@ -58,6 +58,10 @@ GO
 --********************************************************************************
 -- ***********  CM.bCMFolderInfoComplete
 -- Init
+IF NOT EXISTS(select * from sys.columns where name = 'bCMFolderInfoComplete' and object_id=object_id('ClientMattersTBA'))
+	ALTER TABLE ClientMattersTBA ADD bCMFolderInfoComplete bit
+GO
+
 UPDATE ClientMattersTBA SET bCMFolderInfoComplete = 0
 GO
 
@@ -75,12 +79,16 @@ FETCH NEXT FROM mycursor INTO @clientmatter
 WHILE @@FETCH_STATUS = 0
   BEGIN
 
-      -- if any aren't children arent' complete, it's not
+      -- if any children arent' complete, or if it has any missing/malformed folders,
+	  -- it's not complete
       IF EXISTS (
 		SELECT * FROM DCBs WHERE 
 			clientmatter = @clientmatter
 			AND 
-			bDBFolderInfoComplete <> 1  -- safe b/c no nulls
+			(bDBFolderInfoComplete <> 1  -- safe b/c no nulls
+			OR isnull(bHasFoldersMalformed,0) = 1
+			OR isnull(bHasFoldersMissing,0) = 1
+			)
 	  )
         SET @isComplete = 0;
       ELSE
@@ -102,57 +110,7 @@ GO
 SELECT COUNT(*) as 'CM.bCMFolderInfoComplete' FROM ClientMattersTBA 
 WHERE bCMFolderInfoComplete = 1
 GO
---********************************************************************************
--- *** DCB.bReadyForArchive
--- Init
-if not exists(
-	select * from sys.columns 
-    where Name = 'bReadyForArchive' and Object_ID = Object_ID('DCBs'))
-BEGIN
-	ALTER TABLE DCBs ADD bReadyForArchive bit
-END
-GO
-UPDATE DCBs set bReadyForArchive = 0
-GO	
-	           
--- Compute
---  ++++  CASE 1: in a closed matter ++++
-UPDATE DCBs SET bReadyForArchive = 1 WHERE bCMClosed = 1
-GO
 
---  ++++  CASE 2: in an open matter ++++
-DECLARE @dbid int;
-
-DECLARE mycursor CURSOR FOR
-	SELECT dbid FROM DCBs
-	WHERE isnull(bCMClosed,0) = 0
-OPEN mycursor;
-
-FETCH NEXT FROM mycursor INTO @dbid
-WHILE @@FETCH_STATUS = 0
-BEGIN
-	IF EXISTS (
-		SELECT * FROM DCBs 
-		WHERE 
-			dbid = @dbid AND 
-			bTBA = 1 AND
-			bdbfolderinfocomplete = 1 AND
-			isnull(bHasOverlaps,1) = 0  --hmm, null = 0 would fail, so probably don't need isnull()
-	)
-	BEGIN
-		UPDATE DCBs set bReadyForArchive = 1
-	END			
-	FETCH NEXT FROM mycursor INTO @dbid
-END
-CLOSE mycursor
-
-DEALLOCATE mycursor
-GO
--- Report
-SELECT COUNT(*) AS 'DCBs . num bReadyForArchive' 
-FROM DCBs
-WHERE bReadyForArchive = 1
-GO
 
 -- *** 
 -- Init
