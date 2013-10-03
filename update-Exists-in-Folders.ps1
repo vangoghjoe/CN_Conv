@@ -45,7 +45,3 @@ function Main {
 
 Main
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 0d57f5e8aa321be053b1d8828263f8fea38c9b10

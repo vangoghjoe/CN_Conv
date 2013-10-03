@@ -1,18 +1,12 @@
  --********************************************************************************
  -- *** DCBs . bHasFoldersMalformed
  -- Init
- IF EXISTS(select * from sys.columns where name = 'bHasFoldersMalformed' and object_id=object_id('DCBs'))
-	BEGIN
-		DECLARE @SQL varchar(max);
-		SET @SQL= 'UPDATE DCBs SET bHasFoldersMalformed = null'
-		EXEC(@SQL)
-		print 1
-	END
-ELSE
-	BEGIN	
-		ALTER TABLE DCBs ADD bHasFoldersMalformed bit
-		print 0
-	END
+-- alter table dcbs drop column bHasFoldersMalformed
+IF EXISTS(select * from sys.columns where name = 'bHasFoldersMalformed' and object_id=object_id('DCBs'))
+	ALTER TABLE DCBs DROP COLUMN bHasFoldersMalformed
+GO
+ALTER TABLE DCBs ADD bHasFoldersMalformed bit
+GO
 	
 -- TEST DATA
 insert into DCBs (dbid) values (10001), (10002),(10003),(10004)
