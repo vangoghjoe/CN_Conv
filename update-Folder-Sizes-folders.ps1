@@ -65,7 +65,7 @@ SELECT top 5 ID, Folder FROM Folders WHERE DBID=$dbid AND bExists=1
             }
             echo "[$dbid] ($bytes)($files) $folder"
             $sqlCmdW.CommandText = @"
-UPDATE folders SET bytes=$bytes, files=$files WHERE dbid=$dbid
+UPDATE folders SET bytes=$bytes, files=$files WHERE id=$id
 "@
             $sqlCmdW.ExecuteNonQuery() > $null
         }
