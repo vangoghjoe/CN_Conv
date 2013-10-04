@@ -25,6 +25,7 @@ DECLARE mycursor CURSOR FOR
   FROM DCBs
 
 
+
 OPEN mycursor;
 
 FETCH NEXT FROM mycursor INTO @dbid
