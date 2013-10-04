@@ -26,7 +26,7 @@ ALTER TABLE DCBs ADD images_folders_bytes bigint
     # For now, get those ready for archive, but not TBA
     $sqlCmdR_DCBs = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
     $sqlCmdR_DCBs.CommandText = @'
-SELECT dbid, orig_dcb FROM DCBs WHERE bReadyForArchive = 1 and bTBA = 0 
+SELECT dbid, orig_dcb FROM DCBs WHERE bReadyForArchive = 1 
 '@
 
     # Set up query to get folders for each 
@@ -65,4 +65,5 @@ UPDATE DCBs SET db_bytes=$db_bytes, db_files=$db_files WHERE dbid=$dbid
 }
 
 Main
+
 
