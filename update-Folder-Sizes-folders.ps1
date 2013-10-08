@@ -1,6 +1,6 @@
 param(
-    $startRow,
-    $endRow
+    [int] $offset,
+    [int] $fetchNum
 )
 
 
@@ -25,12 +25,18 @@ ALTER TABLE folders ADD files bigint
     # Set up query to get dcbs
     # For now, get those ready for archive, but not TBA
     $sqlCmdR_DCBs = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
-    $sqlCmdR_DCBs.CommandText = @'
-SELECT dbid, orig_dcb FROM DCBs WHERE bReadyForArchive = 1 and bTBA = 0 
-'@
-    $sqlCmdR_DCBs.CommandText = @'
-SELECT top 5 dbid, orig_dcb FROM DCBs
-'@
+    $cmd = @"
+SELECT dbid, orig_dcb FROM DCBs WHERE bReadyForArchive = 0 
+"@
+	# SELECT dbid, orig_dcb FROM DCBs WHERE bReadyForArchive = 1 and bTBA = 1 
+	if ($offset) {
+		$cmd += @" 
+ORDER BY DBID
+OFFSET $offset ROWS
+FETCH NEXT $fetchNum ROWS ONLY
+"@
+	}
+	$sqlCmdR_DCBs.CommandText = $cmd
     
     # Loop over DCBs
     $DCBsreader = $sqlCmdR_DCBs.ExecuteReader() #> $null
@@ -46,7 +52,7 @@ SELECT top 5 dbid, orig_dcb FROM DCBs
         # and only those that exist
         $sqlCmdR_Folders = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
         $sqlCmdR_Folders.CommandText = @"
-SELECT top 5 ID, Folder FROM Folders WHERE DBID=$dbid AND bExists=1
+SELECT ID, Folder FROM Folders WHERE DBID=$dbid AND bExists=1
 "@
         echo $sqlCmdR_Folders.CommandText
         $foldersReader = $sqlCmdR_Folders.ExecuteReader()

@@ -579,6 +579,7 @@ function CF-Create-SqlConnection($database = "FYI_Conversions")
 {
 	$conn = New-Object ('System.Data.SqlClient.SqlConnection');
     $cnstring = $global:connectionstring -replace "<DATABASE>", $database
+	write-host "$cnstring"
 	$conn.ConnectionString = $cnstring
 	$conn.Open();
     $cmd = New-Object System.Data.SqlClient.SqlCommand

@@ -12,7 +12,7 @@ param(
 # files_h hash, without worrying about which added what.
 # Then in "Add-Files-To-DB", each filename will be tested against
 # both orig and conv directories
-function Get-DbFiles-Arch ($dcbPfn, $files_h) {
+function Get-DbFiles-Arch ($dcbPfn) {
     # get name of full pfn without extension
     $dcbBase = CF-Get-PfnWithoutExtension $dcbPfn
     
@@ -36,17 +36,16 @@ function Get-DbFiles-Arch ($dcbPfn, $files_h) {
     # Add to files_h
     foreach ($file in $files) {
         $name = [system.io.path]::GetFilename($file.fullname)
-        $files_h[$name] = ''
+        $script:files_h[$name] = ''
     }
 
-    return $files_h
 }
 
-function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb, $files_h, $sqlCmd) {
+function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb,  $sqlCmd) {
     $origDir = [system.io.path]::GetDirectoryName($orig_dcb)
     $convDir = [system.io.path]::GetDirectoryName($conv_dcb)
 
-    foreach ($file in $files_h.Keys()) {
+    foreach ($file in $script:files_h.Keys()) {
         $origFile = "$origDir\$file"
         if (test-path $origFile) {
             $origExists = 1
@@ -67,11 +66,12 @@ function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb, $files_h, $sqlCmd) {
             $convSize = "NULL"
         }
 
-        $sqlCmd = @"
+        $sqlCmd.CommandText = @"
 insert into DCB_Files (dbid, name, bOrig_exists, orig_bytes, bConv_exists, conv_bytes, orig_pfn, conv_pfn)
 values($dbid, $file, $origExists, $origSize, $convExists, $convSize, $origFile, $convFile)
 "@
-        $sqlCmd.ExecuteNonQuery()
+        #$sqlCmd.ExecuteNonQuery()
+        write-host $sqlcmd.commandtext
     }
 
 }
@@ -92,7 +92,7 @@ ALTER TABLE folders ADD bytes bigint
     # Query to get orig and conv dcbs from DCBs
     $sqlCmdR_DCBs = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
     $sqlCmdR_DCBs.CommandText = @'
-SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs 
+SELECT top 1 dbid, orig_dcb, conv_dcb FROM DCBs 
 '@
     
     # Loop over DCBs
@@ -107,12 +107,17 @@ SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs
         $dbid = $DCBsreader.getvalue(0) 
         $origDcb = $DCBsreader.getvalue(1) 
         $convDcb = $DCBsreader.getvalue(2) 
+	   $x = $convDcb -replace "Test\\\\Bkup", "Test\Bkup"
+       $convDcb = $x
+       write-host  $convDcb
+        
+        # still having problems passing a hash around
+        $script:files_h = @{}
+        
+        Get-DbFiles-Arch $origDcb
+        Get-DbFiles-Arch $convDcb
 
-        $files_h = @{}
-        $files_h = Get-DbFiles-Arch $origDcb, $files_h
-        $files_h = Get-DbFiles-Arch $convDcb, $files_h
-
-        Add-File-To-DB $dbid, $origDcb, $convDcb, $files_h, $sqlCmd
+        Add-File-To-DB $dbid, $origDcb, $convDcb, $sqlCmd
     }
     $DCBsreader.Close()
 }
