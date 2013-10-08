@@ -45,7 +45,7 @@ function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb,  $sqlCmd) {
     $origDir = [system.io.path]::GetDirectoryName($orig_dcb)
     $convDir = [system.io.path]::GetDirectoryName($conv_dcb)
 
-    foreach ($file in $script:files_h.Keys()) {
+    foreach ($file in $script:files_h.Keys) {
         $origFile = "$origDir\$file"
         if (test-path $origFile) {
             $origExists = 1
@@ -92,7 +92,7 @@ ALTER TABLE folders ADD bytes bigint
     # Query to get orig and conv dcbs from DCBs
     $sqlCmdR_DCBs = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
     $sqlCmdR_DCBs.CommandText = @'
-SELECT top 1 dbid, orig_dcb, conv_dcb FROM DCBs 
+SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs
 '@
     
     # Loop over DCBs
@@ -117,7 +117,7 @@ SELECT top 1 dbid, orig_dcb, conv_dcb FROM DCBs
         Get-DbFiles-Arch $origDcb
         Get-DbFiles-Arch $convDcb
 
-        Add-File-To-DB $dbid, $origDcb, $convDcb, $sqlCmd
+        Add-File-To-DB $dbid $origDcb $convDcb $sqlCmdW
     }
     $DCBsreader.Close()
 }
