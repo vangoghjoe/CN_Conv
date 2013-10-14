@@ -682,3 +682,12 @@ function CF-Write-Out-CM-Dbids($outFile, $CMs_h) {
         }
     }
 }
+
+# stub for making a field in a table 
+<#
+$sqlCmdW.CommandText = @'
+IF NOT EXISTS(select * from sys.columns where name = 'bytes' and object_id=object_id('folders'))    
+ALTER TABLE folders ADD bytes bigint
+'@
+$sqlCmdW.ExecuteNonQuery() > $null
+#>
