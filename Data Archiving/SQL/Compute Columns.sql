@@ -112,16 +112,5 @@ WHERE bCMFolderInfoComplete = 1
 GO
 
 
--- *** 
--- Init
--- Compute
--- Report
 
---********************************************************************************
--- ** number of CM's
-SELECT COUNT(*) AS 'Num CMs' FROM ClientMattersTBA
-
---********************************************************************************
--- ** number of DCBs with overlaps
-SELECT COUNT(*) AS 'DBs with Overlaps' FROM DCBs where bHasOverlaps = 1
 

@@ -45,6 +45,19 @@ function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb,  $sqlCmd) {
     $origDir = [system.io.path]::GetDirectoryName($orig_dcb)
     $convDir = [system.io.path]::GetDirectoryName($conv_dcb)
 
+    if (-not (test-path $origDir)) {
+        $sqlCmdW.CommandText = @"
+UPDATE DCBs SET bOrigFolderMissing = 1 WHERE dbid = $dbid
+"@
+        $sqlCmdW.ExecuteNonQuery()
+    }
+    if (-not (test-path $convDir)) {
+        $sqlCmdW.CommandText = @"
+UPDATE DCBs SET bConvFolderMissing = 1 WHERE dbid = $dbid
+"@
+        $sqlCmdW.ExecuteNonQuery()
+    }
+
     foreach ($file in $script:files_h.Keys) {
         $origFile = "$origDir\$file"
         if (test-path $origFile) {
@@ -68,10 +81,10 @@ function Add-File-To-DB ($dbid, $orig_dcb, $conv_dcb,  $sqlCmd) {
 
         $sqlCmd.CommandText = @"
 insert into DCB_Files (dbid, name, bOrig_exists, orig_bytes, bConv_exists, conv_bytes, orig_pfn, conv_pfn)
-values($dbid, $file, $origExists, $origSize, $convExists, $convSize, $origFile, $convFile)
+ values($dbid, '$file', $origExists, $origSize, $convExists, $convSize, '$origFile', '$convFile')
 "@
-        #$sqlCmd.ExecuteNonQuery()
-        write-host $sqlcmd.commandtext
+        $sqlCmd.ExecuteNonQuery() > $null
+        #write-host $sqlcmd.commandtext
     }
 
 }
@@ -79,6 +92,14 @@ values($dbid, $file, $origExists, $origSize, $convExists, $convSize, $origFile, 
 function Main {
     # will be used for db updates
     $sqlCmdW = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
+
+    # Clear Orig/Conv Folder Missing 
+    write-host "Clearing orig/conv FolderMissing"
+    $sqlCmdW.CommandText = @"
+UPDATE DCBs SET bOrigFolderMissing = 0, bConvFolderMissing = 0 
+"@
+    $sqlCmdW.ExecuteNonQuery()
+    write-host "Done"
 
     # CREATE TABLE DCB_Files
     <#
@@ -92,7 +113,7 @@ ALTER TABLE folders ADD bytes bigint
     # Query to get orig and conv dcbs from DCBs
     $sqlCmdR_DCBs = CF-Get-SQL-Cmd $CF_DATA_ARCH_DB
     $sqlCmdR_DCBs.CommandText = @'
-SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs
+SELECT dbid, orig_dcb, conv_dcb FROM DCBs 
 '@
     
     # Loop over DCBs
@@ -101,7 +122,7 @@ SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs
     while ($DCBsreader.Read()) {
         $dbid = $DCBsreader.GetValue(0)
         $ct++
-        if ($ct % 3 -eq 0) { echo "ID= $dbid : $ct : $orig_dcb" }
+        if ($ct % 10 -eq 0) { echo "ID= $dbid : $ct : $orig_dcb" }
         echo "ID= $dbid : $ct : $orig_dcb"
 
         $dbid = $DCBsreader.getvalue(0) 
@@ -123,4 +144,5 @@ SELECT top 3 dbid, orig_dcb, conv_dcb FROM DCBs
 }
 
 Main
+
 
