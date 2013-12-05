@@ -1,31 +1,8 @@
 #####
-$CF_DEBUG = $true
+$CF_DEBUG = $false
 #####
 
-if ($(hostname) -eq "LNGHBEL-5009970") {
-    $CF_LNRoot = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN"
-    $CF_CN_V8_EXE = "C:\Program Files\Dataflight\Concordance\Concordance.exe" 
-    $CF_CN_V10_EXE = "C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe"
-
-    # SQL connection string
-    $global:connectionstring = "Server=LNGHBEL-5009970\SQLEXPRESS; Database=<DATABASE>;"
-    $global:connectionstring += ("User Id=conv_user; Password=fr33d0m!;" )
-}
-elseif ($(hostname) -match "FYI") {
-    $CF_LNRoot = "W:\WSS_TRGS\Non_Billable\DBA_Docs\20130716-Conversion\_LN"
-    $CF_CN_V8_EXE = "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe" 
-    $CF_CN_V10_EXE = "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe" 
-}
-else {
-    $CF_LNRoot = "W:\_LN_TEST"
-    $CF_CN_V8_EXE = "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe" 
-    $CF_CN_V10_EXE = "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe" 
-    # TO HL105SQL03 (just in case)
-    #$global:connectionstring = "Server=HL105SPRSQL03\FYI; Database=FYI_Conversions; Integrated Security = True"
-    # NOTE: Using Windows Auth, so the user probably needs to be in the Domain Administrator group,
-    # so they automatically get sysadmin access
-    $global:connectionstring = "Server=HL105SPRCON01\SQLEXPRESS; Database=<DATABASE>; Integrated Security = True"
-}
+. ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
 
 $CF_DATA_ARCH_DB = "Hogan_Data_Archiving"
 
@@ -58,6 +35,7 @@ $CF_PGMS = @{
 # 2 = root search results (can be array)
 # 3 = prev pgm it depends on (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
+"backup-for-conversion" = @("st_backup", "backup-for-conversion");
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
@@ -102,7 +80,7 @@ $CF_FIELDS = @(
 "st_add_db"
 )
 
-$CF_STATUS_FAILED = 0
+$CF_STATUS_FAILED = -1
 $CF_STATUS_IN_PROGRESS = 1
 $CF_STATUS_GOOD = 2
 
@@ -401,6 +379,7 @@ function CF-Write-DB-File ($table, $rows) {
     $rows | export-csv -Delimiter "`t" $dbFile
 
     # TODO: unlock file
+
 }
 
 function CF-Append-To-Logs {
@@ -579,11 +558,11 @@ function CF-Create-SqlConnection($database = "FYI_Conversions")
 {
 	$conn = New-Object ('System.Data.SqlClient.SqlConnection');
     $cnstring = $global:connectionstring -replace "<DATABASE>", $database
-	write-host "$cnstring"
 	$conn.ConnectionString = $cnstring
+    $conn.close()
 	$conn.Open();
-    $cmd = New-Object System.Data.SqlClient.SqlCommand
-    $cmd.Connection = $conn;    
+    #$cmd = New-Object System.Data.SqlClient.SqlCommand
+    #$cmd.Connection = $conn;    
     return $conn;
 }
 
