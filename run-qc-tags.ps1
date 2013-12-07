@@ -26,6 +26,8 @@ One or more examples
 # VERSION: remote 7/26 7:27 P PST
 param(
     $BatchID,
+    $startRow,
+    $endRow,
     $CN_Ver
 )
 
@@ -99,7 +101,6 @@ function Main {
     Set-Up-CPT $Vstr
     Set-Up-CPT $Vstr
     
-    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     # 11/23/13
     # For now, when this is invoked, it will try to process all DBs
@@ -113,7 +114,13 @@ function Main {
     #  steps table in db can have separate field for step name and pgm-that-does-step
     # if processing breadth first, step name can be ALL STEPS
 
-    for($i = 0 ; $i -lt $dcbRows.length; $i++) {
+    # Setup start/stop rows (assume user specifies as 1-based)
+    if ($startRow -eq $null) { $startRow = 1 }
+    if ($endRow -eq $null) { $endRow = $dcbRows.length } 
+    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start CN=$Vstr row=$startRow  End row=$endRow"
+     
+    # DCB Rows Loop
+    for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         
         if ($row.batchid -ne $BatchID) {   
@@ -134,7 +141,13 @@ function Main {
         # take ownership of this row, this step
     }
 
-    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP"
+    CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP CN=$Vstr Start row=$startRow  End row=$endRow"
+    $endDate = $(get-date -format $CF_DateFormat)
+    write-host "*** Done: batch = $BatchID CN=$Vstr Start row=$startRow  End row=$endRow"
+    write-host "Start: $startDate"
+    write-host "End:   $endDate"
+    #if (-not $DriverFile ) { $DriverFile = "None" }
+    #write-host "Driver file = $DriverFile"
 }     
 
 Main
