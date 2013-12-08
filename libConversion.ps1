@@ -288,6 +288,16 @@ function CF-Finish-Log ($logPfn) {
     }
 }
 
+function CF-Finish-Results-Log ($logPfn) {
+    CF-Write-Log $logPfn "|STOP|"
+    if ($script:rowResultsHasError) {
+        CF-Write-Log $logPfn "|EXIT_STATUS|FAILED" 
+    }
+    else {
+        CF-Write-Log $logPfn "|EXIT_STATUS|OK"
+    }
+}
+
 
 function CF-IsPath ($str) {
     (($str -match "^\\\\") -or ($str -match "^[A-z]:"))
@@ -376,8 +386,14 @@ function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) {
     $lockFile = "$dbFile.LOCK"
     
     # spin until 
-    $rows = import-csv -Delimiter "`t" $dbFile
-
+    try {
+        copy -force $dbFile "${dbfile}.$(get-date -Format "yyyyMMdd.HHmmss").txt"
+        $rows = import-csv -ErrorAction Stop -Delimiter "`t" $dbFile
+    }
+    catch {
+        write-host "$($error[0])"
+        exit
+    }
     
     # TODO: unlock file
     return $rows

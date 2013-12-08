@@ -94,19 +94,9 @@ function Main {
     ($Vstr, $script:CN_EXE) = CF-Get-CN-Info $CN_Ver 
     Set-Up-CPT $Vstr
     $runEnv = CF-Init-RunEnv $BatchID $Vstr
-    
-
-    # 11/23/13
-    # For now, when this is invoked, it will try to process all DBs
-    # in the future, may use a command-line switch to tell it which DB to process
-    # and then could another pgm could call it
-    # Will only process DB's where 
     $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
 
-    # going to write to batchResult File
-    # status to batchStatus = 1 per DB per pgm
-    #  steps table in db can have separate field for step name and pgm-that-does-step
-    # if processing breadth first, step name can be ALL STEPS
+    $startDate = $(get-date -format $CF_DateFormat)
 
     # Setup start/stop rows (assume user specifies as 1-based)
     if ($startRow -eq $null) { $startRow = 1 }
