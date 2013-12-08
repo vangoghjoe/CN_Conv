@@ -37,6 +37,7 @@ $CF_PGMS = @{
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
 "run-qc-v8-tags" = @("st_qc_v8_tags", "v8_tagging", "backup-for-conversions");
+"run-convert-one-dcb" = @("st_qc_convert-one-dcb", "convert-one-dcb", "run-qc-v8-tags|run-qc-v8-dict");
 "run-qc-v10-tags" = @("st_qc_v10_tags", "v10_tagging", "backup-for-conversions");
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");

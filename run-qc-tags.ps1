@@ -98,7 +98,6 @@ function Main {
     
     ($Vstr, $script:CN_EXE) = CF-Get-CN-Info $CN_Ver 
     Set-Up-CPT $Vstr
-    Set-Up-CPT $Vstr
     $runEnv = CF-Init-RunEnv $BatchID $Vstr
     
 
