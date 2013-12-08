@@ -129,7 +129,8 @@ function Main {
 
         $statVal = $row.$($runEnv.StatusField) 
 
-        if ($statVal -ne $CF_STATUS_READY) {
+        if ($statVal -ne $CF_STATUS_READY -and 
+            ($statVal -ne $null) ) {
             continue
         }
 
