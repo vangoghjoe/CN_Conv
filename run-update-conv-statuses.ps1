@@ -37,6 +37,7 @@ param(
     [switch]$pgmFoldersNatives,
     [switch]$pgmFoldersImages,
     [switch]$pgmQcV8Tags,
+    [switch]$pgmConvDcb,
     [switch]$pgmQcV10Tags,
     [switch]$incBlankStatus,
     $startRow,
@@ -56,6 +57,7 @@ function Build-List-Of-Pgms() {
     if ($pgmFoldersNatives) { $pgms += "run-get-natives-folders"; }
     if ($pgmFoldersImages) { $pgms += "run-get-images-folders"; }
     if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
+    if ($pgmConvDcb) { $pgms += "run-convert-one-dcb"; }
     if ($pgmQcV10Tags) { $pgms += "run-qc-v10-tags"; }
     if ($pgmSizesAll) { 
         $pgms += "run-check-and-add-sizes-to-file-natives"; 
