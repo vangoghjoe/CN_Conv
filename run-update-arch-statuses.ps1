@@ -36,7 +36,8 @@ param(
     [switch]$pgmSizesAll,
     [switch]$pgmFoldersNatives,
     [switch]$pgmFoldersImages,
-    [switch]$pgmQcTags,
+    [switch]$pgmQcV8Tags,
+    [switch]$pgmQcV10Tags,
     [switch]$incBlankStatus,
     $startRow,
     $endRow
