@@ -133,8 +133,15 @@ function Main {
             continue
         }
 
-        if ($row.st_backup -ne $CF_STATUS_GOOD) {
-            continue
+        if ($Vstr -eq 'v8') {
+            if ($row.st_backup -ne $CF_STATUS_GOOD) {
+                continue
+            }
+        }
+        else {
+            if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
+                continue
+            }
         }
 
         Exec-Get-Tags $row $runEnv  $CN_EXE $VStr
