@@ -36,6 +36,7 @@ $CF_PGMS = @{
 # 3 = prev pgm it depends on (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
+"run-qc-tags" = @("st_qc_tags", "tagging", "backup-for-conversions");
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
