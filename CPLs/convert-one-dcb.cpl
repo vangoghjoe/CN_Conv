@@ -127,11 +127,11 @@ main()
     char   dcb_pfn_root[256];
 
 
+    g_hasError = FALSE;
     /* Problems with spaces in cmd line args, so sort of URL-encode it,
      * except substitute the string LN_SPACE_XYZ for any spaces
      */
 
-    
     dcb_pfn_root = getarg(2); /* arg0 = /nospash   arg1 = this CPT */
     if (dcb_pfn_root == "") {
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
@@ -179,7 +179,11 @@ main()
 
     stop_time = get_time_stamp();
     write_stats_log("DCB|" + dcb_pfn + "|DURATION|" + xlate_status(status) + "|" + start_time + "|" + stop_time);
-
+    if (status==STATUS_BAD) {
+        g_hasError = TRUE;
+        finish_stats_log();
+        exit();
+    }
 
     /* Convert DIR */
     if (exist(dir_pfn)) {
@@ -188,6 +192,12 @@ main()
         status = ConvertSingleDIRImagebase(dir_pfn, nDstVersion);
         stop_time = get_time_stamp();
         write_stats_log("DIR|" + dir_pfn + "|DURATION|" + xlate_status(status) + "|"+ start_time + "|" + stop_time);
+
+        if (status==STATUS_BAD) {
+            g_hasError = TRUE;
+            finish_stats_log();
+            exit();
+        }
     }
     else {
         write_stats_log("DIR|NONE FOUND||N/A");
@@ -200,6 +210,12 @@ main()
         status = ConvertSingleVOLImagebase(vol_pfn, nDstVersion);
         stop_time = get_time_stamp();
         write_stats_log("VOL|" + vol_pfn + "|DURATION|" + xlate_status(status) + "|"+ start_time + "|" + stop_time);
+
+        if (status==STATUS_BAD) {
+            g_hasError = TRUE;
+            finish_stats_log();
+            exit();
+        }
     }
     else {
         write_stats_log("VOL|NONE FOUND||N/A");
@@ -213,13 +229,20 @@ main()
         stop_time = get_time_stamp();
         status = (status == 0) ? STATUS_OK : STATUS_BAD;
         write_stats_log("INDEX|" + dcb_pfn + "|DURATION|" + xlate_status(status) + "|"+ start_time + "|" + stop_time);
+
+        if (status==STATUS_BAD) {
+            g_hasError = TRUE;
+            finish_stats_log();
+            exit();
+        }
      }
 
     closedb(db);
 
     write_stats_log("END|"+get_time_stamp());
-    close(fh_stats_log);
-    exit();  /* ends the CPL, closes all dbs and quite CN */
+    /* Still here? Finished successfully */
+    finish_stats_log();
+    exit();  /* ends the CPL, closes all dbs and quit CN */
 
 }
 
@@ -256,17 +279,18 @@ init_stats_log()
 }
 
 /****************************************************************
-* Name:         write_stats_log()
-* Open and close each time to make sure its flushed.  This is
-* a low traffic file so won't impact performance.
+* Name:         finish_stats_log
+* Depending on error status, write the STOP REC and EXIT STATUS rec
 ****************************************************************/
-write_stats_log_old(text msg) 
+finish_stats_log()
 {
-    if ((fh_stats_log = open(stats_log_pfn, "a")) == EOF) {
-        exit();  /* ends the CPL, closes all dbs and quite CN */
+    write_stats_log("|STOP|");
+    if (g_hasError == TRUE) {
+		write_stats_log("|EXIT_STATUS|" + "FAILED");
     }
-    writeln(fh_stats_log, msg, len(msg));
-    close(fh_stats_log);
+    else {
+		write_stats_log("|EXIT_STATUS|" + "OK");
+    }
 }
 
 /****************************************************************
@@ -282,8 +306,8 @@ write_stats_log(text msg)
 	mytime = get_time_stamp();
     msg = mytime + "|" + msg;
 	msgLen = len(msg);
-    if ((g_fh_log = open(g_log_pfn, "a")) == EOF) {
-        messageBox("ERROR: Can't open status log for writing","",0);
+    if ((g_fh_log = open(stats_log_pfn, "a")) == EOF) {
+        messageBox("ERROR: Can't open status log for writing " + stats_log_pfn,"",0);
         exit();  /* ends the CPL, closes all dbs and quite CN */
     }
     writeln(g_fh_log, msg, msgLen);
@@ -796,8 +820,4 @@ short   F1 = 15104,
         PGDN = 20736,
         HOME = 18176,
         END = 20224;
-
-
-
-
 
