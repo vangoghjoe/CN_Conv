@@ -117,7 +117,6 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
     CF-Finish-Log $script:statusFilePFN 
 }
 
-# OK, super kludgy:  Loop over whole DB once for each pgm
 # For each row, call Process-Cell to just that pgm for just that row
 # So Process-Cell is called  #rows x #pgms times
 function Main {

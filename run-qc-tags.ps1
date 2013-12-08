@@ -31,6 +31,7 @@ param(
     $CN_Ver
 )
 
+set-strictmode -version latest
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -64,16 +65,10 @@ function Exec-Get-Tags {
         $Vstr
     )
     $bStr = $runEnv.bStr
-    
     $dbid = $dbRow.dbid
 
-    # if we're calling this for v8, still use the "conv" dcb, 
-    # b/c at this point in the process is that it hasn't 
-    # been converted yet
-    $dcbPfn = $dbRow.conv_dcb;
     
     $dbStr = "{0:0000}" -f [int]$dbid
-    $dcbDir = [system.io.path]::GetDirectoryName($dcbPfn)
     $resFile = "${bStr}_${dbStr}_${VStr}_tagging.txt"
     $statusFile = "${bStr}_${dbStr}_${VStr}_tagging_STATUS.txt"
     #$localResFilePFN = "$dcbDir\$CF_LocaldcbDir
@@ -153,8 +148,6 @@ function Main {
     write-host "*** Done: batch = $BatchID CN=$Vstr Start row=$startRow  End row=$endRow"
     write-host "Start: $startDate"
     write-host "End:   $endDate"
-    #if (-not $DriverFile ) { $DriverFile = "None" }
-    #write-host "Driver file = $DriverFile"
 }     
 
 Main
