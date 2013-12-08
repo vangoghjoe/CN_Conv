@@ -36,7 +36,8 @@ $CF_PGMS = @{
 # 3 = prev pgm it depends on (can be array)
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
-"run-qc-tags" = @("st_qc_tags", "tagging", "backup-for-conversions");
+"run-qc-v8-tags" = @("st_qc_v8_tags", "v8_tagging", "backup-for-conversions");
+"run-qc-v10-tags" = @("st_qc_v10_tags", "v10_tagging", "backup-for-conversions");
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
@@ -70,7 +71,8 @@ $CF_FIELDS = @(
 "st_get_images",
 "st_get_images2",
 "st_get_natives",
-"st_qc_tags",
+"st_qc_v8_tags",
+"st_qc_v10_tags",
 "st_qc_compare_tags",
 "st_backup_arch",
 "st_convert",
@@ -140,7 +142,8 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
 
 function CF-Init-RunEnv {
     param  (
-        $bID
+        $bID,
+        $Vstr
     )
     
     $bStr = "{0:000.0}" -f [float]$bID
@@ -165,6 +168,11 @@ function CF-Init-RunEnv {
     $h["bStr"] = $bStr
     $h["MasterLogPFN"] = "$($h.LogsDir)\_Master.log"
     $basename = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
+
+    # the pgm run-qc-tags is a special case b/c runs in both v8 and v10 mode
+    if ($basename -eq 'run-qc-tags') {
+        $basename = "run-qc-${Vstr}-tags"
+    }
     $h["BaseName"] = $basename 
 
     # get outStub and status field

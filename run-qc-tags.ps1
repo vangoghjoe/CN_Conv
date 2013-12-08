@@ -95,11 +95,11 @@ function Exec-Get-Tags {
 }   
 
 function Main {
-    $runEnv = CF-Init-RunEnv $BatchID
     
     ($Vstr, $script:CN_EXE) = CF-Get-CN-Info $CN_Ver 
     Set-Up-CPT $Vstr
     Set-Up-CPT $Vstr
+    $runEnv = CF-Init-RunEnv $BatchID $Vstr
     
 
     # 11/23/13
@@ -130,7 +130,7 @@ function Main {
         $statVal = $row.$($runEnv.StatusField) 
 
         if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne $null) ) {
+            ($statVal -ne "") ) {
             continue
         }
 
