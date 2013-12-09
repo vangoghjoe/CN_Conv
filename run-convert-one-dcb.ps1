@@ -30,6 +30,7 @@ param(
     $endRow
 )
 
+set-strictmode -version latest
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -86,6 +87,7 @@ function Exec-CPL {
 }   
 
 function Main {
+    $startdate = $(get-date -format $CF_DateFormat)
     $runEnv = CF-Init-RunEnv $BatchID
     
     $CN_Ver = 10

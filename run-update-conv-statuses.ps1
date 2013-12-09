@@ -39,6 +39,7 @@ param(
     [switch]$pgmQcV8Tags,
     [switch]$pgmConvDcb,
     [switch]$pgmQcV10Tags,
+    [switch]$pgmQcCompareTags,
     [switch]$incBlankStatus,
     $startRow,
     $endRow
@@ -59,6 +60,7 @@ function Build-List-Of-Pgms() {
     if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
     if ($pgmConvDcb) { $pgms += "run-convert-one-dcb"; }
     if ($pgmQcV10Tags) { $pgms += "run-qc-v10-tags"; }
+    if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
     if ($pgmSizesAll) { 
         $pgms += "run-check-and-add-sizes-to-file-natives"; 
         $pgms += "run-check-and-add-sizes-to-file-images"; 
@@ -67,7 +69,7 @@ function Build-List-Of-Pgms() {
 }
 
 
-function Process-Cell($dbRow, $runEnv, $pgm) {
+function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
     # Inits
     CF-Init-RunEnv-This-Row $runEnv $dbRow
 
@@ -78,13 +80,21 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
     $dbStr = "{0:0000}" -f [int]$dbid
 
     $script:rowHasError = $false
+    $script:rowStatusGood = $false
     write-host "DBID = $dbid  pgm = $pgm"
     try {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
-        $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
-        $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
+        if ($type -eq "status") {
+            $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
+            $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
+        }
+        elseif ($type -eq "results") {
+            $pgmStatFld += "_results"
+            $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}.txt"
+            $pgmStatusFilePFN =  "$($runEnv.SearchResultsDir)\$pgmStatusFile"
+        }
 
         # DEBUG SECTION
         #write-host "pgm = $pgm"
@@ -102,6 +112,7 @@ function Process-Cell($dbRow, $runEnv, $pgm) {
         }
         elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
             $dbRow.$pgmStatFld = $CF_STATUS_GOOD
+            $script:rowStatusGood = $true
             CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
         }
         else {
@@ -184,6 +195,14 @@ function Main {
                 }
 
                 Process-Cell $row $runEnv $pgm
+                # Also check results, if applicable
+                # Only check the results if the pgm itself
+                # ran ok, meaning rowHasError = $false
+                if ($script:rowStatusGood -eq $true) {  
+                    if ($pgm -eq "run-qc-compare-tags") {
+                        Process-Cell $row $runEnv $pgm "results"
+                    }
+                }
 
             }
         }
@@ -227,12 +246,7 @@ function Main {
 
         # update st_all
         if (($row.st_backup -eq $CF_STATUS_GOOD) -and 
-            ($row.st_qc_tags -eq $CF_STATUS_GOOD) -and
-            ($row.st_get_images -eq $CF_STATUS_GOOD) -and
-            ($row.st_get_images2 -eq $CF_STATUS_GOOD) -and
-            ($row.st_db_sizes -eq $CF_STATUS_GOOD) -and
-            ($row.st_sizes_images -eq $CF_STATUS_GOOD) -and
-            ($row.st_sizes_natives -eq $CF_STATUS_GOOD)
+            ($row.st_qc_compare_tags_results -eq $CF_STATUS_GOOD)
            )
         {
             $row.st_all = $CF_STATUS_GOOD
