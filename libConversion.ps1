@@ -229,7 +229,7 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
             }
         }
     }
-    CF-Write-File $errLog $msg
+    #CF-Write-File $errLog $msg
 }
 
 # adds some info to each error, and appends it to the pgm's good log
