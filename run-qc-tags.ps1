@@ -28,6 +28,8 @@ param(
     $BatchID,
     $startRow,
     $endRow,
+    [switch] $ignoreStatus,
+    $DBId,
     $CN_Ver
 )
 
@@ -116,22 +118,28 @@ function Main {
             continue
         }
 
-        $statVal = $row.$($runEnv.StatusField) 
 
-        if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne "") ) {
+        if (!$ignoreStatus) {
+            $statVal = $row.$($runEnv.StatusField) 
+            if ($statVal -ne $CF_STATUS_READY -and 
+                ($statVal -ne "") ) {
+                continue
+            }
+
+            if ($Vstr -eq 'v8') {
+                if ($row.st_backup -ne $CF_STATUS_GOOD) {
+                    continue
+                }
+            }
+            else {
+                if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
+                    continue
+                }
+            }
+        }
+
+        if ($DBid -and ($row.dbid -ne $DBid)) { 
             continue
-        }
-
-        if ($Vstr -eq 'v8') {
-            if ($row.st_backup -ne $CF_STATUS_GOOD) {
-                continue
-            }
-        }
-        else {
-            if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
-                continue
-            }
         }
 
         Exec-Get-Tags $row $runEnv  $CN_EXE $VStr
