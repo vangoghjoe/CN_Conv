@@ -76,6 +76,9 @@ function Exec-Robocopy {
     $success = $false
     # build args array
     ### all dbfiles are in same dir, get the dir name from first entry in list
+    ### IMPORTANT: all the entries in $myargs have to be in double quotes to handle spaces
+    ###            single quotes doesn't work.  
+    ###            Can use sysinternals.com ProcMon to see exactly how things are being called
     $srcDir = [system.io.path]::GetDirectoryName($dbfiles[0])
     $myargs = @("""$srcDir""", """$destDir""")
     foreach ($dbfile in $dbfiles) {
