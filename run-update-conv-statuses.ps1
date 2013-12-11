@@ -51,7 +51,7 @@ param(
 
 function Build-List-Of-Pgms() {
     $pgms = @();
-    if ($pgmBackup) { $pgms += "backup-for-archiving"; }
+    if ($pgmBackup) { $pgms += "backup-for-conversion"; }
     if ($pgmNatives) { $pgms += "run-get-natives"; }
     if ($pgmImages) { $pgms += "run-get-images"; }
     if ($pgmImages2) { $pgms += "run-get-images2"; }
