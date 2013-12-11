@@ -70,9 +70,8 @@ function Process-Row {
         $t = "DELETE FROM CN_Files WHERE "
         $t += "batchid=$batchid AND dbid=$dbid AND fileset='$fileset'" 
         $sCmd.CommandText = $t
-        write-host $t
         $sCmd.ExecuteNonQuery() > $null
-
+	if (($dbid % 10) -eq 0) { write-host $dbid }
 
         $files = CF-Get-DbFiles $dcbPfn
         foreach ($file in $files) {
@@ -82,8 +81,7 @@ function Process-Row {
             $t = "INSERT INTO CN_Files (batchid, dbid, fileset, ext, size)"
             $t += " VALUES($batchid, $dbid, '$fileset','$ext', $size)"
             $sCmd.CommandText = $t
-            write-host $t
-            $sCmd.ExecuteNonQuery()
+            $sCmd.ExecuteNonQuery() > $null
         }
 
     }
@@ -127,7 +125,7 @@ function Main {
                     continue
                 }
             }
-            else {
+            elseif ($fileSet -eq 'C') {
                 if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
                     continue
                 }
