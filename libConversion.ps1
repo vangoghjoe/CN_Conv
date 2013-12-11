@@ -45,6 +45,7 @@ $CF_PGMS = @{
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
 "run-get-natives-folders" = @("st_get_folders_natives","folders_natives","folders_natives","");
 "run-get-images-folders" = @("st_get_folders_images","folders_images","folders_images","");
+"run-get-sizes" = @("st_get_sizes","get-sizes");
 # run-check is a bit problematic: runs as one pgm, but in terms of outputs, its easier 
 # to treat as two separate ones.  
 "run-check-and-add-sizes-to-file-natives" = @("st_sizes_natives","sizes_natives","sizes_natives");
@@ -169,6 +170,7 @@ function CF-Init-RunEnv {
     }
 
     # lastly, add in any values that aren't for dirs to be made
+    $h["bID"] = $bID
     $h["bStr"] = $bStr
     $h["MasterLogPFN"] = "$($h.LogsDir)\_Master.log"
     $basename = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
@@ -496,6 +498,16 @@ function CF-Get-DbFiles {
     return Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
 }
 
+function CF-Get-DbFiles-With-Sizes {
+    param ( [string] $dcbPfn )
+    
+    # get name of full pfn without extension
+    $dcbBase = CF-Get-PfnWithoutExtension $dcbPfn
+    
+    $files = Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
+        
+}
+
 # possible status values:
 # 0 = ran but failed
 # 1 = in process
@@ -690,6 +702,15 @@ function CF-Write-Out-CM-Dbids($outFile, $CMs_h) {
             CF-Write-File $outFile "$CM|$dbid"
         }
     }
+}
+
+function CF-Get-File-Sizes($files) {
+    $sizes = @()
+    foreach ($dbFile in $dbFiles) {
+        $size = (get-item $dbFile).length
+        $sizes += @($dbFile,$size)
+    }
+    return $sizes
 }
 
 # stub for making a field in a table 

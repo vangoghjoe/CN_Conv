@@ -72,7 +72,12 @@ function Exec-Get-Tags {
     # if we're calling this for v8, still use the "conv" dcb,
     # b/c at this point in the process is that it hasn't
     # been converted yet
-    $dcbPfn = $dbRow.conv_dcb;
+    if ($Vstr -match '8') {
+        $dcbPfn = $dbRow.local_v8_dcb;
+    }
+    else {
+        $dcbPfn = $dbRow.conv_dcb;
+    }
     $dcbDir = [system.io.path]::GetDirectoryName($dcbPfn)
     
     $dbStr = "{0:0000}" -f [int]$dbid
