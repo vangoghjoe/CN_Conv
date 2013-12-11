@@ -100,3 +100,21 @@ ORDER BY db.clientmatter  -- this inner query by itself gives the problem CM's
 -- 174 dbs had backup problems
 -- there are 55 open clientmatters that have a db that is RTBA.
 -- BUT, they only have one CM in common: 063553.000160  Double checked by 
+
+select p.db, p.size from
+dbo.n1 p
+left outer join dbo.n2 m
+on p.db = m.db
+where m.db is null
+
+select *, p.size - m.size as 'Diff' from
+dbo.n1 p
+join dbo.n2 m
+on p.db = m.db
+where p.size <> m.size
+
+select SUM(convert(float,p.size - m.size))/POWER(2,30) as 'sum' from
+dbo.n1 p
+join dbo.n2 m
+on p.db = m.db
+where p.size <> m.size

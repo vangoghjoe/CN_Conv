@@ -77,17 +77,18 @@ function Exec-Robocopy {
     # build args array
     ### all dbfiles are in same dir, get the dir name from first entry in list
     $srcDir = [system.io.path]::GetDirectoryName($dbfiles[0])
-    $args = @($srcDir, $destDir)
+    $myargs = @("""$srcDir""", """$destDir""")
     foreach ($dbfile in $dbfiles) {
         $dbfileName = [system.io.path]::GetFileName($dbfile)
-        $args += $dbFileName
+        $myargs += """$dbFileName"""
     }
+
 
     # run robocopy, saving resulting process
     ## flags for Start-Process
     ## -Wait = run synchronously
     ## -PassThru = needed to return the resulting process
-    $proc = (start-process robocopy -ArgumentList $args -Wait -NoNewWindow -PassThru)
+    $proc = (start-process robocopy -ArgumentList $myargs -Wait -NoNewWindow -PassThru)
     if ($proc.ExitCode -gt 1) {
         write-host "Robocopy failed for input dir = $srcDir"
     }
@@ -170,7 +171,7 @@ function Process-Row($dbRow, $runEnv) {
         #foreach ($dbFile in $dbFiles) { write-host "$($dbFile.FullName) : $($dbFile.Length)" }
         if (-not $JustTestPath) {
             $success = Exec-Robocopy  $backupDir $dbFiles
-            if ($success = $true) {
+            if ($success -eq $true) {
                 # throws error if fails
                 Verify-Copy-Sizes $backupDir $dbFiles
                 $row.$($runEnv.StatusField) = $CF_STATUS_GOOD
