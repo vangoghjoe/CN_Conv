@@ -37,8 +37,13 @@ param(
     [switch]$pgmFoldersNatives,
     [switch]$pgmFoldersImages,
     [switch]$pgmQcV8Tags,
+    [switch]$pgmQcListDictV8,
+    [switch]$pgmQcQueryDictV8,
+    [switch]$pgmQcPickWords,
     [switch]$pgmConvDcb,
     [switch]$pgmQcV10Tags,
+    [switch]$pgmQcListDictV10,
+    [switch]$pgmQcQueryDictV10,
     [switch]$pgmQcCompareTags,
     [switch]$incBlankStatus,
     $startRow,
@@ -58,9 +63,15 @@ function Build-List-Of-Pgms() {
     if ($pgmFoldersNatives) { $pgms += "run-get-natives-folders"; }
     if ($pgmFoldersImages) { $pgms += "run-get-images-folders"; }
     if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
+    if ($pgmQcListDictV8) { $pgms += "run-qc-list-dict-v8"; }
+    if ($pgmQcPickWords) { $pgms += "run-qc-dict-pick-qc-words"; }
+    if ($pgmQcQueryDictV8) { $pgms += "run-qc-query-dict-v8"; }
     if ($pgmConvDcb) { $pgms += "run-convert-one-dcb"; }
     if ($pgmQcV10Tags) { $pgms += "run-qc-v10-tags"; }
+    if ($pgmQcListDictV10) { $pgms += "run-qc-list-dict-v10"; }
+    if ($pgmQcQueryDictV10) { $pgms += "run-qc-query-dict-v10"; }
     if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
+    if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
     if ($pgmSizesAll) { 
         $pgms += "run-check-and-add-sizes-to-file-natives"; 
         $pgms += "run-check-and-add-sizes-to-file-images"; 

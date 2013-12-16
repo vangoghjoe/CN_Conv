@@ -7,7 +7,6 @@
 int db, g_fh_log;
 text g_spaceStr = "LN_SPACE_XYZ";
 text g_dcb_pfn, g_results_pfn, g_log_pfn;
-text g_qcwords_pfn;
 int CR=13, LF=10, TAB=9, EOF=-1;
 int g_hasError;
 int OK=0, ERROR=1, TRUE=1, FALSE=0;
@@ -22,9 +21,6 @@ main()
     /*btmenu(btfh,0,0,25,25,"dict",key,data);*/
     /*return;*/
 	
-    /* clear search history */
-    query(db, -1);
-
     /* Inits */
     g_hasError = FALSE;
     if ((Inits())==ERROR) {
@@ -32,20 +28,24 @@ main()
         exit();
     }
 
+    /*
+    g_log_pfn = "C:\_query-dict.txt";
+    init_log();
+    */
+
+    /* clear search history */
+    query(db, -1);
+    
     /* process tags */
     if (GetDatabaseVersion(db) < 9)
-	   status = QueryDictPreV10(db);
+	   status = ProcessDictPreV10(db);
 	else
-	   status = QueryDictPreV10(db);
+	   status = ProcessDictPreV10(db);
 
 	 if (status == ERROR) {
          finish_log();
          exit();
      }
-
-     /* save the search history */
-     SaveSearchHistory(db);
-
 
      /* still here?  finish the log */
      finish_log();
@@ -70,17 +70,12 @@ Inits()
      */
 	  
 	/* get cmdline args */
+    g_dcb_pfn = getarg(2);
+	g_results_pfn = getarg(3);
+	g_log_pfn = getarg(4);
     g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
     g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
     g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");
-    g_qcwords_pfn = LN_replace(getarg(5), g_spaceStr, " ");
-
-    /* for testing */
-    /*g_dcb_pfn = "C:\conversions-6\conversions\orig\v8\Cowco_v8-3\Cowco.dcb";*/
-    /*g_log_pfn = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Program_Logs\002.0_0003_qc-query-test-dict-v8_STATUS.txt";*/
-    /*g_results_pfn = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Search_Results\002.0_0003_qc-query-test-dict-v8.txt";*/
-    /*g_qcwords_pfn = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Search_Results\002.0_0003_qc-dict-pick-qc-words.txt";*/
-
 
     if (g_dcb_pfn == "") {
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
@@ -145,83 +140,145 @@ SaveSearchHistory(int db)
     return OK;
 }
 
-QueryDictPreV10(int db)
+ProcessDictPreV10(int db)
 {
     int      btDict = EOF,
              btList = EOF,
              nData,
              status,
-             qc_words_fh,
-             results_fh,
-             rc,
-             oldQueryNumber,
+             fh,
              i;
     text     pszKey,
              buf,
              pszList;
-    char qc_word[256];
 
     status = OK;
 
     if ((db <> EOF)) 
     {            
-        /* Loop over the qc_words file and make a new search  for each work */
-        if ((qc_words_fh = open(g_qcwords_pfn, "r")) <> EOF) {      
-            while (readln(qc_words_fh, qc_word) <> EOF) {         
-                 oldQueryNumber = db.query;
-                 /* chr(34) = "   (double quote) */
-                 /* chr(39) = '   (single quote) */
-                 /*qc_word = chr(39) + chr(34) + qc_word + chr(34) + chr(39);*/
-                 qc_word = chr(34) + qc_word + chr(34);
-                 rc=search(db,qc_word);
-                 if (rc<>0) {
-                    messageBox("Query: rc = " + str(rc), "",0);
-                    g_hasError = TRUE;
-                    /* testing */
-                    write_log("|ERROR| Error [rc=" + str(rc) + "] for '" + qc_work + "'");
-                    /*write_log("|ERROR| Error [rc=" + str(rc) + "]" );*/
-                    return ERROR;
-                 }
-                 else {
-                    if (oldQueryNumber == db.query) {
-                        g_hasError = TRUE;
-                        write_log("|ERROR| Error query num didnt' change after searching for '" + qc_work + "'");
-                        return ERROR;
-                    }
-                }
+        /* Try and open the DCT file */
+        if ((btDict = btopen(db.database + ".DCT")) <> EOF) {      
+
+            /* Cycle through the DCT file */
+            buf = "";
+            for (i = btfirst(btDict, pszKey, nData); i == 0; i = btnext(btDict, pszKey, nData)) 
+            {         
+                buf = buf + pszKey + chr(CR) + chr(LF);
+                /* Add a space to jump to the next DCT entry */
+                pszKey = pszKey + " ";
             }
-            /* Close the qc_words file */
-            close(qc_words_fh);
+            /* Close the DCT file */
+            btclose(btDict);
 
             /* write keys to the results file */
-            /*if ((results_fh=open(g_results_pfn,"w"))==EOF) {*/
-                /*g_hasError = TRUE;*/
-                /*write_log("|ERROR| Can't open results file: " + g_results_pfn);*/
-                /*return ERROR;*/
-            /*}*/
-            /*if ((write(results_fh, buf, len(buf)))==EOF) {*/
-                /*write_log("|ERROR| Cannot write to results file.");*/
-                /*g_hasError = TRUE;*/
-                /*return ERROR;*/
-            /*}*/
+            if ((fh=open(g_results_pfn,"w"))==EOF) {
+                g_hasError = TRUE;
+                write_log("|ERROR| Can't open results file: " + g_results_pfn);
+                return ERROR;
+            }
+            if ((write(fh, buf, len(buf)))==EOF) {
+                write_log("|ERROR| Cannot write to results file.");
+                g_hasError = TRUE;
+                return ERROR;
+            }
             
-            /*[> close file <]*/
-            /*close(results_fh);*/
+            /* close file */
+            close(fh);
         }
         else {
-            /* We were unable to open qc-words file*/
-            write_log("|ERROR| Can't open qc-words file: " + g_qcwords_pfn) ;
+            /* We were unable to open .DCT*/
+            write_log("|ERROR| Can't open .DCT file");
             g_hasError = TRUE;
             status = ERROR;
         }
     }
     else {
         /* somehow lost db connection */
-        write_log("|ERROR| in QueryDict, db is EOF");
+        write_log("|ERROR| in ProcessDict, db is EOF");
         g_hasError = TRUE;
         status = ERROR;
     }
     return status;
+}
+
+/* try making same as pre 10 except point at TRK instead of */
+ProcessTags(int db)
+{
+		   int      btTag = EOF,
+            btList = EOF,
+            nData,
+            status,
+            i;
+   text     pszKey,
+			tag,
+            pszList;
+   
+   status = OK;
+   if ((db <> EOF)) 
+   {            
+       /* Try and open the tag file */
+       if ((btTag = btopen(db.database + ".TRK")) <> EOF) 
+       {      
+           /* Cycle through the tag file */
+           for (i = btfirst(btTag, pszKey, nData); i == 0; i = btgt(btTag, pszKey, pszKey, nData)) 
+           {         
+               /*pszKey  = LN_replace(pszKey,"»Tagging #","»Tagging "); */
+               tag = substr(pszKey,2);
+               tagquery(db, tag);
+               /* Add a space to jump to the next tag */
+               pszKey = pszKey + " ";
+           }
+           /* Close the tag file */
+           btclose(btTag);
+       }
+       else {
+           /* We were unable to open .TRK*/
+           write_log("|ERROR| Can't open .TRK file");
+           g_hasError = TRUE;
+           status = ERROR;
+       }
+   }
+   else {
+       /* somehow lost db connection */
+       write_log("|ERROR| in ProcessTags, db is EOF");
+       g_hasError = TRUE;
+       status = ERROR;
+   }
+
+    return status;
+}
+
+
+
+
+/****************************************************************
+* Name:         oldProcessTagsV9                                   *
+* Synopsis:     Main function to insert tags into a field.      *
+****************************************************************/
+oldProcessTags(int db, nField; text pszDelimiter)
+{
+   int      btTag = EOF,
+            btList = EOF,
+            nData,
+            bError,
+            i;
+   text     pszKey,
+            pszList;
+   
+   if ((db <> EOF) and (nField <> 0) and (pszDelimiter <> "")) 
+   {            
+     /* Cycle through the database */
+     cycle(db) 
+     {         
+        /* Put up a status message */
+        puts(0, 0,  "Processing record " + str(docno(db)) + " of " + str(count(db)) + ". ");
+
+        /* Erase any previous contents of the field */
+        db->nField = gettags(db, pszDelimiter);
+        
+     }
+  }
+      
 }
 
 
@@ -338,10 +395,6 @@ write_log(text msg)
         exit();  /* ends the CPL, closes all dbs and quite CN */
     }
     writeln(g_fh_log, msg, msgLen);
-
-    /* Uncomment for testing */
-    /*messageBox("WriteLog: msg = " + msg,"",0);*/
-
     close(g_fh_log);
 }
 

@@ -1,5 +1,5 @@
 #####
-$CF_DEBUG = $false
+$CF_DEBUG = $true
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
@@ -37,9 +37,15 @@ $CF_PGMS = @{
 "backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
 "run-qc-v8-tags" = @("st_qc_v8_tags", "v8_tagging", "backup-for-conversions");
+"run-qc-list-dict-v8" = @("st_qc_list_dict_v8", "qc-list-dict-v8", "backup-for-conversions");
+"run-qc-dict-pick-qc-words" = @("st_qc_dict_pick_qc_words", "qc-dict-pick-qc-words", "backup-for-conversions");
+"run-qc-query-dict-v8" = @("st_qc_query_dict_v8", "qc-query-dict-v8", "backup-for-conversions");
 "run-convert-one-dcb" = @("st_convert_one_dcb", "convert-one-dcb", "run-qc-v8-tags|run-qc-v8-dict");
 "run-qc-v10-tags" = @("st_qc_v10_tags", "v10_tagging", "backup-for-conversions");
+"run-qc-list-dict-v10" = @("st_qc_list_dict_v10", "qc-list-dict-v10", "backup-for-conversions");
+"run-qc-query-dict-v10" = @("st_qc_query_dict_v10", "qc-query-dict-v10", "backup-for-conversions");
 "run-qc-compare-tags" = @("st_qc_compare_tags", "qc-compare-tags", "run-qc-v8-tags|run-qc-v10-tags");
+"run-qc-compare-dict" = @("st_qc_compare_dict", "qc-compare-dict", "run-qc-query-dict-v8|run-qc-query-v10");
 "run-get-images" = @("st_get_images", "images", "backup-for-archiving");
 "run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
 "run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
@@ -145,6 +151,21 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
     $runEnv["badbStr"] = "${bstr}_${dbStr}"
 }
 
+function CF-Init-RunEnv-This-Row2 ($runEnv, $dbRow) {
+    $dbid = $dbRow.dbid
+    $bStr = $runEnv.bStr
+    $dbStr = "{0:0000}" -f [int]$dbid
+    $runEnv["dbStr"] = $dbStr
+    $runEnv["badbStr"] = "${bstr}_${dbStr}"
+    
+    $statusFilePFN = "${bStr}_${dbStr}_$($runEnv.outFileStub)_STATUS.txt"
+    $runEnv["StatusFilePFN"] =  "$($runEnv.ProgramLogsDir)\$statusFilePFN"
+    
+    $resFilePFN = "${bStr}_${dbStr}_$($runEnv.outFileStub).txt"
+    $runEnv["ResFilePFN"] =  "$($runEnv.SearchResultsDir)\$resFilePFN"
+    return ($runEnv.StatusFilePFN, $runEnv.resFilePFN)
+}
+
 function CF-Init-RunEnv {
     param  (
         $bID,
@@ -179,6 +200,9 @@ function CF-Init-RunEnv {
     if ($basename -eq 'run-qc-tags') {
         $basename = "run-qc-${Vstr}-tags"
     }
+    elseif ($basename -eq 'run-qc-list-dict' -or ($basename -eq 'run-qc-query-dict')) {
+        $basename = "${basename}-${Vstr}"
+    }
     $h["BaseName"] = $basename 
 
     # get outStub and status field
@@ -186,15 +210,37 @@ function CF-Init-RunEnv {
         $h["StatusField"] = $CF_PGMS[$basename][0]
         $h["outFileStub"] = $CF_PGMS[$basename][1]
     }
+    #else {
+        #$h.Remove("StatusField")
+        #$h.Remove("outFileStub")
+    #}
     else {
-        $h.Remove("StatusField")
-        $h.Remove("outFileStub")
+        $h["StatusField"] = "st_" + $basename.replace("^run-","").replace("-","_")
+        $h["outFileStub"] = "st_" + $basename.replace("^run-","")
     }
+        
     
     $script:CF_BatchEnv = $h
     return $h
     
 }
+
+# Given name of a program, returns
+# @($statusField, 
+function CF-Get-Pgm-Global-Config ($pgmName) {
+    # get outStub and status field
+    $h = @{} 
+    if ($CF_PGMS.ContainsKey($pgmName)) {
+        $h["StatusField"] = $CF_PGMS[$pgmName][0]
+        $h["outFileStub"] = $CF_PGMS[$pgmName][1]
+    }
+    else {
+        $h["StatusField"] = "st_" + $pgmName.replace("^run-","").replace("-","_")
+        $h["outFileStub"] = "st_" + $pgmName.replace("^run-","")
+    }
+    return $h
+}
+
 
 # sets a script level var to hold the current logPfn
 function CF-Initialize-Log ($logPfn) {
