@@ -22,14 +22,16 @@ One or more examples
 .LINK
 
 #>
-
+[cmdletbinding()]
 param(
+    [Parameter(mandatory=$true)]
     $BatchID,
+    [Parameter(mandatory=$true)]
+    $CN_Ver,
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
-    $DBId,
-    $CN_Ver
+    $DBId
 )
 
 set-strictmode -version latest
@@ -88,6 +90,7 @@ function Process-Row {
     
     $safeDcbPfn = CF-Encode-CPL-Safe-Path $dcbPfn
     $myargs = @("/nosplash", $CPT, $safeDcbPfn, $batchResFilePFN, $statusFilePFN)
+    write-verbose ($myargs -join "`n")
 
     CF-Log-To-Master-Log $bStr $dbStr "STATUS" "Start dcb: $dcbPfn"
     $proc = (start-process $CN_EXE -ArgumentList $myargs -Wait -NoNewWindow -PassThru)
