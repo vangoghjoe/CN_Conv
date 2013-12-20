@@ -49,7 +49,7 @@ main()
 
      /* still here?  finish the log */
      finish_log();
-     /* exit(); */
+     exit();
 }
 
 /* Get the paths of various input / output files, 
@@ -74,9 +74,11 @@ Inits()
     g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
     g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");
 
+    /*
     g_dcb_pfn = LN_replace("C:\conversions\orig\v8\Cowco_v8-3\Cowco.dcb", g_spaceStr, " ");
     g_results_pfn = LN_replace("C:\DocumentsLN_SPACE_XYZandLN_SPACE_XYZSettings\hudsonj1\MyLN_SPACE_XYZDocuments\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Search_Results\002.0_0003_qc-list-dict-v8.txt", g_spaceStr, " ");
     g_log_pfn = LN_replace("C:\DocumentsLN_SPACE_XYZandLN_SPACE_XYZSettings\hudsonj1\MyLN_SPACE_XYZDocuments\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Program_Logs\002.0_0003_qc-list-dict-v8_STATUS.txt", g_spaceStr, " ");
+    */
 
     if (g_dcb_pfn == "") {
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
