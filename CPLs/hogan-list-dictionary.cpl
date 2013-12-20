@@ -49,7 +49,7 @@ main()
 
      /* still here?  finish the log */
      finish_log();
-     exit();
+     /* exit(); */
 }
 
 /* Get the paths of various input / output files, 
@@ -70,18 +70,18 @@ Inits()
      */
 	  
 	/* get cmdline args */
-    g_dcb_pfn = getarg(2);
-	g_results_pfn = getarg(3);
-	g_log_pfn = getarg(4);
     g_dcb_pfn = LN_replace(getarg(2), g_spaceStr, " ");
     g_results_pfn = LN_replace(getarg(3), g_spaceStr, " ");
     g_log_pfn = LN_replace(getarg(4), g_spaceStr, " ");
+
+    g_dcb_pfn = LN_replace("C:\conversions\orig\v8\Cowco_v8-3\Cowco.dcb", g_spaceStr, " ");
+    g_results_pfn = LN_replace("C:\DocumentsLN_SPACE_XYZandLN_SPACE_XYZSettings\hudsonj1\MyLN_SPACE_XYZDocuments\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Search_Results\002.0_0003_qc-list-dict-v8.txt", g_spaceStr, " ");
+    g_log_pfn = LN_replace("C:\DocumentsLN_SPACE_XYZandLN_SPACE_XYZSettings\hudsonj1\MyLN_SPACE_XYZDocuments\Hogan\_LN\Conversion_Admin\Batches\002.0\Logs\Program_Logs\002.0_0003_qc-list-dict-v8_STATUS.txt", g_spaceStr, " ");
 
     if (g_dcb_pfn == "") {
         messageBox("wrong nr args, look at top of CPL code", "Error", MB_OK);
         return ERROR;  
     }
-
 
 	/* initialize log */
     init_log();
@@ -147,6 +147,7 @@ ProcessDictPreV10(int db)
              nData,
              status,
              fh,
+             length,
              i;
     text     pszKey,
              buf,
@@ -154,51 +155,59 @@ ProcessDictPreV10(int db)
 
     status = OK;
 
-    if ((db <> EOF)) 
+    /* make sure still have db connection */
+    if ((db == EOF)) 
     {            
-        /* Try and open the DCT file */
-        if ((btDict = btopen(db.database + ".DCT")) <> EOF) {      
+        write_log("|ERROR| in ProcessDict, db is EOF");
+        g_hasError = TRUE;
+        return ERROR;
+    }
 
-            /* Cycle through the DCT file */
-            buf = "";
-            for (i = btfirst(btDict, pszKey, nData); i == 0; i = btnext(btDict, pszKey, nData)) 
-            {         
-                buf = buf + pszKey + chr(CR) + chr(LF);
-                /* Add a space to jump to the next DCT entry */
-                pszKey = pszKey + " ";
-            }
-            /* Close the DCT file */
-            btclose(btDict);
+    /* Try and open the DCT file */
+    if ((btDict = btopen(db.database + ".DCT")) == EOF) {      
+        /* We were unable to open .DCT*/
+        write_log("|ERROR| Can't open .DCT file");
+        g_hasError = TRUE;
+        return ERROR;
+    }
 
-            /* write keys to the results file */
-            if ((fh=open(g_results_pfn,"w"))==EOF) {
-                g_hasError = TRUE;
-                write_log("|ERROR| Can't open results file: " + g_results_pfn);
-                return ERROR;
-            }
-            if ((write(fh, buf, len(buf)))==EOF) {
+    if ((fh=open(g_results_pfn,"w"))==EOF) {
+        g_hasError = TRUE;
+        write_log("|ERROR| Can't open results file: " + g_results_pfn);
+        return ERROR;
+    }
+
+    /* Cycle through the DCT file */
+    buf = "";
+    for (i = btfirst(btDict, pszKey, nData); i == 0; i = btnext(btDict, pszKey, nData)) {         
+        buf = buf + pszKey + chr(CR) + chr(LF);
+        length = len(buf);
+        if (length>10000) {
+            /* write out buf each time b/c too slow when buf gets too bigh */
+            if ((write(fh, buf, length))==EOF) {
                 write_log("|ERROR| Cannot write to results file.");
                 g_hasError = TRUE;
                 return ERROR;
             }
-            
-            /* close file */
-            close(fh);
+            buf = "";
         }
-        else {
-            /* We were unable to open .DCT*/
-            write_log("|ERROR| Can't open .DCT file");
-            g_hasError = TRUE;
-            status = ERROR;
-        }
+
+        /* Add a space to jump to the next DCT entry */
+        pszKey = pszKey + " ";
     }
-    else {
-        /* somehow lost db connection */
-        write_log("|ERROR| in ProcessDict, db is EOF");
+
+    /* Close the DCT file */
+    btclose(btDict);
+
+    /* write keys to the results file */
+    if ((write(fh, buf, len(buf)))==EOF) {
+        write_log("|ERROR| Cannot write to results file.");
         g_hasError = TRUE;
-        status = ERROR;
+        return ERROR;
     }
-    return status;
+
+    /* close file */
+    close(fh);
 }
 
 /* try making same as pre 10 except point at TRK instead of */
