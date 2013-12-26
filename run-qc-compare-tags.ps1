@@ -25,6 +25,8 @@ One or more examples
 
 param(
     $BatchID,
+    [switch] $ignoreStatus,
+    $DBId,
     $startRow,
     $endRow
 )
@@ -197,24 +199,10 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         
-        if ($row.batchid -ne $BatchID) {   
+        $arrPreReqs = @($row.st_qc_v8_tags, $row.st_qc_v10_tags)
+        if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
-
-        $statVal = $row.$($runEnv.StatusField) 
-
-        if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne "") ) {
-            continue
-        }
-  
-        if ($row.st_qc_v8_tags -ne $CF_STATUS_GOOD) {
-            continue
-        }
-        if ($row.st_qc_v10_tags -ne $CF_STATUS_GOOD) {
-            continue
-        }
-
         write-host "comparing $($row.dbid)"
         Process-Row $row $runEnv 
     }
