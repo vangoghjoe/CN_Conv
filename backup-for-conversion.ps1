@@ -3,9 +3,12 @@ param (
     [string] $backupDirRoot,
     [Parameter(mandatory=$true)]
     [string] $BatchID,
-    [bool] $DeleteEachDestDir = $false,
+    [switch] $ignoreStatus,
+    $DBId,
+    [switch] $DeleteEachDestDir,
     [int] $dcbPathFoldersToSkip = 0,
-    $ignoreStatus = $false,
+    [switch] $FileSetLocalv8,
+    [switch] $FileSetConv,
     $DriverFile,
     $startRow,
     $endRow,
@@ -48,16 +51,16 @@ function Get-BackupDir {
         }
     }
     $backupDir = "$backupDirRoot\$dcbPfnStub" 
-    $conv_dcb = "$backupDir\$dcbFile"
+    $newDcbPfn = "$backupDir\$dcbFile"
     
     # I dont' know what the heck was going on here, but just couldn't
     # get it to return the hash correctly.  Finally restarted env and 
     # worked better
     #$ret = @{}
     #$ret["backupDir"] = $backupDir
-    #$ret["conv_dcb"] = $conv_dcb
+    #$ret["newDcbPfn"] = $newDcbPfn
     #$ret
-    ($backupDir, $conv_dcb)
+    ($backupDir, $newDcbPfn)
 }
  
 
@@ -146,7 +149,10 @@ function Process-Row($dbRow, $runEnv) {
         # use backslashes for everything to make it easier
         $dcbPfn = $dcbPfn -replace "/", "\"
 
-        ($backupDir, $row.conv_dcb) = Get-BackupDir $backupDirRoot $dcbPfn $dcbPathFoldersToSkip
+        ($backupDir, $newDcbPfn) = Get-BackupDir $backupDirRoot $dcbPfn $dcbPathFoldersToSkip
+
+        if ($FileSetLocalv8) { $dbrow.local_v8_dcb = $conv_dcb }
+        else { $dbrow.conv_dcb = $newDcbPfn }
 
         # Delete the destination backup dir? (mostly for testing)
         if (($DeleteEachDestDir) -and (test-path $backupDir)) {
@@ -201,6 +207,11 @@ function Main {
         # Inits
         $script:errMsg = "";
         $bStr = $runEnv.bStr        
+
+        if ($FileSetLocalv8 -and $FileSetConv -or ($FileSetLocalv8 -eq $false -and $FileSetConv -eq $false)) {
+            write-host "Please choose either -FileSetLocalv8 OR -FileSetConv"
+            return
+        }
         
         # Load driver file, if using
         if ($DriverFile) {
@@ -220,22 +231,16 @@ function Main {
 
         for($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
             $row = $dcbRows[$i]
-            $statVal = $row.$($runEnv.StatusField) 
-
-            if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "")) {
-                continue
-            }
-            
-            if ($row.batchid -ne $BatchID) {   
+            if (CF-Skip-This-Row $runEnv $row @()) {
                 continue
             }
 
-            # Check against driver file, if using
-            if ($DriverFile) {
-                if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                    continue
-                }
-            }
+            #Check against driver file, if using
+            #if ($DriverFile) {
+                #if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
+                    #continue
+                #}
+            #}
 
             # Process this row
             Process-Row $row $runEnv

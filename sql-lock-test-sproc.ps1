@@ -2,7 +2,7 @@ param(
     $instanceNum
 )
 set-strictmode -version 2
-$instanceNum = 5
+#$instanceNum = 5
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -15,10 +15,10 @@ function Main {
 
     # Getting a return value from a stored procedure
     $cmd.CommandType = [System.Data.CommandType] 'StoredProcedure'
-    $cmd.CommandText = 'uspX'
+    $cmd.CommandText = 'uspGetNextID'
 
     # set input param
-    $cmd.Parameters.AddWithValue("@caller","77") > $null 
+    $cmd.Parameters.AddWithValue("@caller",$instanceNum) > $null 
     # get output param
     $param = new-object System.Data.SqlClient.SqlParameter;
     $param.ParameterName = '@ID'
@@ -35,7 +35,8 @@ function Main {
         $id |  out-file -append -Encoding ascii $fileOut
         $caller++
         #$cmd.Parameters["@caller"].Value = $caller > $null 
-        if ($caller -gt 75) { echo "caller = $caller" ; break }
+        #if ($caller -gt 75) { echo "caller = $caller" ; break }
+        sleep 1
     }
 }
 

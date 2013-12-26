@@ -118,32 +118,15 @@ function Main {
     # DCB Rows Loop
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
-        
-        if ($row.batchid -ne $BatchID) {   
-            continue
+        $arrPreReqs = @()
+        if ($Vstr -eq 'v8') {
+            $arrPreReqs += $row.st_backup
         }
-
-
-        if (!$ignoreStatus) {
-            $statVal = $row.$($runEnv.StatusField) 
-            if ($statVal -ne $CF_STATUS_READY -and 
-                ($statVal -ne "") ) {
-                continue
-            }
-
-            if ($Vstr -eq 'v8') {
-                if ($row.st_backup -ne $CF_STATUS_GOOD) {
-                    continue
-                }
-            }
-            else {
-                if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
-                    continue
-                }
-            }
+        else {
+            $arrPreReqs += $row.st_convert_one_dcb
         }
-
-        if ($DBid -and ($row.dbid -ne $DBid)) { 
+       
+        if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
 

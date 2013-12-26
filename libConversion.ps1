@@ -449,6 +449,16 @@ function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) {
     return $rows
 }
 
+# returns variable pointing to all rows
+# most brain dead method imaginable.
+# Wanted to just shell out to sqlcmd, but not easily installable on target
+# So, will save the rows out to a CSV, then proceed as before
+function CF-Read-DB-File-SQL ($dbname) {
+    $outFile = 
+    $cmd = CF-Get-SQL-Cmd $dbname
+    $cmd.CommandText = "SELECT * FROM DCBs"
+}
+
 # up to caller to catch errors
 function CF-Write-DB-File ($table, $rows) {
     # TODO: lock file first
@@ -767,3 +777,40 @@ ALTER TABLE folders ADD bytes bigint
 '@
 $sqlCmdW.ExecuteNonQuery() > $null
 #>
+
+# Checks things like BatchID and row number to see if this row should be processed 
+# or not.  
+# 
+# Return $true if should skip this row, ie *not* to be processed
+# else   $false
+# 
+# $arrPreReqs is an array of status values that will trigger a skip if not GOOD
+function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
+    $skip = $false
+    if ($row.batchid -ne $BatchID) {   
+        return $true
+    }
+
+    $statVal = $row.$($runEnv.StatusField) 
+
+    if (!$ignoreStatus) {
+        $statVal = $row.$($runEnv.StatusField) 
+        if ($statVal -ne $CF_STATUS_READY -and 
+            ($statVal -ne "") ) {
+            return $true
+        }
+
+        $arrPreReqs | % {
+            if ($_ -ne $CF_STATUS_GOOD) {
+                return $true
+            }
+        }
+    }
+
+    if ($DBid -and ($row.dbid -ne $DBid)) { 
+        return $true
+    }
+    
+    # still here?  Don't skip this row
+    return $false
+}
