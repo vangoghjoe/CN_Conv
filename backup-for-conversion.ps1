@@ -12,6 +12,7 @@ param (
     $DriverFile,
     $startRow,
     $endRow,
+    $FileSet,
     [bool] $writeToDBFile = $true,
     [bool] $JustTestPath = $false
  )
