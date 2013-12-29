@@ -152,7 +152,7 @@ function Process-Row($dbRow, $runEnv) {
 
         ($backupDir, $newDcbPfn) = Get-BackupDir $backupDirRoot $dcbPfn $dcbPathFoldersToSkip
 
-        if ($FileSetLocalv8) { $dbrow.local_v8_dcb = $conv_dcb }
+        if ($FileSetLocalv8) { $dbrow.local_v8_dcb = $newDcbPfn }
         else { $dbrow.conv_dcb = $newDcbPfn }
 
         # Delete the destination backup dir? (mostly for testing)

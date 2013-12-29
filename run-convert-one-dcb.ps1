@@ -27,7 +27,8 @@ One or more examples
 param(
     $BatchID,
     $startRow,
-    $endRow
+    $endRow,
+    [switch]$UseMultiFileSets
 )
 
 set-strictmode -version latest
@@ -121,8 +122,15 @@ function Main {
             continue
         }
 
-        if ($row.st_qc_v8_tags -ne $CF_STATUS_GOOD) {
-            continue
+        if ($UseMultiFileSets) {
+            if ($row.st_backup -ne $CF_STATUS_GOOD) {
+                continue
+            }
+        }
+        else {
+            if ($row.st_qc_v8_tags -ne $CF_STATUS_GOOD) {
+                continue
+            }
         }
         #if ($row.st_qc_v8_dict -ne $CF_STATUS_GOOD) {
             #continue
