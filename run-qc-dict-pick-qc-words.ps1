@@ -23,12 +23,16 @@ One or more examples
 
 #>
 
+[CmdLetBinding()]
 param(
     $BatchID,
+    [switch] $ignoreStatus,
+    $DBId,
     $startRow,
     $endRow
 )
 
+set-strictmode -version latest
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
 function IsAlpha4($word) {

@@ -22,7 +22,7 @@ One or more examples
 .LINK
 
 #>
-
+[CmdLetBinding()]
 param(
     $BatchID,
     $startRow,
@@ -93,7 +93,7 @@ function Exec-Get-Tags {
     $myargs = @("/nosplash", $CPT, $safeDcbPfn, $batchResFilePFN, $statusFilePFN)
     CF-Log-To-Master-Log $bStr $dbStr "STATUS" "Start dcb: $dcbPfn"
     CF-Write-Progress $dbid $dcbPfn
-    write-verbose $myargs
+    write-verbose ($myargs -join "`n")
     $proc = (start-process $CN_EXE -ArgumentList $myargs -Wait -NoNewWindow -PassThru)
     if ($proc.ExitCode -gt 1) {
         CF-Log-To-Master-Log $bStr $dbStr "ERROR" "Bad exitcode CPL: $dcbPfn"
