@@ -29,6 +29,7 @@ $CF_CM_TBA_Dbids = "Data Archiving/client-matters-TBA-with-dbids.txt"
 $CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
 $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
+$writeProgCt = 0
 $CF_PGMS = @{
 # 0 = status field
 # 1 = root for status file
@@ -813,4 +814,9 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
     
     # still here?  Don't skip this row
     return $false
+}
+
+function CF-Write-Progress ($dbid, $dcb) {
+    $writeProgCt++
+    write-host ("Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 20,0))))
 }

@@ -70,11 +70,13 @@ function Process-Row {
     $dbid = $dbRow.dbid
     $outFileStub = $runEnv.outFileStub
 
-    # if we're calling this for v8, still use the "conv" dcb,
-    # b/c at this point in the process is that it hasn't
-    # been converted yet
     if ($Vstr -match '8') {
-        $dcbPfn = $dbRow.local_v8_dcb;
+        if ($UseMultiFilesets) {
+            $dcbPfn = $dbRow.local_v8_dcb;
+        }
+        else {
+            $dcbPfn = $dbRow.conv_dcb;
+        }
     }
     else {
         $dcbPfn = $dbRow.conv_dcb;
@@ -90,6 +92,7 @@ function Process-Row {
     
     $safeDcbPfn = CF-Encode-CPL-Safe-Path $dcbPfn
     $myargs = @("/nosplash", $CPT, $safeDcbPfn, $batchResFilePFN, $statusFilePFN)
+    CF-Write-Progress $dbid $dcbPfn
     write-verbose ($myargs -join "`n")
 
     CF-Log-To-Master-Log $bStr $dbStr "STATUS" "Start dcb: $dcbPfn"
@@ -119,34 +122,23 @@ function Main {
     # DCB Rows Loop
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
-        
-        if ($row.batchid -ne $BatchID) {   
-            continue
-        }
-
-
-        if (!$ignoreStatus) {
-            $statVal = $row.$($runEnv.StatusField) 
-            if ($statVal -ne $CF_STATUS_READY -and 
-                ($statVal -ne "") ) {
-                continue
-            }
-
-            if ($Vstr -eq 'v8') {
-                if ($row.st_backup -ne $CF_STATUS_GOOD) {
-                    continue
-                }
+        $arrPreReqs = @()
+        if ($Vstr -eq 'v8') {
+            if ($UseMultiFilesets) {
+                $arrPreReqs += $row.st_backup_local_v8
             }
             else {
-                if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
-                    continue
-                }
+                $arrPreReqs += $row.st_backup
             }
         }
-
-        if ($DBid -and ($row.dbid -ne $DBid)) { 
+        else {
+            $arrPreReqs += $row.st_convert_one_dcb
+        }
+       
+        if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
+
 
         Process-Row $row $runEnv  $CN_EXE $VStr
         # take ownership of this row, this step

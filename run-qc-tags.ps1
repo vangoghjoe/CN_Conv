@@ -23,13 +23,13 @@ One or more examples
 
 #>
 
-# VERSION: remote 7/26 7:27 P PST
 param(
     $BatchID,
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
     $DBId,
+    [switch]$UseMultiFilesets,
     $CN_Ver
 )
 
@@ -69,11 +69,13 @@ function Exec-Get-Tags {
     $bStr = $runEnv.bStr
     $dbid = $dbRow.dbid
 
-    # if we're calling this for v8, still use the "conv" dcb,
-    # b/c at this point in the process is that it hasn't
-    # been converted yet
     if ($Vstr -match '8') {
-        $dcbPfn = $dbRow.local_v8_dcb;
+        if ($UseMultiFilesets) {
+            $dcbPfn = $dbRow.local_v8_dcb;
+        }
+        else {
+            $dcbPfn = $dbRow.conv_dcb;
+        }
     }
     else {
         $dcbPfn = $dbRow.conv_dcb;
@@ -90,8 +92,8 @@ function Exec-Get-Tags {
     $safeDcbPfn = CF-Encode-CPL-Safe-Path $dcbPfn
     $myargs = @("/nosplash", $CPT, $safeDcbPfn, $batchResFilePFN, $statusFilePFN)
     CF-Log-To-Master-Log $bStr $dbStr "STATUS" "Start dcb: $dcbPfn"
-    $myargs
-    write ""
+    CF-Write-Progress $dbid $dcbPfn
+    write-verbose $myargs
     $proc = (start-process $CN_EXE -ArgumentList $myargs -Wait -NoNewWindow -PassThru)
     if ($proc.ExitCode -gt 1) {
         CF-Log-To-Master-Log $bStr $dbStr "ERROR" "Bad exitcode CPL: $dcbPfn"
@@ -120,7 +122,12 @@ function Main {
         $row = $dcbRows[$i]
         $arrPreReqs = @()
         if ($Vstr -eq 'v8') {
-            $arrPreReqs += $row.st_backup
+            if ($UseMultiFilesets) {
+                $arrPreReqs += $row.st_backup_local_v8
+            }
+            else {
+                $arrPreReqs += $row.st_backup
+            }
         }
         else {
             $arrPreReqs += $row.st_convert_one_dcb
