@@ -26,6 +26,9 @@ One or more examples
 # local 7/23 12 noon
 param(
     $BatchID,
+    [switch] $MultiFileSets,
+    [switch] $ignoreStatus,
+    $DBid,
     $startRow,
     $endRow
 )
@@ -121,7 +124,20 @@ function Main {
             continue
         }
 
-        if ($row.st_qc_v8_tags -ne $CF_STATUS_GOOD) {
+        $arrPreReqs = @()
+        # if Multi sets, then the v8 qc is in a different dir than the conversions.
+        # So, the conversions can start as soon as the conv bkups are done
+        # But if not, all the v8 Qc steps have to be run first
+        # NB: "st_backup" is for the conv backup, as opposed to st_backup_local_v8
+        if ($MultiFileSets) {
+            $arrPreReqs = @($row.st_backup)
+        }
+        else {
+            $arrPreReqs += $row.st_qc_v8_tags
+            $arrPreReqs += $row.st_qc_query_dict_v8
+        }
+       
+        if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
         #if ($row.st_qc_v8_dict -ne $CF_STATUS_GOOD) {
