@@ -817,6 +817,6 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
 }
 
 function CF-Write-Progress ($dbid, $dcb) {
-    $writeProgCt++
+    $script:writeProgCt++
     write-host ("Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 20,0))))
 }
