@@ -29,7 +29,7 @@ $CF_CM_TBA_Dbids = "Data Archiving/client-matters-TBA-with-dbids.txt"
 $CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
 $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
-$writeProgCt = 0
+$script:writeProgCt = 0
 $CF_PGMS = @{
 # 0 = status field
 # 1 = root for status file
@@ -800,13 +800,14 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
             ($statVal -ne "") ) {
             return $true
         }
-
-        foreach ($preReq in $arrPreReqs)  {
-            if ($preReq -ne $CF_STATUS_GOOD) {
-                return $true
-            }
+    }
+    
+    foreach ($preReq in $arrPreReqs)  {
+        if ($preReq -ne $CF_STATUS_GOOD) {
+            return $true
         }
     }
+
 
     if ($DBid -and ($row.dbid -ne $DBid)) { 
         return $true
