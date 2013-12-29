@@ -31,7 +31,6 @@ param(
     $DBid,
     $startRow,
     $endRow,
-    [switch]$UseUseMultiFileSets
 )
 
 set-strictmode -version latest
@@ -140,11 +139,7 @@ function Main {
        
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
->>>>>>> fa8f5696f9d88cba552dbcfbe3ac7f16987c43db
         }
-        #if ($row.st_qc_v8_dict -ne $CF_STATUS_GOOD) {
-            #continue
-        #}
 
         write $row.conv_dcb;
         Exec-CPL $row $runEnv $CN_EXE 
