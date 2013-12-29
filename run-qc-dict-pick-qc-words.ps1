@@ -64,22 +64,41 @@ function Pick-QC-Words ($dictListFile, $resFilePFN) {
     # if that fails, get alpha + 3 or more alphanum
     # else take what we can get except for tokens containing doublequotes
     # File format is just one dictionary word per line
-    $words = get-content $dictListFile
+    #$words = get-content $dictListFile
     $script:qcwords = @{}
+    $isDone = $false
 
     # All alpha
-    foreach ($word in $words) {
-        if (IsAlpha4 $word) {
-            if (AddToResFile) { return }
+    $reader = [System.IO.File]::OpenText("$dictListFile")
+    try {
+        for(;;) {
+            $word = $reader.ReadLine()
+            if ($word -eq $null) { break }
+            if (IsAlpha4 $word) {
+                if (AddToResFile) { $isDone = $true; break }
+            }
         }
     }
+    finally {
+        $reader.Close()
+    }
+    if ($isDone) { return }    
 
     # Alpha + alphanum
-    foreach ($word in $words) {
-        if (IsAlphaNum4 $word) {
-            if (AddToResFile) { return }
+    $reader = [System.IO.File]::OpenText("$dictListFile")
+    try {
+        for(;;) {
+            $word = $reader.ReadLine()
+            if ($word -eq $null) { break }
+            if (IsAlphaNum4 $word) {
+                if (AddToResFile) { $isDone = $true; break }
+            }
         }
     }
+    finally {
+        $reader.Close()
+    }
+    if ($isDone) { return }    
 
     # Anything except with double-quotes
     # NOTE: if Modify punctuation, double-quotes embedded in strings can 
@@ -87,11 +106,20 @@ function Pick-QC-Words ($dictListFile, $resFilePFN) {
     # Eg  aaa"doublequote   will be in dictionary
     #    but "aaa"doublequote"  and 'aaa"doubleqouote' 
     #    both throw errors when searching
-    foreach ($word in $words) {
-        if (!($word -match '"')) {
-            if (AddToResFile) { return }
+    $reader = [System.IO.File]::OpenText("$dictListFile")
+    try {
+        for(;;) {
+            $word = $reader.ReadLine()
+            if ($word -eq $null) { break }
+            if (!($word -match '"')) {
+                if (AddToResFile) { $isDone = $true; break }
+            }
         }
     }
+    finally {
+        $reader.Close()
+    }
+    if ($isDone) { return }    
 }
 
 function Process-Row($dbRow, $runEnv) {

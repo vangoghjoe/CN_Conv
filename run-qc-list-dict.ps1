@@ -30,6 +30,7 @@ param(
     $CN_Ver,
     $startRow,
     $endRow,
+    [switch] $UseMultiFilesets,
     [switch] $ignoreStatus,
     $DBId
 )

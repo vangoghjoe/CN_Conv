@@ -819,5 +819,5 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
 
 function CF-Write-Progress ($dbid, $dcb) {
     $script:writeProgCt++
-    write-host ("Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 20,0))))
+    write-host ("{3} Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 50,0)), (get-date -f $CF_DateFormat)))
 }
