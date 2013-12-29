@@ -800,8 +800,8 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
             return $true
         }
 
-        $arrPreReqs | % {
-            if ($_ -ne $CF_STATUS_GOOD) {
+        foreach ($preReq in $arrPreReqs)  {
+            if ($preReq -ne $CF_STATUS_GOOD) {
                 return $true
             }
         }
