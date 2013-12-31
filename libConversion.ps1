@@ -30,13 +30,19 @@ $CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
 $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
 $script:writeProgCt = 0
+
+# @step_defns =  set of all possible steps
+# @A_Work_Flow = seq of steps
+# to minimize re-coding, will use $CF_PGMS as the current work flow
+# 12/30 - See CF_PGMS-for-archiving.ps1 for old set of steps
+
 $CF_PGMS = @{
 # 0 = status field
 # 1 = root for status file
 # 2 = root search results (can be array)
 # 3 = prev pgm(s) it depends on (pipe delimited list)
-"backup-for-archiving" = @("st_backup_arch", "backup-for-archiving");
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
+"backup-for-conversion-local-v8" = @("st_backup_local_v8", "backup-for-conversion-local-v8");
 "run-qc-v8-tags" = @("st_qc_v8_tags", "v8_tagging", "backup-for-conversions");
 "run-qc-list-dict-v8" = @("st_qc_list_dict_v8", "qc-list-dict-v8", "backup-for-conversions");
 "run-qc-dict-pick-qc-words" = @("st_qc_dict_pick_qc_words", "qc-dict-pick-qc-words", "backup-for-conversions");
@@ -47,17 +53,6 @@ $CF_PGMS = @{
 "run-qc-query-dict-v10" = @("st_qc_query_dict_v10", "qc-query-dict-v10", "backup-for-conversions");
 "run-qc-compare-tags" = @("st_qc_compare_tags", "qc-compare-tags", "run-qc-v8-tags|run-qc-v10-tags");
 "run-qc-compare-dict" = @("st_qc_compare_dict", "qc-compare-dict", "run-qc-query-dict-v8|run-qc-query-v10");
-"run-get-images" = @("st_get_images", "images", "backup-for-archiving");
-"run-get-images-pt2" = @("st_get_images2","images_pt2","images_ALL", "run-get-images");
-"run-get-natives" = @("st_get_natives","natives","natives","backup-for-archiving");
-"run-get-natives-folders" = @("st_get_folders_natives","folders_natives","folders_natives","");
-"run-get-images-folders" = @("st_get_folders_images","folders_images","folders_images","");
-"run-get-sizes" = @("st_get_sizes","get-sizes");
-# run-check is a bit problematic: runs as one pgm, but in terms of outputs, its easier 
-# to treat as two separate ones.  
-"run-check-and-add-sizes-to-file-natives" = @("st_sizes_natives","sizes_natives","sizes_natives");
-"run-check-and-add-sizes-to-file-images" = @("st_sizes_images","sizes_images","sizes_images");
-"run-get-db-sizes" = @("st_db_sizes")
 }
 
 $CF_FIELDS = @(
@@ -204,6 +199,11 @@ function CF-Init-RunEnv {
     elseif ($basename -eq 'run-qc-list-dict' -or ($basename -eq 'run-qc-query-dict')) {
         $basename = "${basename}-${Vstr}"
     }
+    elseif ($basename -eq 'backup-for-conversion') {
+        if ($FileSetLocalv8) {
+            $basename = "${basename}-local-v8"
+        }
+    }
     $h["BaseName"] = $basename 
 
     # get outStub and status field
@@ -219,7 +219,6 @@ function CF-Init-RunEnv {
         $h["StatusField"] = "st_" + $basename.replace("^run-","").replace("-","_")
         $h["outFileStub"] = "st_" + $basename.replace("^run-","")
     }
-        
     
     $script:CF_BatchEnv = $h
     return $h
