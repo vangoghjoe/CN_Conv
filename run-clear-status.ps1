@@ -24,12 +24,12 @@ One or more examples
 #>
 
 param(
+    [Parameter(mandatory=$true)]
     $BatchID,
-    $ignoreStatus = $false,
-    $DriverFile,
     [Parameter(mandatory=$true)]
     [string] $FileStub,
     [switch]$NotJustErrors,
+    [switch]$pgmAll,
     [switch]$pgmBackup,
     [switch]$pgmNatives,
     [switch]$pgmImages,
@@ -48,7 +48,9 @@ param(
     [switch]$pgmQcCompareTags,
     [switch]$incBlankStatus,
     $startRow,
-    $endRow
+    $endRow,
+    $ignoreStatus = $false,
+    $DriverFile
 )
 
 
@@ -57,25 +59,32 @@ param(
 
 function Build-List-Of-Pgms() {
     $pgms = @();
-    if ($pgmBackup) { $pgms += "backup-for-conversion"; }
-    if ($pgmNatives) { $pgms += "run-get-natives"; }
-    if ($pgmImages) { $pgms += "run-get-images"; }
-    if ($pgmImages2) { $pgms += "run-get-images2"; }
-    if ($pgmFoldersNatives) { $pgms += "run-get-natives-folders"; }
-    if ($pgmFoldersImages) { $pgms += "run-get-images-folders"; }
-    if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
-    if ($pgmQcListDictV8) { $pgms += "run-qc-list-dict-v8"; }
-    if ($pgmQcPickWords) { $pgms += "run-qc-dict-pick-qc-words"; }
-    if ($pgmQcQueryDictV8) { $pgms += "run-qc-query-dict-v8"; }
-    if ($pgmConvDcb) { $pgms += "run-convert-one-dcb"; }
-    if ($pgmQcV10Tags) { $pgms += "run-qc-v10-tags"; }
-    if ($pgmQcListDictV10) { $pgms += "run-qc-list-dict-v10"; }
-    if ($pgmQcQueryDictV10) { $pgms += "run-qc-query-dict-v10"; }
-    if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
-    if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
-    if ($pgmSizesAll) { 
-        $pgms += "run-check-and-add-sizes-to-file-natives"; 
-        $pgms += "run-check-and-add-sizes-to-file-images"; 
+    if ($pgmAll) {
+        $pgms  += "backup-for-conversion"
+        $pgms  += "backup-for-conversion-local-v8"
+        $pgms  += "run-qc-v8-tags"
+        $pgms  += "run-qc-list-dict-v8"
+        $pgms  += "run-qc-dict-pick-qc-words"
+        $pgms  += "run-qc-query-dict-v8"
+        $pgms  += "run-convert-one-dcb"
+        $pgms  += "run-qc-v10-tags"
+        $pgms  += "run-qc-list-dict-v10"
+        $pgms  += "run-qc-query-dict-v10"
+        $pgms  += "run-qc-compare-tags"
+        $pgms  += "run-qc-compare-dict"
+    }
+    else {
+        if ($pgmBackup) { $pgms += "backup-for-conversion"; }
+        if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
+        if ($pgmQcListDictV8) { $pgms += "run-qc-list-dict-v8"; }
+        if ($pgmQcPickWords) { $pgms += "run-qc-dict-pick-qc-words"; }
+        if ($pgmQcQueryDictV8) { $pgms += "run-qc-query-dict-v8"; }
+        if ($pgmConvDcb) { $pgms += "run-convert-one-dcb"; }
+        if ($pgmQcV10Tags) { $pgms += "run-qc-v10-tags"; }
+        if ($pgmQcListDictV10) { $pgms += "run-qc-list-dict-v10"; }
+        if ($pgmQcQueryDictV10) { $pgms += "run-qc-query-dict-v10"; }
+        if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
+        if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
     }
     return $pgms;
 }
@@ -110,15 +119,11 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # if NotJustErros, reset for all 
         # else only if currently = STATUS_FAILED
         write-host "DBID = $dbid  pgm=$pgm old stat=$($dbrow.$pgmStatFld)"
-        if ($NotJustErrors) {
+        if ($NotJustErrors -or ($dbRow.$pgmStatFld -eq $CF_STATUS_FAILED)) {
             write-host "clear it"
             $dbRow.$pgmStatFld = $CF_STATUS_READY
-        }
-        else {
-            if ($dbRow.$pgmStatFld -eq $CF_STATUS_FAILED) {
-                write-host "clear it"
-                $dbRow.$pgmStatFld = $CF_STATUS_READY
-            }
+            echo "removing $pgmStatusFilePFN"
+            remove-item $pgmStatusFilePFN
         }
     }
     catch {

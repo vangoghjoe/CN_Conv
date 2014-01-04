@@ -30,6 +30,7 @@ $CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
 $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
 $script:writeProgCt = 0
+$script:CF_BatchRow = 0
 
 # @step_defns =  set of all possible steps
 # @A_Work_Flow = seq of steps
@@ -808,6 +809,45 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
     }
 
 
+    if ($DBid -and ($row.dbid -ne $DBid)) { 
+        return $true
+    }
+    
+    # still here?  Don't skip this row
+    return $false
+}
+function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) {
+    # Check Batch
+    if ($row.batchid -ne $BatchID) {   
+        return $true
+    }
+
+    # Check Row
+    $script:CF_BatchRow++
+    if (($startRow -ne $null -and ($CF_BatchRow -lt $startRow)) -or
+        ($endRow -ne $null -and ($CF_BatchRow -gt $endRow))) {
+        return $true
+    }
+
+    $statVal = $row.$($runEnv.StatusField) 
+
+    # Check Status
+    if (!$ignoreStatus) {
+        $statVal = $row.$($runEnv.StatusField) 
+        if ($statVal -ne $CF_STATUS_READY -and 
+            ($statVal -ne "") ) {
+            return $true
+        }
+    }
+    
+    # Check Prereqs
+    foreach ($preReq in $arrPreReqs)  {
+        if ($preReq -ne $CF_STATUS_GOOD) {
+            return $true
+        }
+    }
+
+    # Check DB
     if ($DBid -and ($row.dbid -ne $DBid)) { 
         return $true
     }
