@@ -102,7 +102,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # Get status from log
         # If log not there at all, have to assume it didn't run, so status is empty
         if (-not (test-path $pgmStatusFilePFN)) {
-            $dbRow.$pgmStatFld = ""
+            $dbRow.$pgmStatFld = $CF_STATUS_READY
             if ($incBlankStatus) {
                 CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
             }
@@ -117,7 +117,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
             CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
         }
         # batch id, dbid, stat field, stat value
-        #CF-Update-Status-in-SQL $sqlCmd $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
+        CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
@@ -133,6 +133,9 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
+        # set up update status sql cmd
+        $script:sqlUpdStat = CF-Get-SQL-Cmd $CF_DBName
+
         # set up @pgms
         $pgms = Build-List-Of-Pgms
 
