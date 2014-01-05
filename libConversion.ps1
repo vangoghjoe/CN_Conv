@@ -1,5 +1,5 @@
 #####
-$CF_DEBUG = $true
+$CF_DEBUG = $false
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
@@ -31,6 +31,7 @@ $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
 $script:writeProgCt = 0
 $script:CF_BatchRow = 0
+$script:CF_NumToProcess = 0
 
 # @step_defns =  set of all possible steps
 # @A_Work_Flow = seq of steps
@@ -853,6 +854,7 @@ function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) {
     }
     
     # still here?  Don't skip this row
+    $script:CF_NumToProcess++
     return $false
 }
 

@@ -27,6 +27,7 @@ param(
     $BatchID,
     $startRow,
     $endRow,
+    [switch] $UseMultiFilesets,
     [switch] $ignoreStatus,
     $DBId,
     $CN_Ver
@@ -68,11 +69,13 @@ function Process-Row {
     $dbid = $dbRow.dbid
     $outFileStub = $runEnv.outFileStub
 
-    # if we're calling this for v8, still use the "conv" dcb,
-    # b/c at this point in the process is that it hasn't
-    # been converted yet
     if ($Vstr -match '8') {
-        $dcbPfn = $dbRow.local_v8_dcb;
+        if ($UseMultiFilesets) {
+            $dcbPfn = $dbRow.local_v8_dcb;
+        }
+        else {
+            $dcbPfn = $dbRow.conv_dcb;
+        }
     }
     else {
         $dcbPfn = $dbRow.conv_dcb;

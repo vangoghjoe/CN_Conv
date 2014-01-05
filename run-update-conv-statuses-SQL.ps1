@@ -1,4 +1,4 @@
-
+[CmdLetBinding()]
 param(
     $BatchID,
     $ignoreStatus = $false,
@@ -17,11 +17,12 @@ param(
     [switch]$pgmQcListDictV10,
     [switch]$pgmQcQueryDictV10,
     [switch]$pgmQcCompareTags,
+    [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
     $startRow,
     $endRow
 )
-
+set-strictmode -version 2
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -44,6 +45,7 @@ function Build-List-Of-Pgms() {
     }
     else {
         if ($pgmBackup) { $pgms += "backup-for-conversion"; }
+        if ($pgmBackupLocalv8) { $pgms += "backup-for-conversion-local-v8"; }
         if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
         if ($pgmQcListDictV8) { $pgms += "run-qc-list-dict-v8"; }
         if ($pgmQcPickWords) { $pgms += "run-qc-dict-pick-qc-words"; }
@@ -55,6 +57,7 @@ function Build-List-Of-Pgms() {
         if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
         if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
     }
+    write-verbose ("PGM {0}`n" -f ($pgms -join "`n"))
     return $pgms;
 }
 
@@ -77,6 +80,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
+        write-verbose "type = $type"
         if ($type -eq "status") {
             $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
             $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
@@ -84,8 +88,10 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         elseif ($type -eq "results") {
             $pgmStatFld += "_results"
             $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}.txt"
-            $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
+            $pgmStatusFilePFN =  "$($runEnv.SearchResultsDir)\$pgmStatusFile"
+            write-verbose "type = results"
         }
+        write-verbose "statusfile = $pgmStatusFilePFN"
 
         # DEBUG SECTION
         #write-host "pgm = $pgm"
@@ -191,7 +197,8 @@ function Main {
                 # Only check the results if the pgm itself
                 # ran ok, meaning rowHasError = $false
                 if ($script:rowStatusGood -eq $true) {  
-                    if ($pgm -eq "run-qc-compare-tags") {
+                    if ($pgm -eq "run-qc-compare-tags" -or ($pgm -eq "run-qc-compare-dict")) {
+                        write-verbose "Call $pgm for results"
                         Process-Cell $row $runEnv $pgm "results"
                     }
                 }

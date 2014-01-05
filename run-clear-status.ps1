@@ -52,7 +52,7 @@ param(
     $ignoreStatus = $false,
     $DriverFile
 )
-
+set-strictmode -version 2
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -104,6 +104,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
     $script:rowStatusGood = $false
     try {
         # Calc status field and status file
+        write-host "PROGRAM $pgm"
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
         if ($type -eq "status") {
@@ -123,7 +124,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
             write-host "clear it"
             $dbRow.$pgmStatFld = $CF_STATUS_READY
             echo "removing $pgmStatusFilePFN"
-            remove-item $pgmStatusFilePFN
+            remove-item -force $pgmStatusFilePFN -ea silentlycontinue > $null
         }
     }
     catch {
