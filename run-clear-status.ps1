@@ -46,6 +46,7 @@ param(
     [switch]$pgmQcListDictV10,
     [switch]$pgmQcQueryDictV10,
     [switch]$pgmQcCompareTags,
+    [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
     $startRow,
     $endRow,
