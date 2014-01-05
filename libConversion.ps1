@@ -1,5 +1,6 @@
 #####
-$CF_DEBUG = $false
+$CF_DEBUG = $true
+#$CF_DEBUG = $false
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
@@ -861,4 +862,13 @@ function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) {
 function CF-Write-Progress ($dbid, $dcb) {
     $script:writeProgCt++
     write-host ("{3} Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 50,0)), (get-date -f $CF_DateFormat)))
+}
+
+function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) {
+    $sqlCmd.CommandText = @"
+UPDATE DCBs SET $statFld='$statVal'
+WHERE BatchID=$bID and dbid=$dbid
+"@
+    write-host ("sql cmd = `n" + $sqlCmd.CommandText)
+    $sqlCmd.ExecuteNonQuery()
 }
