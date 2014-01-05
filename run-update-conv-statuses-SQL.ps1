@@ -102,7 +102,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # Get status from log
         # If log not there at all, have to assume it didn't run, so status is empty
         if (-not (test-path $pgmStatusFilePFN)) {
-            $dbRow.$pgmStatFld = ""
+            $dbRow.$pgmStatFld = $CF_STATUS_READY
             if ($incBlankStatus) {
                 CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
             }
