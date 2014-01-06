@@ -869,6 +869,5 @@ function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) {
 UPDATE DCBs SET $statFld='$statVal'
 WHERE BatchID=$bID and dbid=$dbid
 "@
-    write-host ("sql cmd = `n" + $sqlCmd.CommandText)
     $sqlCmd.ExecuteNonQuery()
 }

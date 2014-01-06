@@ -162,6 +162,7 @@ function Parse-Conversion-Report ($reportPFN) {
         # look for errors in col D (3) 
         # TODO:  check for  Security issues in Admin or Security Enabled
         $recPtr = 0
+        $recPtr = ConsumeTillTarget $recs $recPtr "File_Name"
         while ($recPtr -lt $numRecs) {
             $fileName = $recs[$recPtr][0]
             $recsBefore = $recs[$recPtr][1]
@@ -203,77 +204,6 @@ function Parse-Conversion-Report ($reportPFN) {
             write-log "|EXIT STATUS|ERROR"
         }
     }
-}
-
-function compare-tables {
-    param (
-        $tags1,
-        $tags2,
-        $pass,
-        $resFilePFN
-    )
-    
-    # $pass = pass1 means old 2 new
-    # $pass = pass2 means new 2 old; in pass2, we don't compare tag values
-
-    if ($pass -eq "pass1") { $desc = "old2new" } else { $desc = "new2old" }
-
-    
-    #TODO: rename this variables: 
-    # $tag1Name = $tag1Name  $tag1Info = $tags1[$tag1Name]
-    foreach ($h in $tags1.GetEnumerator()) {
-        if ($tags2.ContainsKey($h.Name)) {
-            $val1 = $tags1[$h.Name][0]
-            if ($pass -eq "pass1") {
-                $searchNum1 = $tags1[$h.Name][1]
-                $val2 = $tags2[$h.Name][0]
-                $searchNum2 = $tags2[$h.Name][1]
-                
-                # compare-object arr1 arr2 -syncwindow
-                #  => if same, returns null, else returns the different elems
-                $diffs = compare-object $val1 $val2 -syncwindow 0
-                if ($diffs) {
-                    # Start with "||" to match other types of error entries
-                    $msg = "||ERROR|DIFF COUNTS ($desc): tag = $($h.name) |"
-                    $msg += "$val1 [search $searchNum1]|"
-                    $msg += "$val2 [search $searchNum2]"
-                    CF-Write-File $resFilePFN $msg
-                    $script:rowResultsHasError += 1
-                }
-            }
-        }
-        else {
-            # tag in 1 but not 2
-            
-            # Exception: if v8 had the Default tag 
-            # (renamed to Tagging Default Tag when building tag table), with no hits
-            # it won't be converted to v10,so that's not an error
-            if ( ($h.Name -eq '"»Tagging Default tag«"') -and ($pass -eq "pass1") ) {
-                $val1 = $tags1[$h.Name][0];
-                $hits = $val1[0];
-                $docs = $val1[1];
-                if (($hits -eq "0" -and $docs -eq "0")) {
-                    continue
-                }
-            }
-            
-            # Start with "||" to match other types of error entries
-            $msg = "||ERROR|FIRST, NOT SECOND ($desc): $($h.Name)"
-            CF-Write-File $resFilePFN $msg
-            $script:rowResultsHasError += 1
-        }
-    }
-}
-
-function compare-tag-files($oldTagFile, $newTagFile, $resFilePFN) {
-    $script:rowResultsHasError = 0
-    $oldTags = build-tag-table $oldTagFile "v8" $resFilePFN
-    $newTags = build-tag-table $newTagFile "v10" $resFilePFN
-
-    compare-tables $oldTags $newTags "pass1" $resFilePFN
-    compare-tables $newTags $oldTags "pass2" $resFilePFN
-
-    CF-Finish-Results-Log $resFilePFN
 }
 
 function Process-Row($dbRow, $runEnv) {

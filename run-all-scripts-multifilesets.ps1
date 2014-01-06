@@ -52,30 +52,30 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start Start row=$startRow  End row=$endRow"
    
     $cmds= @(
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8",
-    #"backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-list-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-dict-pick-qc-words.ps1  ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-convert-one-dcb.ps1  ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-tags.ps1 -CN_Ver 10 ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-compare-tags.ps1",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-list-dict.ps1 -CN_Ver 10  ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"run-qc-query-dict.ps1 -CN_Ver 10 ",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-compare-dict.ps1 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+    #".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    #".\backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8",
+    #".\backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-list-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-dict-pick-qc-words.ps1  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-convert-one-dcb.ps1  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-tags.ps1 -CN_Ver 10 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-compare-tags.ps1",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-list-dict.ps1 -CN_Ver 10  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-query-dict.ps1 -CN_Ver 10 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-compare-dict.ps1 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
     )
 
     foreach ($cmd in $cmds) {
@@ -95,3 +95,4 @@ function Main {
 }     
 
 Main
+
