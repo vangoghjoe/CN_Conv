@@ -75,7 +75,6 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 
     $script:rowHasError = $false
     $script:rowStatusGood = $false
-    write-host "DBID = $dbid  pgm = $pgm"
     try {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
@@ -235,7 +234,6 @@ function Main {
             }
         }
 
-        write-host "update st_all: DBID = $($row.dbid)"
 
         #if (($row.st_size_natives -eq $CF_STATUS_GOOD) -and 
             #($row.st_size_images -eq $CF_STATUS_GOOD)

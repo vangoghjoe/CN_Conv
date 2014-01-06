@@ -800,12 +800,14 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
         $statVal = $row.$($runEnv.StatusField) 
         if ($statVal -ne $CF_STATUS_READY -and 
             ($statVal -ne "") ) {
+            write-host "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
             return $true
         }
     }
     
     foreach ($preReq in $arrPreReqs)  {
         if ($preReq -ne $CF_STATUS_GOOD) {
+            write-host "[$($row.dbid)] CF-Skip: failed prereq: $statval"
             return $true
         }
     }

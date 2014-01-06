@@ -25,8 +25,9 @@ One or more examples
 
 # local 7/23 12 noon
 param(
+    [parameter(mandatory=$true)]
     $BatchID,
-    [switch]$MultiFileSets,
+    [switch]$UseMultiFileSets,
     [switch]$ignoreStatus,
     $DBid,
     $startRow,
@@ -78,6 +79,7 @@ function Exec-CPL {
     
     $safeDcbPfn = CF-Encode-CPL-Safe-Path $dcbPfn
     $myargs = @("/nosplash", $CPT, $safeDcbPfn, $statusFilePFN)
+    CF-Write-Progress $dbid $dcbPfn
     CF-Log-To-Master-Log $bStr $dbStr "STATUS" "Start dcb: $dcbPfn"
 
     $proc = (start-process $CN_EXE -ArgumentList $myargs -Wait -NoNewWindow -PassThru)
@@ -129,7 +131,7 @@ function Main {
         # So, the conversions can start as soon as the conv bkups are done
         # But if not, all the v8 Qc steps have to be run first
         # NB: "st_backup" is for the conv backup, as opposed to st_backup_local_v8
-        if ($MultiFileSets) {
+        if ($UseMultiFileSets) {
             $arrPreReqs = @($row.st_backup)
         }
         else {
