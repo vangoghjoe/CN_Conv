@@ -4,3 +4,6 @@ Powershell learning/
 .git-ssh/
 .*.sw?
 conversion-config.ps1
+good*
+error*
+GitIgnore/
