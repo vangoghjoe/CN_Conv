@@ -54,8 +54,10 @@ $CF_PGMS = @{
 "run-qc-v10-tags" = @("st_qc_v10_tags", "v10_tagging", "backup-for-conversions");
 "run-qc-list-dict-v10" = @("st_qc_list_dict_v10", "qc-list-dict-v10", "backup-for-conversions");
 "run-qc-query-dict-v10" = @("st_qc_query_dict_v10", "qc-query-dict-v10", "backup-for-conversions");
+"run-qc-conv-report" = @("st_qc_conv_report", "qc-conv-report", "run-convert-one-dcb");
 "run-qc-compare-tags" = @("st_qc_compare_tags", "qc-compare-tags", "run-qc-v8-tags|run-qc-v10-tags");
 "run-qc-compare-dict" = @("st_qc_compare_dict", "qc-compare-dict", "run-qc-query-dict-v8|run-qc-query-v10");
+"run-get-sizes" = @("st_get_sizes", "get-sizes", "");
 }
 
 $CF_FIELDS = @(
@@ -792,6 +794,21 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
     $skip = $false
     if ($row.batchid -ne $BatchID) {   
         return $true
+    }
+
+    $script:CF_BatchRow++
+
+    if ($DriverFile) {
+        # WARNING: this doesn't work if multiple steps are using 
+        # this libary in same executable b/c the values are only
+        # initialized the first time the lib is loaded
+        if ($script:CF_BatchRow -eq 1) {
+            CF-Load-Driver-File $DriverFile
+        }
+
+        if (!(CF-Is-DBID-in-Driver $row.dbid)) {
+            return $true
+        }
     }
 
     $statVal = $row.$($runEnv.StatusField) 
