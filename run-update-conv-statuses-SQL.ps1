@@ -160,6 +160,7 @@ function Main {
         # Setup start/stop rows (assume user specifies as 1-based)
         if ($startRow -eq $null) { $startRow = 1 }
         if ($endRow -eq $null) { $endRow = $dcbRows.length } 
+        if ($endRow -gt $dcbRows.length) { $endRow = $dcbRows.length }
         CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start row=$startRow  End row=$endRow"
          
         # Main loop
@@ -180,6 +181,9 @@ function Main {
 
             for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
                 $row = $dcbRows[$i]
+                if ($row -eq $null) {
+                    write-host "row is null at i = $i"
+                }
                 CF-Init-RunEnv-This-Row $runEnv $row
 
                 # Only process this row if it's in the right batch 

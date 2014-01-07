@@ -138,7 +138,12 @@ function CF-Check-DB-Fields($dbRows) {
 }
     
 function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
+    try {
     $dbid = $dbRow.dbid
+    }
+    catch {
+        $a
+    }
     $bStr = $runEnv.bStr
     $dbStr = "{0:0000}" -f [int]$dbid
     $runEnv["dbStr"] = $dbStr
@@ -871,5 +876,5 @@ function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) {
 UPDATE DCBs SET $statFld='$statVal'
 WHERE BatchID=$bID and dbid=$dbid
 "@
-    $sqlCmd.ExecuteNonQuery()
+    $sqlCmd.ExecuteNonQuery() > $null
 }

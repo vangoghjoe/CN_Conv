@@ -115,6 +115,7 @@ function Main {
     # Setup start/stop rows (assume user specifies as 1-based)
     if ($startRow -eq $null) { $startRow = 1 }
     if ($endRow -eq $null) { $endRow = $dcbRows.length } 
+    if ($endRow -gt $dcbRows.length) { $endRow = $dcbRows.length }
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start CN=$Vstr row=$startRow  End row=$endRow"
      
     # DCB Rows Loop
