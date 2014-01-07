@@ -30,6 +30,7 @@ param(
     [switch]$UseMultiFileSets,
     [switch]$ignoreStatus,
     $DBid,
+    $DriverFile,
     $startRow,
     $endRow
 )

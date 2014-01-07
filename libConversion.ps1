@@ -54,7 +54,7 @@ $CF_PGMS = @{
 "run-qc-v10-tags" = @("st_qc_v10_tags", "v10_tagging", "backup-for-conversions");
 "run-qc-list-dict-v10" = @("st_qc_list_dict_v10", "qc-list-dict-v10", "backup-for-conversions");
 "run-qc-query-dict-v10" = @("st_qc_query_dict_v10", "qc-query-dict-v10", "backup-for-conversions");
-"run-qc-conv-report" = @("st_qc_conv_report", "qc-conv-report", "run-convert-one-dcb");
+"parse-conversion-report" = @("st_qc_conv_report", "qc-conv-report", "run-convert-one-dcb");
 "run-qc-compare-tags" = @("st_qc_compare_tags", "qc-compare-tags", "run-qc-v8-tags|run-qc-v10-tags");
 "run-qc-compare-dict" = @("st_qc_compare_dict", "qc-compare-dict", "run-qc-query-dict-v8|run-qc-query-v10");
 "run-get-sizes" = @("st_get_sizes", "get-sizes", "");
@@ -362,8 +362,11 @@ function CF-Finish-Results-Log ($logPfn) {
 function CF-IsPath ($str) {
     (($str -match "^\\\\") -or ($str -match "^[A-z]:"))
 }
-
-
+function CF-Get-Start-Stop-From-Log ($logPFN) {
+    if (Test-Path $logPFN) {
+        $logRecs = @(get-content $logPfn)
+    }
+}
 
 function CF-Log-Says-Ran-Successfully ($logPFN) {
     if (Test-Path $logPFN) {
@@ -795,7 +798,7 @@ $sqlCmdW.ExecuteNonQuery() > $null
 # else   $false
 # 
 # $arrPreReqs is an array of status values that will trigger a skip if not GOOD
-function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
+function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) {
     $skip = $false
     if ($row.batchid -ne $BatchID) {   
         return $true
@@ -816,12 +819,9 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
         }
     }
 
-    $statVal = $row.$($runEnv.StatusField) 
-
-    if (!$ignoreStatus) {
+    if (!$ignoreStatus -and (!($noStatFld))) {
         $statVal = $row.$($runEnv.StatusField) 
-        if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne "") ) {
+        if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "") -and ($statval -ne $null)) {
             write-host "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
             return $true
         }
@@ -829,13 +829,13 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs) {
     
     foreach ($preReq in $arrPreReqs)  {
         if ($preReq -ne $CF_STATUS_GOOD) {
-            write-host "[$($row.dbid)] CF-Skip: failed prereq: $statval"
+            write-host "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
             return $true
         }
     }
 
 
-    if ($DBid -and ($row.dbid -ne $DBid)) { 
+    if (($DBid -ne $null) -and ($row.dbid -ne $DBid)) { 
         return $true
     }
     
@@ -895,3 +895,33 @@ WHERE BatchID=$bID and dbid=$dbid
 "@
     $sqlCmd.ExecuteNonQuery() > $null
 }
+
+#01/04/2014  20:46:3|START|01/04/2014  20:46:3
+#01/04/2014  20:46:3|DCB|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|START|01/04/2014  20:46:3
+#01/04/2014  20:46:6|DCB|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|DURATION|OK|01/04/2014  20:46:3|01/04/2014  20:46:6
+#01/04/2014  20:46:6|DIR|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DIR|START|01/04/2014  20:46:6
+#01/04/2014  20:46:6|DIR|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DIR|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:6
+#01/04/2014  20:46:6|VOL|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.VOL|START|01/04/2014  20:46:6
+#01/04/2014  20:46:6|VOL|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.VOL|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:6
+#01/04/2014  20:46:6|INDEX|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|START|01/04/2014  20:46:6
+#01/04/2014  20:46:9|INDEX|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:9
+#01/04/2014  20:46:9|END|01/04/2014  20:46:9
+#01/04/2014  20:46:9||STOP|
+#01/04/2014  20:46:9||EXIT_STATUS|OK
+
+# Returns Conversion Start, Stop and Duration 
+function CF-Get-Duration-For-Conv-Step {
+    param($pfn)
+    $recs = Get-Content $pfn
+    $startArr = $recs[0] -split "\|",0
+    $stopArr = $recs[$recs.length-1] -split "\|",0
+   
+    $convStart = $startArr[2]
+    $convStop = $stopArr[0]
+
+    $convDur = CF-Time-Diff-From-CN $convStop $convStart
+    
+    write-host ("Start: {0}  Stop: {1} Time: {2}" -f ($convStart, $convStop, $convDur))
+    return @($convStart, $convStop, $convDur)
+}
+

@@ -27,11 +27,24 @@ param(
     $BatchID,
     [switch] $ignoreStatus,
     $DBId,
+    $DriverFile,
     $startRow,
     $endRow
 )
 
+set-strictmode -version latest
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
+
+function logErr ($msg, $recPtr, $qcflag = 1) {
+# right now, "log" is a misnomer
+# adds the err msg to the global errmsg string,
+# adding some formatting
+    if ($recPtr -ne "") {
+        $msg = "[line $($recPtr-1)] $msg"
+    }
+    CF-Write-Log $script:resFilePFN $msg
+    $script:rowResultsHasError = 1
+}
  
 # Given a DCB path, find the Conversion report
 # Conversion report names are like
@@ -54,7 +67,7 @@ function DCB-To-CR ($dcbPfn) {
         }
     }
     catch {
-        write "Unable to find a conversion report"
+        throw "Unable to find a conversion report"
     }
 }
 
@@ -80,25 +93,79 @@ function ConsumeBlankrecs($recs, $recPtr) {
     }
 }
 
-
-# reads until field matches a value
-# returns new recPtr
-# throws an error if falls off the end of the record
+# Reads until field matches a value
+# Returns new recPtr
+# Returns -1 if not found
 function ConsumeTillTarget($recs, $recPtr,  $targetStr, $fieldNr=0) {
     $numRecs = $recs.length
-    while (1) {
-        if ($recPtr -ge $numRecs) {
-            throw "Reached end of file before finding '$targetStr'"
+    try {
+        while (1) {
+            if ($recPtr -ge $numRecs) {
+                return -1
+            }
+            else {
+                if ($recs[$recPtr][$fieldNr] -match $targetStr) {
+                    return $recPtr
+                } 
+            }
+            $recPtr++
         }
-        else {
-            if ($recs[$recPtr][$fieldNr] -match $targetStr) {
-                return $recPtr
-            } 
-        }
-        $recPtr++
+    }
+    catch {
+        $a
     }
 }        
+
+# Returns new $recPtr or -1 didn't find a "File_Name" section
+function CheckFileSections($recs, $recPtr ) {
+    $recPtr = ConsumeTillTarget $recs $recPtr "File_Name"
+    if ($recPtr -eq -1) { return -1 }
+    $recPtr++
     
+    $numRecs = $recs.length
+    while ($recPtr -lt $numRecs) {
+        $fileName = $recs[$recPtr][0]
+        $recsBefore = $recs[$recPtr][1]
+        $recsAfter = $recs[$recPtr][2]
+        $errorRefs = $recs[$recPtr][3]
+        # elem 4 is "Notes" which is unused
+        $AdminLogin = $recs[$recPtr][5]
+        $SecurityEnabled = $recs[$recPtr][6]
+        $LogonRequired = $recs[$recPtr][7]
+
+        # End of section
+        if ($fileName -eq "") { 
+            break
+        }
+
+        # Check Before and After agree, unless either of them is marked N/A
+        if (!(($recsBefore -eq "n/a") -or ($recsAfter -eq "n/a"))) {
+            if ($recsBefore -ne $recsAfter) {
+                logErr "||Error|Before and after don't agree: [file = $fileName]: before=$recsBefore  after=$recsAfter" $recPtr;
+            }
+        }
+
+        if ($ErrorRefs -ne "Error_Refs" -and (-not ($ErrorRefs -match "^\s*$"))) {        
+            logErr "||Error|Non-blank ErrorRef: [file = $fileName]: $ErrorRefs" $recPtr;
+        }
+
+        if ($AdminLogin -ne "") { 
+            logErr "||Error|AdminLogon not blank: [file=$fileName]: $AdminLogin" $recPtr
+        }
+
+        if ($SecurityEnabled -ne "No") { 
+            logErr "||Error|Security Enabled not 'No': [file=$fileName]: $SecurityEnabled" $recPtr
+        }
+
+        if ($LogonRequired -ne "No") { 
+            logErr "||Error|Logon Required not 'No': [file=$fileName]: $LogonRequired" $recPtr
+        }
+
+        $recPtr++
+    }
+    return $recPtr
+}
+
 function Parse-Conversion-Report ($reportPFN) {
     
     # the file is TAB delimited, double-quotes around most fields
@@ -107,9 +174,9 @@ function Parse-Conversion-Report ($reportPFN) {
 
     # capture all errors into the log
     try {
-        Write-Log "Conversion Report = '$reportPFN'"
+        CF-Write-Log $script:StatusFilePFN "Conversion Report = '$reportPFN'"
         
-        $recs = Get-Content $convReport | 
+        $recs = Get-Content $reportPFN | 
                   foreach { $_ -replace '"', '' } |  
                   foreach { , $( $_ -split "`t" ) }
         $numRecs = $recs.length
@@ -123,16 +190,31 @@ function Parse-Conversion-Report ($reportPFN) {
         # 
 
         $recPtr = 0
-        #docs before/after
+        # Docs before/after
         $recPtr = ConsumeTillTarget $recs $recPtr "Documents before conversion:"
+        if ($recPtr -eq -1) { throw "Can't find line: 'Documents before conversion" }
         $docsBefore = $recs[$recPtr][1]
         $docsAfter = $recs[$recPtr+1][1]
 
         if ($docsBefore -ne $docsAfter) {
             logErr "Mismatched doc numbers: before = $docsBefore - after = $docsAfter" $recPtr
         }
+
+        # File_name sections
+        # Must be at least one, and up to three
+        # One each for Main, Notes and Redlines
+        for ($i=1; $i -le 3; $i++) {
+            $recPtr = CheckFileSections $recs $recPtr
+            if ($recPtr -eq -1) { break }
+        }
+        if ($i -eq 1) {
+            logErr "No 'File_Name' sections found"
+        }
         
         # "Errors that occured during processing"
+        # Have to start over at 0 after the FileName sections b/c
+        # we don't know how FileName sections there are
+        $recPtr = 0
         $recPtr = ConsumeTillTarget $recs $recPtr "Errors that occured during processing:"
         $recPtr++
         while ($recPtr -lt $numRecs) {
@@ -154,55 +236,14 @@ function Parse-Conversion-Report ($reportPFN) {
                     logErr "Errors during processing: $smush" $recPtr
                 }
             }
-            
             $recPtr++
         }
         
-        # Check stats on each file
-        # look for errors in col D (3) 
-        # TODO:  check for  Security issues in Admin or Security Enabled
-        $recPtr = 0
-        $recPtr = ConsumeTillTarget $recs $recPtr "File_Name"
-        while ($recPtr -lt $numRecs) {
-            $fileName = $recs[$recPtr][0]
-            $recsBefore = $recs[$recPtr][1]
-            $recsAfter = $recs[$recPtr][2]
-            $errorRefs = $recs[$recPtr][3]
-            $AdminLogin = $recs[$recPtr][5]
-            $SecurityEnabled = $recs[$recPtr][6]
-            $LogonRequired = $recs[$recPtr][7]
-
-            if ($ErrorRefs -ne "Error_Refs" -and (-not ($ErrorRefs -match "^\s*$"))) {        
-                $msg = "||Error|Non-blank ErrorRef: [file = $fileName]: $ErrorRefs" $recPtr;
-                    CF-Write-File $resFilePFN $msg
-            }
-
-            # Check Before and After agree, unless either of them is marked N/A
-            if (!(($recsBefore -eq "n/a") -or ($recsAfter -eq "n/a"))) {
-                if ($recsBefore -ne $recsAfter) {
-                    logErr "Non-blank ErrorRef: [file = $file]: $ErrorRefs" $recPtr;
-                }
-            }
-            # later will do something with the security enabled flags
-
-            $recPtr++
-            
-        }
     } # end try
     catch {
         # all exceptions and errors will go into progam status file
         # QC errors will say QC ERROR at beginning
-       $script:errMsg += "`nERROR: " + $error[0] + $error[1]
-    }
-    finally {
-        # write finish to pgm status
-        if ($script:errMsg -eq "") {
-            write-log "|EXIT STATUS|OK"
-        }
-        else {
-            write-log $script:errMsg
-            write-log "|EXIT STATUS|ERROR"
-        }
+        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
     }
 }
 
@@ -216,33 +257,30 @@ function Process-Row($dbRow, $runEnv) {
     $dbStr = "{0:0000}" -f [int]$dbid
 
     $script:rowHasError = $false
+    $script:rowResultsHasError = $false
     try {
         # status file for THIS pgm
-        $statusFile = "${bStr}_${dbStr}_qc-compare-tags_STATUS.txt"
+        $statusFile = "${bStr}_${dbStr}_qc-conv-report_STATUS.txt"
         $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
+        echo $null > $script:statusFilePFN
 
         # results file for THIS pgm
-        $resFile = "${bStr}_${dbStr}_qc-compare-tags.txt"
-        $resFilePFN =  "$($runEnv.SearchResultsDir)\$resFile"
+        $resFile = "${bStr}_${dbStr}_qc-conv-report.txt"
+        $script:resFilePFN =  "$($runEnv.SearchResultsDir)\$resFile"
         echo $null > $resFilePFN
 
-        # Calc results file for the v8/10 tag pgms
-        $v8FileStub = $CF_PGMS['run-qc-v8-tags'][1];
-        $v8ResFilePFN = "${bStr}_${dbStr}_${v8FileStub}.txt"
-        $v8ResFilePFN =  "$($runEnv.SearchResultsDir)\$v8ResFilePFN"
-
-        $v10FileStub = $CF_PGMS['run-qc-v10-tags'][1];
-        $v10ResFilePFN = "${bStr}_${dbStr}_${v10FileStub}.txt"
-        $v10ResFilePFN =  "$($runEnv.SearchResultsDir)\$v10ResFilePFN"
-
-        compare-tag-files $v8ResFilePFN $v10ResFilePFN $resFilePFN
+        $reportPFN = DCB-To-CR $row.conv_dcb
+        Parse-Conversion-Report $reportPFN
 
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
         $script:rowHasError = $true
     }
-    CF-Finish-Log $script:statusFilePFN 
+    finally {
+        CF-Finish-Log $script:StatusFilePFN
+        CF-Finish-Results-Log $script:resFilePFN
+    }
 }
 
 function Main {
@@ -260,7 +298,7 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         
-        $arrPreReqs = @($row.st_qc_v8_tags, $row.st_qc_v10_tags)
+        $arrPreReqs = @($row.st_convert_one_dcb)
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }

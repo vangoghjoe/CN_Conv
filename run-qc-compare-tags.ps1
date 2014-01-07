@@ -159,6 +159,7 @@ function Process-Row($dbRow, $runEnv) {
         # status file for THIS pgm
         $statusFile = "${bStr}_${dbStr}_qc-compare-tags_STATUS.txt"
         $script:statusFilePFN =  "$($runEnv.ProgramLogsDir)\$statusFile"
+        echo $null > $script:statusFilePFN
 
         # results file for THIS pgm
         $resFile = "${bStr}_${dbStr}_qc-compare-tags.txt"
