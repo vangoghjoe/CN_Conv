@@ -28,8 +28,9 @@ param(
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
+    $DriverFile,
     $DBId,
-    $fileSet
+    $fileSet   # O = orig  S = localv8  C = conv
 )
 
 set-strictmode -version latest
@@ -71,7 +72,7 @@ function Process-Row {
         $t += "batchid=$batchid AND dbid=$dbid AND fileset='$fileset'" 
         $sCmd.CommandText = $t
         $sCmd.ExecuteNonQuery() > $null
-	if (($dbid % 10) -eq 0) { write-host $dbid }
+        if (($dbid % 10) -eq 0) { write-host $dbid }
 
         $files = CF-Get-DbFiles $dcbPfn
         foreach ($file in $files) {
@@ -102,40 +103,25 @@ function Main {
     $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
     $startDate = $(get-date -format $CF_DateFormat)
 
+    if ($fileSet -eq $null) { $fileSet = 'C' }
+
     # Setup start/stop rows (assume user specifies as 1-based)
     if ($startRow -eq $null) { $startRow = 1 }
     if ($endRow -eq $null) { $endRow = $dcbRows.length } 
     # DCB Rows Loop
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
-        
-        if ($row.batchid -ne $BatchID) {   
+
+        $arrPreReqs = @()
+        if ($fileSet -eq 'S') {
+                $arrPreReqs += $row.st_backup_local_v8
+        }
+        else {
+            $arrPreReqs += $row.st_backup
+        }
+        if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
-
-        if (!$ignoreStatus) {
-            $statVal = $row.$($runEnv.StatusField) 
-            if ($statVal -ne $CF_STATUS_READY -and 
-                ($statVal -ne "") ) {
-                continue
-            }
-
-            if ($fileSet -eq 'S') {
-                if ($row.st_backup -ne $CF_STATUS_GOOD) {
-                    continue
-                }
-            }
-            elseif ($fileSet -eq 'C') {
-                if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
-                    continue
-                }
-            }
-        }
-
-        if ($DBid -and ($row.dbid -ne $DBid)) { 
-            continue
-        }
-
         Process-Row $row $runEnv $fileSet
     }
 

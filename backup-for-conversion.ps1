@@ -1,20 +1,21 @@
 param (
     [Parameter(mandatory=$true)]
-    [string] $backupDirRoot,
-    [Parameter(mandatory=$true)]
     [string] $BatchID,
+
+    [Parameter(mandatory=$true)]
+    [string] $backupDirRoot,
+
     [switch] $ignoreStatus,
-    $DBId,
     [switch] $DeleteEachDestDir,
     [int] $dcbPathFoldersToSkip = 0,
     [switch] $FileSetLocalv8,
     [switch] $FileSetConv,
+    $DBId,
     $DriverFile,
     $startRow,
     $endRow,
-    $FileSet,
-    [bool] $writeToDBFile = $true,
-    [bool] $JustTestPath = $false
+    [switch] $writeToDBFile,
+    [switch] $JustTestPath
  )
 set-strictmode -version 2
 
@@ -214,11 +215,6 @@ function Main {
             return
         }
         
-        # Load driver file, if using
-        if ($DriverFile) {
-            CF-Load-Driver-File $DriverFile
-        }
-
         # Get dcb names from DB
         $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
         
@@ -235,13 +231,6 @@ function Main {
             if (CF-Skip-This-Row $runEnv $row @()) {
                 continue
             }
-
-            #Check against driver file, if using
-            #if ($DriverFile) {
-                #if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                    #continue
-                #}
-            #}
 
             # Process this row
             Process-Row $row $runEnv
