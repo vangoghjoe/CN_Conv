@@ -263,8 +263,13 @@ function CF-Initialize-Log ($logPfn) {
 
 # Takes a status file, pulls out any errors,
 # adds some info to each error, and appends it to the global err log
-function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false) {
+# Style values:
+#    "client" [default]
+#    "qc"
+function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) {
+    if ($style -eq $null) { $style = "client" }
     if ($forBlankStatus) {
+        #$msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
         $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
         $msg += ("| BLANK STATUS FIELD")
     }
@@ -278,13 +283,30 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
         # Not sure if there can be more than one error in a given STAT file, but will assume there can be
         # Will make each it's own rec in the this global error log
         #
-        # Output err struc:
-        # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
         foreach ($rec in $recs) {
             $p = $rec -split "\|"
             if ($p[2] -eq "ERROR") {
-                $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
-                $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                switch ($style) {
+                    "client" { 
+                        # Output err struc:
+                        # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
+                        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
+                        $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                    }
+                    "qc" {
+                        # Output err struc:
+                        # dbid | dbdir | any other pieces 
+                        if (($pgm -match "v8") -and ($UseMultiFileSets)) {
+                            $dcb = $dbrow.local_v8_dcb
+                        }
+                        else {
+                            $dcb = $dbrow.conv_dcb
+                        }
+                        $dir = [system.io.path]::GetDirectoryName($dcb)
+                        $msg = @($dbRow.dbid, $dir) -join "|"
+                        $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                    }
+                }
                 CF-Write-File $errLog $msg
             }
         }

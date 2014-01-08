@@ -3,6 +3,11 @@ param(
     $BatchID,
     $ignoreStatus = $false,
     $DriverFile,
+    $DBid,
+    $startRow,
+    $endRow,
+    [switch]$MultiFileSetsOff,
+    $ReportStyle="qc",   # client [default], qc
     [Parameter(mandatory=$true)]
     [string] $FileStub,
     [switch]$pgmAll,
@@ -19,10 +24,7 @@ param(
     [switch]$pgmQcCompareTags,
     [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
-    [switch]$pgmConvReport,
-    $DBid,
-    $startRow,
-    $endRow
+    [switch]$pgmConvReport
 )
 set-strictmode -version latest
 
@@ -117,7 +119,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         }
         else {
             $dbRow.$pgmStatFld = $CF_STATUS_FAILED
-            CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog
+            CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $false $ReportStyle
         }
         # batch id, dbid, stat field, stat value
         CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
@@ -133,6 +135,8 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 # So Process-Cell is called  #rows x #pgms times
 function Main {
     $runEnv = CF-Init-RunEnv $BatchID
+    # Flip the logic so matches other pgms, but keep the default as usingn multi file sets
+    $UseMultiFileSets = -not $MultiFileSetsOff
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
@@ -207,7 +211,6 @@ function Main {
                         Process-Cell $row $runEnv $pgm "results"
                     }
                 }
-
             }
         }
 
