@@ -19,10 +19,11 @@ param(
     [switch]$pgmQcCompareTags,
     [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
+    [switch]$pgmConvReport,
     $startRow,
     $endRow
 )
-set-strictmode -version 2
+set-strictmode -version latest
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
@@ -42,6 +43,7 @@ function Build-List-Of-Pgms() {
         $pgms  += "run-qc-query-dict-v10"
         $pgms  += "run-qc-compare-tags"
         $pgms  += "run-qc-compare-dict"
+        $pgms  += "parse-conversion-report"
     }
     else {
         if ($pgmBackup) { $pgms += "backup-for-conversion"; }
@@ -56,6 +58,7 @@ function Build-List-Of-Pgms() {
         if ($pgmQcQueryDictV10) { $pgms += "run-qc-query-dict-v10"; }
         if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
         if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
+        if ($pgmConvReport) { $pgms += "parse-conversion-report"; }
     }
     write-verbose ("PGM {0}`n" -f ($pgms -join "`n"))
     return $pgms;
@@ -203,7 +206,7 @@ function Main {
                 # Only check the results if the pgm itself
                 # ran ok, meaning rowHasError = $false
                 if ($script:rowStatusGood -eq $true) {  
-                    if ($pgm -eq "run-qc-compare-tags" -or ($pgm -eq "run-qc-compare-dict")) {
+                    if ($CF_ResultsSteps -contains $pgm) {
                         write-verbose "Call $pgm for results"
                         Process-Cell $row $runEnv $pgm "results"
                     }

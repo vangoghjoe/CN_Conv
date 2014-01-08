@@ -48,6 +48,7 @@ param(
     [switch]$pgmQcCompareTags,
     [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
+    [switch]$pgmConvReport,
     $startRow,
     $endRow,
     $ignoreStatus = $false,
@@ -72,6 +73,7 @@ function Build-List-Of-Pgms() {
         $pgms  += "run-qc-list-dict-v10"
         $pgms  += "run-qc-query-dict-v10"
         $pgms  += "run-qc-compare-tags"
+        $pgms  += "parse-conversion-report"
         $pgms  += "run-qc-compare-dict"
     }
     else {
@@ -86,6 +88,7 @@ function Build-List-Of-Pgms() {
         if ($pgmQcQueryDictV10) { $pgms += "run-qc-query-dict-v10"; }
         if ($pgmQcCompareTags) { $pgms += "run-qc-compare-tags"; }
         if ($pgmQcCompareDict) { $pgms += "run-qc-compare-dict"; }
+        if ($pgmConvReport) { $pgms += "parse-conversion-report"; }
     }
     return $pgms;
 }

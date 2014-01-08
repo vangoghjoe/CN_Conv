@@ -40,7 +40,7 @@ function logErr ($msg, $recPtr, $qcflag = 1) {
 # adds the err msg to the global errmsg string,
 # adding some formatting
     if ($recPtr -ne "") {
-        $msg = "[line $($recPtr-1)] $msg"
+        $msg = "[line $($recPtr+1)] $msg"
     }
     CF-Write-Log $script:resFilePFN $msg
     $script:rowResultsHasError = 1
@@ -116,10 +116,17 @@ function ConsumeTillTarget($recs, $recPtr,  $targetStr, $fieldNr=0) {
     }
 }        
 
-# Returns new $recPtr or -1 didn't find a "File_Name" section
+# Sets $script:CheckFileRecPtr to  new $recPtr or -1 
+# if didn't find a "File_Name" section
+#
+# NB: don't know why, but when try to return $recPtr from CheckFileSecions
+# it passing back $error.  So, hack it by using a global pass the val
 function CheckFileSections($recs, $recPtr ) {
     $recPtr = ConsumeTillTarget $recs $recPtr "File_Name"
-    if ($recPtr -eq -1) { return -1 }
+    if ($recPtr -eq -1) { 
+        $script:CheckFileRecPtr = -1
+        return
+    }
     $recPtr++
     
     $numRecs = $recs.length
@@ -139,7 +146,7 @@ function CheckFileSections($recs, $recPtr ) {
         }
 
         # Check Before and After agree, unless either of them is marked N/A
-        if (!(($recsBefore -eq "n/a") -or ($recsAfter -eq "n/a"))) {
+        if (($recsBefore -NotMatch "n/a") -and ($recsAfter -NotMatch "n/a")) {
             if ($recsBefore -ne $recsAfter) {
                 logErr "||Error|Before and after don't agree: [file = $fileName]: before=$recsBefore  after=$recsAfter" $recPtr;
             }
@@ -163,7 +170,9 @@ function CheckFileSections($recs, $recPtr ) {
 
         $recPtr++
     }
-    return $recPtr
+    # this was returning $error
+    #return $recPtr
+    $script:CheckFileRecPtr = $recPtr
 }
 
 function Parse-Conversion-Report ($reportPFN) {
@@ -200,11 +209,14 @@ function Parse-Conversion-Report ($reportPFN) {
             logErr "Mismatched doc numbers: before = $docsBefore - after = $docsAfter" $recPtr
         }
 
-        # File_name sections
+        ###   File_Name Sections
         # Must be at least one, and up to three
         # One each for Main, Notes and Redlines
+        # 
+
         for ($i=1; $i -le 3; $i++) {
-            $recPtr = CheckFileSections $recs $recPtr
+            CheckFileSections $recs $recPtr
+            $recPtr = $script:CheckFileRecPtr
             if ($recPtr -eq -1) { break }
         }
         if ($i -eq 1) {
@@ -302,7 +314,6 @@ function Main {
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
-        write-host "comparing $($row.dbid)"
         Process-Row $row $runEnv 
     }
 
