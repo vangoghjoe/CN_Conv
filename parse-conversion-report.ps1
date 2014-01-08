@@ -40,7 +40,7 @@ function logErr ($msg, $recPtr, $qcflag = 1) {
 # adds the err msg to the global errmsg string,
 # adding some formatting
     if ($recPtr -ne "") {
-        $msg = "[line $($recPtr+1)] $msg"
+        $msg = "|Error|[line $($recPtr+1)] $msg"
     }
     CF-Write-Log $script:resFilePFN $msg
     $script:rowResultsHasError = 1
@@ -148,24 +148,24 @@ function CheckFileSections($recs, $recPtr ) {
         # Check Before and After agree, unless either of them is marked N/A
         if (($recsBefore -NotMatch "n/a") -and ($recsAfter -NotMatch "n/a")) {
             if ($recsBefore -ne $recsAfter) {
-                logErr "||Error|Before and after don't agree: [file = $fileName]: before=$recsBefore  after=$recsAfter" $recPtr;
+                logErr "Before and after don't agree: [file = $fileName]: before=$recsBefore  after=$recsAfter" $recPtr;
             }
         }
 
         if ($ErrorRefs -ne "Error_Refs" -and (-not ($ErrorRefs -match "^\s*$"))) {        
-            logErr "||Error|Non-blank ErrorRef: [file = $fileName]: $ErrorRefs" $recPtr;
+            logErr "Non-blank ErrorRef: [file = $fileName]: $ErrorRefs" $recPtr;
         }
 
         if ($AdminLogin -ne "") { 
-            logErr "||Error|AdminLogon not blank: [file=$fileName]: $AdminLogin" $recPtr
+            logErr "AdminLogon not blank: [file=$fileName]: $AdminLogin" $recPtr
         }
 
         if ($SecurityEnabled -ne "No") { 
-            logErr "||Error|Security Enabled not 'No': [file=$fileName]: $SecurityEnabled" $recPtr
+            logErr "Security Enabled not 'No': [file=$fileName]: $SecurityEnabled" $recPtr
         }
 
         if ($LogonRequired -ne "No") { 
-            logErr "||Error|Logon Required not 'No': [file=$fileName]: $LogonRequired" $recPtr
+            logErr "Logon Required not 'No': [file=$fileName]: $LogonRequired" $recPtr
         }
 
         $recPtr++

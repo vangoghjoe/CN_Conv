@@ -818,7 +818,7 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) {
     if (!$ignoreStatus -and (!($noStatFld))) {
         $statVal = $row.$($runEnv.StatusField) 
         if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "") -and ($statval -ne $null)) {
-            #write-verbose "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
+            write-host "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
             return $true
         }
     }
