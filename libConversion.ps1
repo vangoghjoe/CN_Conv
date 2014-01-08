@@ -200,6 +200,7 @@ function CF-Init-RunEnv {
     # lastly, add in any values that aren't for dirs to be made
     $h["bID"] = $bID
     $h["bStr"] = $bStr
+    write-host "bstr = $($h.bstr)"
     $h["MasterLogPFN"] = "$($h.LogsDir)\_Master.log"
     $basename = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
 

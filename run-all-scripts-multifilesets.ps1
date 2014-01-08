@@ -50,9 +50,9 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start Start row=$startRow  End row=$endRow"
    
     $cmds= @(
-    #".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #".\backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8",
-    #".\backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8 -WriteToDbFile",
+    ".\backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv -WriteToDbFile",
     ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
     ".\run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
     ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",

@@ -28,6 +28,7 @@ param(
     $BatchID,
     [switch] $ignoreStatus,
     $DBId,
+    $DriverFile,
     $startRow,
     $endRow
 )

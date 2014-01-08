@@ -32,7 +32,8 @@ param(
     $endRow,
     [switch] $UseMultiFilesets,
     [switch] $ignoreStatus,
-    $DBId
+    $DBId,
+    $DriverFile
 )
 
 set-strictmode -version latest

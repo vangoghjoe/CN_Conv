@@ -26,7 +26,10 @@ One or more examples
 param(
     $BatchID,
     $startRow,
-    $endRow
+    $endRow,
+    [switch] $ignoreStatus,
+    $DriverFile,
+    $DBId,
 )
 
 set-strictmode -version latest
