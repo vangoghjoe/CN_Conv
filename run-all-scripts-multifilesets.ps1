@@ -46,8 +46,6 @@ set-strictmode -version latest
 function Main {
     $runEnv = CF-Init-RunEnv $BatchID 
     $startDate = $(get-date -format $CF_DateFormat)
-    if ($startRow -eq $null) { $startRow = 1 }
-    if ($endRow -eq $null) { $endRow = 9999 }
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start Start row=$startRow  End row=$endRow"
    
@@ -79,7 +77,15 @@ function Main {
     )
 
     foreach ($cmd in $cmds) {
-        $cmd += " -BatchID $BatchID -startRow $startRow -endRow $endRow"
+        $cmd += " -BatchID $BatchID"
+        if ($startRow -ne $null) {
+            $cmd += " -startRow $startRow"
+        }
+        
+        if ($endRow -ne $null) {
+            $cmd += " -endRow $endRow"
+        }
+        
         if ($DBid -ne $null) {
             $cmd += " -DBId $dbid"
         }

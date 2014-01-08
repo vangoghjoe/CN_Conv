@@ -53,8 +53,6 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 UPDATE DCBs set conv_start='$start', conv_stop='$stop', conv_duration=$time
 WHERE batchid = $bid and dbid = $dbid
 "@
-            write-host $script:sqlUpdStat.CommandText
-            write-host ""
             $script:sqlUpdStat.ExecuteNonQuery() > $null
         }
     }
