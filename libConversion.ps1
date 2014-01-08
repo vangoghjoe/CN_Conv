@@ -1,12 +1,11 @@
 #####
-$CF_DEBUG = $true
-#$CF_DEBUG = $false
+#$CF_DEBUG = $true
+$CF_DEBUG = $false
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
 
 $CF_DATA_ARCH_DB = "Hogan_Data_Archiving"
-
 
 $CF_ConvAdminDir = "$CF_LNRoot\Conversion_Admin"
 $CF_DBDir = "$CF_ConvAdminDir\DB"
@@ -42,8 +41,7 @@ $script:CF_NumToProcess = 0
 $CF_PGMS = @{
 # 0 = status field
 # 1 = root for status file
-# 2 = root search results (can be array)
-# 3 = prev pgm(s) it depends on (pipe delimited list)
+# 2 = prev pgm(s) it depends on (pipe delimited list)
 "backup-for-conversion" = @("st_backup", "backup-for-conversion");
 "backup-for-conversion-local-v8" = @("st_backup_local_v8", "backup-for-conversion-local-v8");
 "run-qc-v8-tags" = @("st_qc_v8_tags", "v8_tagging", "backup-for-conversions");
@@ -59,6 +57,9 @@ $CF_PGMS = @{
 "run-qc-compare-dict" = @("st_qc_compare_dict", "qc-compare-dict", "run-qc-query-dict-v8|run-qc-query-v10");
 "run-get-sizes" = @("st_get_sizes", "get-sizes", "");
 }
+
+# Better to add this as a field in CF_PGMS, but that array is getting unwieldy
+$CF_ResultsSteps = @("run-qc-compare-tags", "run-qc-compare-dict", "parse-conversion-report")
 
 $CF_FIELDS = @(
 "batchid",
@@ -817,14 +818,14 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) {
     if (!$ignoreStatus -and (!($noStatFld))) {
         $statVal = $row.$($runEnv.StatusField) 
         if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "") -and ($statval -ne $null)) {
-            write-host "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
+            #write-verbose "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
             return $true
         }
     }
     
     foreach ($preReq in $arrPreReqs)  {
         if ($preReq -ne $CF_STATUS_GOOD) {
-            write-host "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
+            write-verbose "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
             return $true
         }
     }
@@ -888,21 +889,9 @@ function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) {
 UPDATE DCBs SET $statFld='$statVal'
 WHERE BatchID=$bID and dbid=$dbid
 "@
-    $sqlCmd.ExecuteNonQuery()
+    $sqlCmd.ExecuteNonQuery() > $null
 }
 
-#01/04/2014  20:46:3|START|01/04/2014  20:46:3
-#01/04/2014  20:46:3|DCB|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|START|01/04/2014  20:46:3
-#01/04/2014  20:46:6|DCB|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|DURATION|OK|01/04/2014  20:46:3|01/04/2014  20:46:6
-#01/04/2014  20:46:6|DIR|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DIR|START|01/04/2014  20:46:6
-#01/04/2014  20:46:6|DIR|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DIR|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:6
-#01/04/2014  20:46:6|VOL|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.VOL|START|01/04/2014  20:46:6
-#01/04/2014  20:46:6|VOL|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.VOL|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:6
-#01/04/2014  20:46:6|INDEX|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|START|01/04/2014  20:46:6
-#01/04/2014  20:46:9|INDEX|c:\conversions\conv\conversions\orig\v8\Cowco_v8-3\Cowco.DCB|DURATION|OK|01/04/2014  20:46:6|01/04/2014  20:46:9
-#01/04/2014  20:46:9|END|01/04/2014  20:46:9
-#01/04/2014  20:46:9||STOP|
-#01/04/2014  20:46:9||EXIT_STATUS|OK
 
 # Returns Conversion Start, Stop and Duration 
 function CF-Get-Duration-For-Conv-Step {
