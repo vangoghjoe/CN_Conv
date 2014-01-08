@@ -20,6 +20,7 @@ param(
     [switch]$pgmQcCompareDict,
     [switch]$incBlankStatus,
     [switch]$pgmConvReport,
+    $DBid,
     $startRow,
     $endRow
 )
@@ -189,17 +190,12 @@ function Main {
                 }
                 CF-Init-RunEnv-This-Row $runEnv $row
 
-                # Only process this row if it's in the right batch 
-                if ($row.batchid -ne $BatchID) {
+                # There is no stat field for this pgm
+                $ignoreStatus = $true
+                if (CF-Skip-This-Row $runEnv $row @()) {
                     continue
                 }
-
-                # Check against driver file, if using
-                if ($DriverFile) {
-                    if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                        continue
-                    }
-                }
+                write-verbose "checking dbid = $($row.dbid)"
 
                 Process-Cell $row $runEnv $pgm
                 # Also check results, if applicable
