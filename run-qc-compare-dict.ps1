@@ -220,8 +220,8 @@ function Process-Row($dbRow, $runEnv) {
     $script:rowResultsHasError = $false
 
     try {
-        #Get-Num-Words-In-Dict $dbRow $runEnv "v8"
-        #Get-Num-Words-In-Dict $dbRow $runEnv "v10"
+        Get-Num-Words-In-Dict $dbRow $runEnv "v8"
+        Get-Num-Words-In-Dict $dbRow $runEnv "v10"
         Load-Dict-Query $dbRow $runEnv "v8" 
         Load-Dict-Query $dbRow $runEnv "v10"
         compare-dict-results $dbRow $runEnv
