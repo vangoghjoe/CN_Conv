@@ -1,6 +1,6 @@
 #####
-#$CF_DEBUG = $true
-$CF_DEBUG = $false
+$CF_DEBUG = $true
+#$CF_DEBUG = $false
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")

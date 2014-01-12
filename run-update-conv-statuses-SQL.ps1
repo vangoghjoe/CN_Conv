@@ -108,6 +108,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # If log not there at all, have to assume it didn't run, so status is empty
         if (-not (test-path $pgmStatusFilePFN)) {
             $dbRow.$pgmStatFld = $CF_STATUS_READY
+            write-verbose "Program cell: status file not found --> stat = ready"
             if ($incBlankStatus) {
                 CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
             }
@@ -115,12 +116,15 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
             $dbRow.$pgmStatFld = $CF_STATUS_GOOD
             $script:rowStatusGood = $true
+            write-verbose "Program cell: log says good"
             CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
         }
         else {
+            write-verbose "Program cell: log says failed"
             $dbRow.$pgmStatFld = $CF_STATUS_FAILED
             CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $false $ReportStyle
         }
+        write-verbose "Program cell: stat = $($dbRow.$pgmStatFld)"
         # batch id, dbid, stat field, stat value
         CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
     }
@@ -202,11 +206,18 @@ function Main {
                 write-verbose "checking dbid = $($row.dbid)"
 
                 Process-Cell $row $runEnv $pgm
-                # Also check results, if applicable
-                # Only check the results if the pgm itself
-                # ran ok, meaning rowHasError = $false
-                if ($script:rowStatusGood -eq $true) {  
-                    if ($CF_ResultsSteps -contains $pgm) {
+
+                if ($CF_ResultsSteps -contains $pgm) {
+                    # if parent status isn't good, the child results should
+                    # automatically be cleared (not error, that wouldn't quite make
+                    # sense, either). Otherwise, get the results
+                    # status from the results file itself
+                    $pgmStatFld = $CF_PGMS.$pgm[0];
+                    if ($row.$pgmStatFld -ne $CF_STATUS_GOOD) {
+                        $resStatFld = "${pgmStatFld}_results"
+                        $row.$resStatFld = $CF_STATUS_READY
+                    }
+                    else {
                         write-verbose "Call $pgm for results"
                         Process-Cell $row $runEnv $pgm "results"
                     }
