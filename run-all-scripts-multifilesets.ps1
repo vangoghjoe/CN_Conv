@@ -26,12 +26,10 @@ One or more examples
 param(
     [parameter(mandatory=$true)]
     $BatchID,
-    [parameter(mandatory=$true)]
+    $DoBackups,
     $BackupDirRootLocalV8,
-    [parameter(mandatory=$true)]
     $BackupDirRootConv,
-    [parameter(mandatory=$true)]
-    $fileStub,
+    $fileStub = "run-all",
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
@@ -48,32 +46,45 @@ function Main {
     $startDate = $(get-date -format $CF_DateFormat)
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start Start row=$startRow  End row=$endRow"
+
+    if ($DoBackups) {
+        if (($BackupDirRootLocalV8 -eq $null) -or ($BackupDirRootConv -eq $null)) {
+            echo "Must specify backupdirs if doing backups"
+            return
+        }
+    }
    
-    $cmds= @(
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    #"backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8 -WriteToDbFile",
-    #"backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv -WriteToDbFile",
-    #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-list-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-dict-pick-qc-words.ps1  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-convert-one-dcb.ps1  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-tags.ps1 -CN_Ver 10 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-compare-tags.ps1",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-list-dict.ps1 -CN_Ver 10  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-query-dict.ps1 -CN_Ver 10 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
-    "run-qc-compare-dict.ps1 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+    $cmds= @()
+    #".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    if ($DoBackups) {
+        $cmds += @(
+        ".\backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8 -WriteToDbFile",
+        ".\backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv -WriteToDbFile",
+        ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+        )
+    }
+    $cmds += @(
+    ".\run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-list-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-dict-pick-qc-words.ps1  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-convert-one-dcb.ps1  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-tags.ps1 -CN_Ver 10 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-compare-tags.ps1",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-list-dict.ps1 -CN_Ver 10  ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-query-dict.ps1 -CN_Ver 10 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    ".\run-qc-compare-dict.ps1 ",
+    ".\run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+>>>>>>> 38037f5638620542f00185870a3b2f55c55021b4
     )
 
     foreach ($cmd in $cmds) {
@@ -91,6 +102,7 @@ function Main {
         }
         echo $cmd
         invoke-expression $cmd
+        echo ""
     }
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "STOP  Start row=$startRow  End row=$endRow"

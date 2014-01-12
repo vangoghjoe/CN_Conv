@@ -109,6 +109,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
     $script:rowHasError = $false
     $script:rowStatusGood = $false
     try {
+        
         # Calc status field and status file
         write-host "PROGRAM $pgm"
         $pgmStatFld = $CF_PGMS.$pgm[0];
@@ -132,6 +133,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
             echo "removing $pgmStatusFilePFN"
             remove-item -force $pgmStatusFilePFN -ea silentlycontinue > $null
         }
+
     }
     catch {
         CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
@@ -206,6 +208,21 @@ function Main {
                     }
                 }
                 Process-Cell $row $runEnv $pgm
+                if ($CF_ResultsSteps -contains $pgm) {
+                    # if parent status isn't good, the child results should
+                    # automatically be cleared (not error, that wouldn't quite make
+                    # sense, either). Otherwise, get the results
+                    # status from the results file itself
+                    $pgmStatFld = $CF_PGMS.$pgm[0];
+                    if ($row.$pgmStatFld -ne $CF_STATUS_GOOD) {
+                        $resStatFld = "${pgmStatFld}_results"
+                        $row.$resStatFld = $CF_STATUS_READY
+                    }
+                    else {
+                        write-verbose "Call $pgm for results"
+                        Process-Cell $row $runEnv $pgm "results"
+                    }
+                }
             }
         }
 
