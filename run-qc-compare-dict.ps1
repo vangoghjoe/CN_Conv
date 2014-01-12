@@ -204,6 +204,7 @@ UPDATE Dict_QC_Words SET status_auto='$stat' where ID='$id';
         $sUpd.ExecuteNonQuery()
     }
     finally {
+        $reader.Close()
         $sUpd.Connection.Close()
     }
 }
@@ -221,8 +222,8 @@ function Process-Row($dbRow, $runEnv) {
     $script:rowResultsHasError = $false
 
     try {
-        Get-Num-Words-In-Dict $dbRow $runEnv "v8"
-        Get-Num-Words-In-Dict $dbRow $runEnv "v10"
+        #Get-Num-Words-In-Dict $dbRow $runEnv "v8"
+        #Get-Num-Words-In-Dict $dbRow $runEnv "v10"
         Load-Dict-Query $dbRow $runEnv "v8" 
         Load-Dict-Query $dbRow $runEnv "v10"
         compare-dict-results $dbRow $runEnv
