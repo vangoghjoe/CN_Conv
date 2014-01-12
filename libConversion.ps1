@@ -29,6 +29,9 @@ $CF_CM_TBA_Dbids = "Data Archiving/client-matters-TBA-with-dbids.txt"
 $CF_CM_COLLISIONS = "Data Archiving/client-matters-bad-collisions.txt"
 $CF_CM_NO_COLLISIONS = "Data Archiving/client-matters-good-no-collisions.txt"
 
+$CF_Error_File_Delim = "`t"
+$CF_ErrFileSeen = @{}   # hash of each $collectedErrLog
+
 $script:writeProgCt = 0
 $script:CF_BatchRow = 0
 $script:CF_NumToProcess = 0
@@ -99,12 +102,14 @@ $CF_STATUS_READY = 0  # as in, ready to be processed
 $CF_STATUS_IN_PROGRESS = 1
 $CF_STATUS_GOOD = 2
 
-function CF-Put-DCB-Header-On-Clipboard() {
+function CF-Put-DCB-Header-On-Clipboard() 
+{
     # intended to be redirected to a file
     [Windows.Forms.Clipboard]::SetText($CF_FIELDS -join "`t")
 }
 
-function CF-Load-Driver-File($driverPFN, $pieceNum = 0) {
+function CF-Load-Driver-File($driverPFN, $pieceNum = 0) 
+{
    $script:driverIDs = @{}
 
    $recs = get-content $driverPFN
@@ -114,7 +119,8 @@ function CF-Load-Driver-File($driverPFN, $pieceNum = 0) {
    }
 }
 
-function CF-Is-DBID-in-Driver ($dbid) {
+function CF-Is-DBID-in-Driver ($dbid) 
+{
     return $script:driverIDs.ContainsKey($dbid)
 }
 
@@ -122,7 +128,8 @@ function CF-Is-DBID-in-Driver ($dbid) {
 #  $bytes =    total size of all files in the dir and any subdirs
 #  $numFiles = num files  " " "
 # If folder doesn't exists, returns @("", "")
-function CF-Get-Num-Files-And-Size-Of-Folder ($dir) {
+function CF-Get-Num-Files-And-Size-Of-Folder ($dir) 
+{
     if (test-path $dir) {
         $size = $numFiles = 0
         Get-ChildItem -Recurse $dir | foreach {
@@ -137,10 +144,12 @@ function CF-Get-Num-Files-And-Size-Of-Folder ($dir) {
 }
 
 
-function CF-Check-DB-Fields($dbRows) {
+function CF-Check-DB-Fields($dbRows) 
+{
 }
     
-function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
+function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) 
+{
     try {
     $dbid = $dbRow.dbid
     }
@@ -158,7 +167,8 @@ function CF-Init-RunEnv-This-Row ($runEnv, $dbRow) {
     $runEnv["badbStr"] = "${bstr}_${dbStr}"
 }
 
-function CF-Init-RunEnv-This-Row2 ($runEnv, $dbRow) {
+function CF-Init-RunEnv-This-Row2 ($runEnv, $dbRow) 
+{
     $dbid = $dbRow.dbid
     $bStr = $runEnv.bStr
     $dbStr = "{0:0000}" -f [int]$dbid
@@ -173,7 +183,8 @@ function CF-Init-RunEnv-This-Row2 ($runEnv, $dbRow) {
     return ($runEnv.StatusFilePFN, $runEnv.resFilePFN)
 }
 
-function CF-Init-RunEnv {
+function CF-Init-RunEnv 
+{
     param  (
         $bID,
         $Vstr
@@ -200,7 +211,6 @@ function CF-Init-RunEnv {
     # lastly, add in any values that aren't for dirs to be made
     $h["bID"] = $bID
     $h["bStr"] = $bStr
-    write-host "bstr = $($h.bstr)"
     $h["MasterLogPFN"] = "$($h.LogsDir)\_Master.log"
     $basename = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
 
@@ -239,7 +249,8 @@ function CF-Init-RunEnv {
 
 # Given name of a program, returns
 # @($statusField, 
-function CF-Get-Pgm-Global-Config ($pgmName) {
+function CF-Get-Pgm-Global-Config ($pgmName) 
+{
     # get outStub and status field
     $h = @{} 
     if ($CF_PGMS.ContainsKey($pgmName)) {
@@ -255,19 +266,58 @@ function CF-Get-Pgm-Global-Config ($pgmName) {
 
 
 # sets a script level var to hold the current logPfn
-function CF-Initialize-Log ($logPfn) {
+function CF-Initialize-Log ($logPfn) 
+{
     if (test-path $logPfn) {
         clear-content $logPfn
     }
 }
 
+# Makes the record header in the collected error report
+function CF-Make-Global-Error-File-Record-Header ($errLog, $style) 
+{
+    if ($style -eq $null) { $style = "client" } 
+    write-verbose "header style = $style"
+    switch ($style) {
+        "client" { 
+            # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
+            $msg = @("PGM","DB_ID","CLIENT_ID","DCB","Timestampt","Err Msg") 
+        }
+        "qc" {
+            # Dbid | Local v8 Dir | Conv Dir | any other pieces 
+            $msg = @(" Dbid", "Local v8 dir", "Conv dir","Messages")
+        }
+    }
+
+    $msg = $msg -join $CF_Error_File_Delim
+    CF-Write-File $errLog $msg
+}
+
+# Call this when starting a new errLog so will get
+# a header first time an actual error is sent to the log
+# The intention is that the err log will be empty unless
+# actually has recs, instead of always having at least a header
+function CF-Make-Global-Err-Clear-File-Seen($errLog)
+{
+    $CF_ErrFileSeen.Remove($errLog)
+}
 # Takes a status file, pulls out any errors,
 # adds some info to each error, and appends it to the global err log
 # Style values:
 #    "client" [default]
 #    "qc"
-function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) {
+function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
+{
+
     if ($style -eq $null) { $style = "client" }
+    write-verbose "rec style = $style"
+
+    # Make header if this is the first time for this log
+    if (!($CF_ErrFileSeen.ContainsKey($pgmStatusFilePFN))) {
+        $CF_ErrFileSeen[$errLog] = 1
+        CF-Make-Global-Error-File-Record-Header $errLog $style
+    }
+
     if ($forBlankStatus) {
         #$msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
         $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
@@ -279,46 +329,44 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
 
         # Error recs look like:
         # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
-        #
-        # Not sure if there can be more than one error in a given STAT file, but will assume there can be
-        # Will make each it's own rec in the this global error log
-        #
         foreach ($rec in $recs) {
             $p = $rec -split "\|"
             if ($p[2] -eq "ERROR") {
                 switch ($style) {
                     "client" { 
-                        # Output err struc:
                         # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
-                        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, $p[0]) -join "|"
-                        $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb,
+                                 $p[0])
+                        $msg +=  $p[3 .. ($p.length-1)] 
                     }
                     "qc" {
-                        # Output err struc:
                         # dbid | dbdir | any other pieces 
-                        if (($pgm -match "v8") -and ($UseMultiFileSets)) {
-                            $dcb = $dbrow.local_v8_dcb
+                        if ($UseMultiFileSets) {
+                            $v8dir = [System.io.path]::GetDirectoryName($dbrow.local_v8_dcb)
+                            $v8dir = "=Hyperlink(""$v8dir"")"
                         }
                         else {
-                            $dcb = $dbrow.conv_dcb
+                            $v8dir = ""
                         }
-                        $dir = [system.io.path]::GetDirectoryName($dcb)
-                        $msg = @($dbRow.dbid, $dir) -join "|"
-                        $msg += ("|" + $p[3 .. ($p.length-1)] -join "|")
+                        $convdir = [System.io.path]::GetDirectoryName($dbrow.conv_dcb)
+                        $convdir = "=Hyperlink(""$convdir"")"
+                        $msg = @($dbRow.dbid, $v8dir, $convdir)
+                        $msg += $p[3 .. ($p.length-1)]
                     }
                 }
+                $msg = $msg -join $CF_Error_File_Delim
                 CF-Write-File $errLog $msg
             }
         }
     }
-    #CF-Write-File $errLog $msg
 }
 
 # adds some info to each error, and appends it to the pgm's good log
 # pgm | dbid | clientid | orig_dcb | TS
 # pgm | dbid | clientid | orig_dcb | TS
 # dbid | clientid | pgm | orig_dcb | TS 
-function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $goodlog) {
+function CF-Make-Global-Good-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $goodlog) 
+{
     $recs = @(get-content $pgmStatusFilePFN)
     if ($recs.length) {
         $lastLine = $recs[-1]
@@ -345,7 +393,8 @@ function CF-Resolve-Error ($ErrorRecord=$Error[0])
 }
 
 
-function CF-Write-Log ($logPfn, $msg) {
+function CF-Write-Log ($logPfn, $msg) 
+{
     if ($msg -match "error") { 
         write-host ("Write to error log: " + $msg )
         if ($CF_DEBUG) {
@@ -358,11 +407,13 @@ function CF-Write-Log ($logPfn, $msg) {
 }
 
 # Simply appends a line to a file (badly named)
-function CF-Write-File($file, $msg) {
+function CF-Write-File($file, $msg) 
+{
     $msg | out-file -encoding ASCII -append -filepath $file
 }
 
-function CF-Finish-Log ($logPfn) {
+function CF-Finish-Log ($logPfn) 
+{
     CF-Write-Log $logPfn "|STOP|"
     if ($script:rowHasError) {
         CF-Write-Log $logPfn "|EXIT_STATUS|FAILED" 
@@ -372,7 +423,8 @@ function CF-Finish-Log ($logPfn) {
     }
 }
 
-function CF-Finish-Results-Log ($logPfn) {
+function CF-Finish-Results-Log ($logPfn) 
+{
     CF-Write-Log $logPfn "|STOP|"
     if ($script:rowResultsHasError) {
         CF-Write-Log $logPfn "|EXIT_STATUS|FAILED" 
@@ -383,16 +435,19 @@ function CF-Finish-Results-Log ($logPfn) {
 }
 
 
-function CF-IsPath ($str) {
+function CF-IsPath ($str) 
+{
     (($str -match "^\\\\") -or ($str -match "^[A-z]:"))
 }
-function CF-Get-Start-Stop-From-Log ($logPFN) {
+function CF-Get-Start-Stop-From-Log ($logPFN) 
+{
     if (Test-Path $logPFN) {
         $logRecs = @(get-content $logPfn)
     }
 }
 
-function CF-Log-Says-Ran-Successfully ($logPFN) {
+function CF-Log-Says-Ran-Successfully ($logPFN) 
+{
     if (Test-Path $logPFN) {
         $logRecs = @(get-content $logPfn)
         if ($logRecs.length) {
@@ -416,8 +471,14 @@ function CF-Log-Says-Ran-Successfully ($logPFN) {
         
 
 
-function CF-Make-DbStr ([int] $dbid) {
+function CF-Make-DbStr ([int] $dbid) 
+{
     return "{0:0000}" -f [int]$dbid
+}
+
+function CF-Hostname {
+    # NB: $hostname doesnn't work on the admin boxes
+    return $(Get-WmiObject win32_computersystem).name
 }
 
 # $type = status or search or qc
@@ -434,7 +495,8 @@ function CF-Make-Output-PFN-Name ($runEnv, $stub, $type) {
     return $file
 }
 
-function CF-Log-To-Master-Log {
+function CF-Log-To-Master-Log 
+{
     # typically will call this at the beginning of a session and store
     # then use it whenever logging to Master Log
     
@@ -450,7 +512,7 @@ function CF-Log-To-Master-Log {
     $pgm = [system.io.path]::GetFileNameWithoutExtension($script:MyInvocation.MyCommand.Path)
     
     # TS | HOST | PID | PGM | USER | BATCH | DBID
-    $x = @( $(get-date -format $CF_DateFormat), $(hostname), $pid, $pgm, [Environment]::Username, 
+    $x = @( $(get-date -format $CF_DateFormat), $(CF-Hostname), $pid, $pgm, [Environment]::Username, 
             $bStr, $dbStr, $type, $msg)
     $x -join '|' | out-file -append -encoding ASCII $script:CF_BatchEnv.MasterLogPFN
        
@@ -459,14 +521,17 @@ function CF-Log-To-Master-Log {
 # Takes a list of orig DCB's and a batch number
 #
 
+
 # DCB-DB.txt
 #  
-function CF-Init-Batch {
+function CF-Init-Batch 
+{
     # ok for now, have to copy the DCB's into the orig-dcb header of the TSV
 }
 
 # returns variable pointing to all rows
-function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) {
+function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) 
+{
 
     # TODO: lock file first
     $dbFile = "$CF_DBDir\${table}.txt"
@@ -490,14 +555,16 @@ function CF-Read-DB-File ($table, $searchName, $p1, $p2, $p3) {
 # most brain dead method imaginable.
 # Wanted to just shell out to sqlcmd, but not easily installable on target
 # So, will save the rows out to a CSV, then proceed as before
-function CF-Read-DB-File-SQL ($dbname) {
+function CF-Read-DB-File-SQL ($dbname) 
+{
     $outFile = 
     $cmd = CF-Get-SQL-Cmd $dbname
     $cmd.CommandText = "SELECT * FROM DCBs"
 }
 
 # up to caller to catch errors
-function CF-Write-DB-File ($table, $rows) {
+function CF-Write-DB-File ($table, $rows) 
+{
     # TODO: lock file first
     $dbFile = "$CF_DBDir\${table}.txt"
     
@@ -507,7 +574,8 @@ function CF-Write-DB-File ($table, $rows) {
 
 }
 
-function CF-Append-To-Logs {
+function CF-Append-To-Logs 
+{
     param (
         [string] $msg,
         [string] $dcbPfn
@@ -521,21 +589,24 @@ function CF-Append-To-Logs {
 
 #function CF-Add-To-Record ($rec, $
 
-function CF-Encode-CPL-Safe-Path {
+function CF-Encode-CPL-Safe-Path 
+{
     param (
         $path
     )
     return $path.replace(" ", $CF_CPL_SPACE_STRING)
 }
         
-function CF-Decode-CPL-Safe-Path {
+function CF-Decode-CPL-Safe-Path 
+{
     param (
         $path
     )
     return $path.replace($CF_CPL_SPACE_STRING, " ")
 }
         
-function CF-Make-Local-Conv-Dir {
+function CF-Make-Local-Conv-Dir 
+{
     param (
         [string] $dcbPfn
     )
@@ -551,7 +622,8 @@ function CF-Make-Local-Conv-Dir {
 }    
 
 # init some common vars, such as those based on $dcbPfn
-function CF-Init-Vars {
+function CF-Init-Vars 
+{
     param (
         [string] $dcbPfn
     )
@@ -561,7 +633,8 @@ function CF-Init-Vars {
 }
 
 # get list of dcbs
-function CF-Get-DcbList {
+function CF-Get-DcbList 
+{
     $dcbList = Get-Content $fileOfListOfDcbs
     return $dcbList
 }
@@ -573,7 +646,8 @@ function CF-Get-BackupDirRoot { return $backupDirRoot }
 
 # Given a full path-filename, returns that same path-filename, but without the extension
 # inputs: path-filename
-function CF-Get-PfnWithoutExtension {
+function CF-Get-PfnWithoutExtension 
+{
     param($pfn)
     $parent =  Split-Path -Parent $pfn
     $basename = [system.io.path]::GetFileNameWithoutExtension($pfn)
@@ -582,7 +656,8 @@ function CF-Get-PfnWithoutExtension {
 
 # get list of db files on disk (per dcb) and their sizes
 # inputs:  1) full-path-to-Dcb
-function CF-Get-DbFiles {
+function CF-Get-DbFiles 
+{
     param ( [string] $dcbPfn )
     
     # get name of full pfn without extension
@@ -591,7 +666,8 @@ function CF-Get-DbFiles {
     return Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
 }
 
-function CF-Get-DbFiles-With-Sizes {
+function CF-Get-DbFiles-With-Sizes 
+{
     param ( [string] $dcbPfn )
     
     # get name of full pfn without extension
@@ -605,7 +681,8 @@ function CF-Get-DbFiles-With-Sizes {
 # 0 = ran but failed
 # 1 = in process
 # 2 = ran successfully
-function CF-Finish-DBRow($dbRow, $statFld) {
+function CF-Finish-DBRow($dbRow, $statFld) 
+{
     if ($script:rowHasError) {
         $dbRow.$statFld = $CF_STATUS_FAILED
     }
@@ -615,7 +692,8 @@ function CF-Finish-DBRow($dbRow, $statFld) {
 }
 
 # inputs: 1) dir-to-search  2) extension, eg "txt"
-function CF-Find-ListOfFilesByExt {
+function CF-Find-ListOfFilesByExt 
+{
     param($dir, $ext)
     return Get-ChildItem -Recurse $dir | where {$_.extension -eq "$ext"}
     
@@ -623,7 +701,8 @@ function CF-Find-ListOfFilesByExt {
 
 
 
-function CF-Get-Time-From-CN-TS {
+function CF-Get-Time-From-CN-TS 
+{
     param ([string] $ts)
     $dt = $ts.Split(" ")
 
@@ -645,7 +724,8 @@ function CF-Get-Time-From-CN-TS {
 
 # later value is first arg, earlier value is 2nd, just like subtraction
 # DAMN, still have to handle case of spanning midnight
-function CF-Time-Diff-From-CN {
+function CF-Time-Diff-From-CN 
+{
     param ([string] $tsLate, [string] $tsEarly)
     $tArr1 = CF-Get-Time-From-CN-TS($tsEarly)
     $tArr2 = CF-Get-Time-From-CN-TS($tsLate)
@@ -668,7 +748,8 @@ function CF-Time-Diff-From-CN {
 
 #CF-Time-Diff-From-CN "06/18/2013  :8:59" "06/18/2013  :3:6" 
 
-function CF-Parse-Stats-Log {
+function CF-Parse-Stats-Log 
+{
     param($pfn)
     $recs = Get-Content $pfn
     $convArr = $recs[2] -split "\|",0
@@ -682,7 +763,8 @@ function CF-Parse-Stats-Log {
     write-host ("Conv time TAB idx time = {0}`t{1}" -f ($convDuration, $idxDuration))
 }
 
-function CF-Testme {
+function CF-Testme 
+{
     write "got cf-testme"
     
 }
@@ -701,7 +783,8 @@ function CF-Create-SqlConnection($database = "FYI_Conversions")
     return $conn;
 }
 
-function CF-Get-SQL-Cmd ($database="FYI_Conversions") {
+function CF-Get-SQL-Cmd ($database="FYI_Conversions") 
+{
     $conn = CF-Create-SqlConnection $database
     $cmd = New-Object System.Data.SqlClient.SqlCommand
     $cmd.Connection = $conn;
@@ -711,12 +794,14 @@ function CF-Get-SQL-Cmd ($database="FYI_Conversions") {
     #[Void] $cmd.ExecuteNonQuery()
 }
 
-function CF-Show-DCB-DB-File($file="DCBs") {
+function CF-Show-DCB-DB-File($file="DCBs") 
+{
     $dbFile = "$CF_DBDir\${file}.txt"
     import-CSV -delimiter "`t" $dbfile | out-gridview
 }
 
-function CF-Get-Client-Matter ($dcb) {
+function CF-Get-Client-Matter ($dcb) 
+{
     $p= $dcb -split "\\"
     $clMtr = "$($p[1]).$($p[2])"
     write-host $clMtr
@@ -724,7 +809,8 @@ function CF-Get-Client-Matter ($dcb) {
 }
 
 # $vers = "v8" or "v10"
-function CF-Get-CN-Exe($vers) {
+function CF-Get-CN-Exe($vers) 
+{
     if (-not ($vers)) {
         throw "Must define `$vers when calling CF-Get-CN-Exe"
     }
@@ -754,7 +840,8 @@ function CF-Get-CN-Exe($vers) {
     throw $msg
 }
 
-function CF-Get-CN-Info ($CN_Ver) {
+function CF-Get-CN-Info ($CN_Ver) 
+{
     if (-not ($CN_Ver)) {
         throw "Must define `$CN_Ver when calling CF-Get-CN-Info"
     }
@@ -768,7 +855,8 @@ function CF-Get-CN-Info ($CN_Ver) {
     return @($Vstr, $CN_EXE)
 }
     
-function CF-Strip-Last-Slash ($path) {
+function CF-Strip-Last-Slash ($path) 
+{
     $len = $path.length
     if ($path.substring($len-1, 1) -eq '\') {
         return $path.substring(0, $len-1)
@@ -778,7 +866,8 @@ function CF-Strip-Last-Slash ($path) {
     }
 }
 
-function CF-Add-Arr-Item-To-Hash($hash, $key, $item) {
+function CF-Add-Arr-Item-To-Hash($hash, $key, $item) 
+{
     if (-not ($hash.ContainsKey($key))) {
         $hash[$key] = @($item)
     }
@@ -788,7 +877,8 @@ function CF-Add-Arr-Item-To-Hash($hash, $key, $item) {
     return $hash
 }
 
-function CF-Write-Out-CM-Dbids($outFile, $CMs_h) {
+function CF-Write-Out-CM-Dbids($outFile, $CMs_h) 
+{
     echo $null > $outFile
     foreach ($CM in $CMs_h.keys) {
         foreach ($dbid in $CMs_h[$CM]) {
@@ -797,7 +887,8 @@ function CF-Write-Out-CM-Dbids($outFile, $CMs_h) {
     }
 }
 
-function CF-Get-File-Sizes($files) {
+function CF-Get-File-Sizes($files) 
+{
     $sizes = @()
     foreach ($dbFile in $dbFiles) {
         $size = (get-item $dbFile).length
@@ -822,7 +913,8 @@ $sqlCmdW.ExecuteNonQuery() > $null
 # else   $false
 # 
 # $arrPreReqs is an array of status values that will trigger a skip if not GOOD
-function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) {
+function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) 
+{
     $skip = $false
     if ($row.batchid -ne $BatchID) {   
         return $true
@@ -866,7 +958,8 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) {
     # still here?  Don't skip this row
     return $false
 }
-function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) {
+function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) 
+{
     # Check Batch
     if ($row.batchid -ne $BatchID) {   
         return $true
@@ -907,12 +1000,14 @@ function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs) {
     return $false
 }
 
-function CF-Write-Progress ($dbid, $dcb) {
+function CF-Write-Progress ($dbid, $dcb) 
+{
     $script:writeProgCt++
     write-host ("{3} Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 50,0)), (get-date -f $CF_DateFormat)))
 }
 
-function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) {
+function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) 
+{
     $sqlCmd.CommandText = @"
 UPDATE DCBs SET $statFld='$statVal'
 WHERE BatchID=$bID and dbid=$dbid
@@ -921,7 +1016,8 @@ WHERE BatchID=$bID and dbid=$dbid
 }
 
 # Returns Conversion Start, Stop and Duration 
-function CF-Get-Duration-For-Conv-Step {
+function CF-Get-Duration-For-Conv-Step 
+{
     param($pfn)
     $recs = Get-Content $pfn
     $startArr = $recs[0] -split "\|",0

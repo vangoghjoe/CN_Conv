@@ -29,7 +29,7 @@ param(
     $endRow,
     [switch] $ignoreStatus,
     $DriverFile,
-    $DBId,
+    $DBId
 )
 
 set-strictmode -version latest
@@ -239,26 +239,14 @@ function Main {
     # DCB Rows Loop
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
-        
-        if ($row.batchid -ne $BatchID) {   
+
+        $arrPreReqs = @()
+        $arrPreReqs += $row.st_qc_query_dict_v8
+        $arrPreReqs += $row.st_qc_query_dict_v10
+        if (CF-Skip-This-Row $runEnv $row @arrPreReqs) {
             continue
         }
 
-        $statVal = $row.$($runEnv.StatusField) 
-
-        if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne "") ) {
-            continue
-        }
-  
-        if ($row.st_qc_v8_tags -ne $CF_STATUS_GOOD) {
-            continue
-        }
-        if ($row.st_qc_v10_tags -ne $CF_STATUS_GOOD) {
-            continue
-        }
-
-        write-host "comparing $($row.dbid)"
         Process-Row $row $runEnv 
     }
 
