@@ -26,8 +26,8 @@ One or more examples
 param(
     [Parameter(mandatory=$true)]
     $BatchID,
-    [Parameter(mandatory=$true)]
-    [string] $FileStub,
+    $DBId,
+    [string] $FileStub = (get-date -f "yyMMddHHmmss"),
     [switch]$NotJustErrors,
     [switch]$pgmAll,
     [switch]$pgmBackup,
@@ -196,16 +196,10 @@ function Main {
                 $row = $dcbRows[$i]
                 CF-Init-RunEnv-This-Row $runEnv $row
 
-                # Only process this row if it's in the right batch 
-                if ($row.batchid -ne $BatchID) {
+                # There is no stat field for this pgm
+                $ignoreStatus = $true
+                if (CF-Skip-This-Row $runEnv $row @()) {
                     continue
-                }
-
-                # Check against driver file, if using
-                if ($DriverFile) {
-                    if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                        continue
-                    }
                 }
                 Process-Cell $row $runEnv $pgm
                 if ($CF_ResultsSteps -contains $pgm) {

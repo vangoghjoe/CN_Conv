@@ -36,10 +36,37 @@ set-strictmode -version latest
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/libConversion.ps1")
 
+function Get-Num-Words-In-Dict($dbRow, $runEnv, $Vstr) {
+    # Calc results file for the v8/10 tag pgms
+    $bid = $dbRow.batchid
+    $dbid = $dbRow.dbid
+    $sCmd = $runEnv.sCmd
+    $Vstr = $Vstr.ToLower()
+
+    write-verbose "vstr = $Vstr $dbid"
+    
+    if ($Vstr -eq 'v8') { $type = 'orig' }
+    elseif ($Vstr -eq 'v10') { $type = 'conv' }
+
+    $FileStub = $CF_PGMS["run-qc-list-dict-${Vstr}"][1];
+    $resFilePFN = "${bStr}_${dbStr}_${FileStub}.txt"
+    $resFilePFN =  "$($runEnv.SearchResultsDir)\$resFilePFN"
+    write-verbose "Dict-Num: resfile = $resFilePFN"
+
+    # open it first to make sure it's there
+    $recs = get-content $resFilePFN
+    
+    # Update DB
+    $statFld = "st_num_dict_${type}"
+    $sCmd.CommandText = "UPDATE DCBS SET $statFld=$($recs.length) WHERE batchid=$bid and dbid=$dbid"
+    write-verbose "Dict Num: $($sCmd.CommandText)"
+    $sCmd.ExecuteNonQuery()
+}
 
 function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
     # Calc results file for the v8/10 tag pgms
     $bStr = $runEnv.bStr
+    $bid = $runEnv.bid
     $dbid = $dbRow.dbid
     $sCmd = $runEnv.sCmd
     $Vstr = $Vstr.ToLower()
@@ -59,7 +86,8 @@ function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
     # if v8, delete any old recs for this db 
     if ($Vstr -eq 'v8') {
         $t = "DELETE FROM Dict_QC_Words WHERE "
-        $t += "dbid=$dbid"
+        $t += " batchid=$batchid"
+        $t += " AND dbid=$dbid"
         $sCmd.CommandText = $t
         $sCmd.ExecuteNonQuery() > $null
     }
@@ -76,15 +104,28 @@ function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
         $word = $word -replace "'", "''"
         $word = "'$word'" 
 
-        # if v8, insert new recs.  If not, update existing, matching on Word
-        write-verbose "word $word   numHits $numHits   numDocs $numDocs"
+        # if v8, insert new recs.  
+        # else try to update existing word, else make new rec
         if ($Vstr -eq 'v8') {
-            $t = "INSERT INTO Dict_QC_Words (dbid,word,${type}_hit_cnt,${type}_doc_cnt)"
-            $t += " VALUES ($dbid, $word, $numHits, $numDocs)"
+            $t = "INSERT INTO Dict_QC_Words (batchid,dbid,word,${type}_hit_cnt,${type}_doc_cnt)"
+            $t += " VALUES ($bid, $dbid, $word, $numHits, $numDocs)"
         }
         else {
-            $t = "UPDATE Dict_QC_Words SET ${type}_hit_cnt=$numHits , ${type}_doc_cnt=$numDocs"
-            $t += " WHERE dbid=$dbid and word=$word"
+            $t = "SELECT ID from Dict_QC_Words"
+            $t += " WHERE batchid=$bid and dbid=$dbid and word=$word"
+            write-verbose "Load: existing word: $t"
+            $sCmd.CommandText = $t
+            $reader = $sCmd.ExecuteReader()
+            if ($reader.read()) { 
+                $id = $reader.Item("id")
+                $t = "UPDATE Dict_QC_Words SET ${type}_hit_cnt=$numHits , ${type}_doc_cnt=$numDocs"
+                $t += " WHERE id=$id"
+            }
+            else {
+                $t = "INSERT INTO Dict_QC_Words (batchid,dbid,word,${type}_hit_cnt,${type}_doc_cnt)"
+                $t += " VALUES ($bid, $dbid, $word, $numHits, $numDocs)"
+            }
+            $reader.close() # should use ExecuteScalar, but not familiar with it
         }
         $sCmd.CommandText = $t
         $sCmd.ExecuteNonQuery() > $null
@@ -138,12 +179,18 @@ FROM Dict_QC_Words WHERE dbid=$dbid
             if ($orig_doc_cnt -ne $conv_doc_cnt) {
                 $stat = 'F'
             }
+            # default value for all the cnts is -2,
+            # meaning that word wasn't even in the dict
+            if (($orig_hit_cnt -eq -2) -or ($orig_doc_cnt -eq -2) -or
+                ($conv_hit_cnt -eq -2) -or ($conv_doc_cnt -eq -2)) {
+                $stat = 'F'
+            }
 
             # Make eror log entry
             if ($stat -eq 'F') {
                 $msg = "|ERROR|Word = $word|Orig cnts: $orig_hit_cnt, $orig_doc_cnt|Conv cnts: $conv_hit_cnt, $conv_doc_cnt"
-                CF-Write-File $resFilePFN $msg
-                $script:rowResultsHasError += 1
+                CF-Write-Log $resFilePFN $msg $false
+                $script:rowResultsHasError = $true
             }
             # I have GOT to learn how to use parameters ;)
             $cmd += @"
@@ -173,8 +220,9 @@ function Process-Row($dbRow, $runEnv) {
     $script:rowHasError = $false
     $script:rowResultsHasError = $false
 
-    CF-Write-Progress $dbid $dbRow.conv_dcb
     try {
+        Get-Num-Words-In-Dict $dbRow $runEnv "v8"
+        Get-Num-Words-In-Dict $dbRow $runEnv "v10"
         Load-Dict-Query $dbRow $runEnv "v8" 
         Load-Dict-Query $dbRow $runEnv "v10"
         compare-dict-results $dbRow $runEnv
@@ -213,7 +261,7 @@ function Main {
                 continue
             }
 
-            CF-Write-Progress $
+            CF-Write-Progress $row.dbid $row.conv_dcb
             Process-Row $row $runEnv 
 
         }

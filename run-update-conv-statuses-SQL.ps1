@@ -7,9 +7,9 @@ param(
     $startRow,
     $endRow,
     [switch]$MultiFileSetsOff,
-    $ReportStyle="qc",   # client [default], qc
-    [Parameter(mandatory=$true)]
-    [string] $FileStub,
+    $ReportStyle="qc",   #  qc [default], or client
+    #[string] $FileStub = (get-date -f "yyMMddHHmmss"),
+    [string] $FileStub = "x",
     [switch]$pgmAll,
     [switch]$pgmBackup,
     [switch]$pgmBackupLocalv8,
@@ -117,7 +117,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
             $dbRow.$pgmStatFld = $CF_STATUS_GOOD
             $script:rowStatusGood = $true
             write-verbose "Program cell: log says good"
-            CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
+            #CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
         }
         else {
             write-verbose "Program cell: log says failed"

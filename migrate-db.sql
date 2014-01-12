@@ -16,3 +16,7 @@ alter table dcbs add conv_duration float
 alter table dcbs add conv_start nvarchar(25)
 alter table dcbs add conv_stop nvarchar(25)
 go
+
+alter table dcbs add st_num_dict_orig bigint
+alter table dcbs add st_num_dict_conv bigint
+go

@@ -392,12 +392,12 @@ function CF-Resolve-Error ($ErrorRecord=$Error[0])
    }
 }
 
-
-function CF-Write-Log ($logPfn, $msg) 
+# If $Exception=$false, don't write $error to screen
+function CF-Write-Log ($logPfn, $msg, $Exception=$true) 
 {
     if ($msg -match "error") { 
         write-host ("Write to error log: " + $msg )
-        if ($CF_DEBUG) {
+        if ($CF_DEBUG -and $Exception) {
             $error[0] | format-list
         }
     }
@@ -1003,6 +1003,8 @@ function CF-Skip-This-Row2 ($runEnv, $row, $arrPreReqs)
 function CF-Write-Progress ($dbid, $dcb) 
 {
     $script:writeProgCt++
+    # debug
+    write-host "dcb = $dcb"
     write-host ("{3} Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 50,0)), (get-date -f $CF_DateFormat)))
 }
 
