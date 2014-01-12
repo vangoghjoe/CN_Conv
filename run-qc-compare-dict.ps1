@@ -53,12 +53,10 @@ function Get-Num-Words-In-Dict($dbRow, $runEnv, $Vstr) {
     $resFilePFN =  "$($runEnv.SearchResultsDir)\$resFilePFN"
     write-verbose "Dict-Num: resfile = $resFilePFN"
 
-    # open it first to make sure it's there
-    $recs = get-content $resFilePFN
-    
+    $numRecs = CF-Count-Lines-In-File $resFilePFN 
     # Update DB
     $statFld = "st_num_dict_${type}"
-    $sCmd.CommandText = "UPDATE DCBS SET $statFld=$($recs.length) WHERE batchid=$bid and dbid=$dbid"
+    $sCmd.CommandText = "UPDATE DCBS SET $statFld=$numRecs WHERE batchid=$bid and dbid=$dbid"
     write-verbose "Dict Num: $($sCmd.CommandText)"
     $sCmd.ExecuteNonQuery()
 }
