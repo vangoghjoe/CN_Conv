@@ -1034,3 +1034,18 @@ function CF-Get-Duration-For-Conv-Step
     return @($convStart, $convStop, $convDur)
 }
 
+function CF-Count-Lines-In-File($file) {
+    $reader = [System.IO.File]::OpenText("$file")
+    $ct = 0
+    try {
+        for(;;) {
+            $word = $reader.ReadLine()
+            if ($word -eq $null) { break }
+            $ct++
+        }
+    }
+    finally {
+        $reader.Close()
+    }
+    return $ct
+}
