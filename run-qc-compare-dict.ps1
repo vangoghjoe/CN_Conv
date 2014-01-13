@@ -62,6 +62,8 @@ function Get-Num-Words-In-Dict($dbRow, $runEnv, $Vstr) {
 }
 
 function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
+    #Val stored in Dict_QC_Words if no hits/docs for a word
+    $VAL_FOR_EMPTY = -2 
     # Calc results file for the v8/10 tag pgms
     $bStr = $runEnv.bStr
     $bid = $runEnv.bid
@@ -92,7 +94,10 @@ function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
 
     # format is work numHits numDocs 
     foreach ($rec in $recs) {
+        
         ($srcNum, $numHits, $numDocs, $word) = $rec -split "`t"
+        if ($numHits -eq '') { $numHits = $VAL_FOR_EMPTY }
+        if ($numDocs -eq '') { $numDocs = $VAL_FOR_EMPTY }
         # for $word, strip off surrounding quotes
         #            replace ' with ''
         #            quote it with '
@@ -125,9 +130,10 @@ function Load-Dict-Query($dbRow, $runEnv, $Vstr) {
             }
             $reader.close() # should use ExecuteScalar, but not familiar with it
         }
+        write-verbose $t
         $sCmd.CommandText = $t
         $sCmd.ExecuteNonQuery() > $null
-        write-verbose $t
+
     }
 }
 

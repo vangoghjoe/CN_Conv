@@ -216,7 +216,7 @@ function Main {
         }
         
         # Get dcb names from DB
-        $dcbRows = CF-Read-DB-File "DCBs" "BatchID" $BatchID
+        $dcbRows = @(CF-Read-DB-File "DCBs" "BatchID" $BatchID)
         
         $backupDirRoot = CF-Get-BackupDirRoot
         $startDate = $(get-date -format $CF_DateFormat)
