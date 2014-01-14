@@ -22,7 +22,7 @@ One or more examples
 .LINK
 
 #>
-
+[CmdLetBinding()]
 param(
     [Parameter(mandatory=$true)]
     $BatchID,
@@ -111,7 +111,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
     try {
         
         # Calc status field and status file
-        write-host "PROGRAM $pgm"
+        write-verbose "PROGRAM $pgm"
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
         if ($type -eq "status") {
@@ -126,9 +126,9 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 
         # if NotJustErros, reset for all 
         # else only if currently = STATUS_FAILED
-        write-host "DBID = $dbid  pgm=$pgm old stat=$($dbrow.$pgmStatFld)"
+        write-verbose "DBID = $dbid  pgm=$pgm old stat=$($dbrow.$pgmStatFld)"
         if ($NotJustErrors -or ($dbRow.$pgmStatFld -eq $CF_STATUS_FAILED)) {
-            write-host "clear it"
+            write-verbose "clear it"
             $dbRow.$pgmStatFld = $CF_STATUS_READY
             echo "removing $pgmStatusFilePFN"
             remove-item -force $pgmStatusFilePFN -ea silentlycontinue > $null

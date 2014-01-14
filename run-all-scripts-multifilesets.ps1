@@ -26,7 +26,7 @@ One or more examples
 param(
     [parameter(mandatory=$true)]
     $BatchID,
-    $DoBackups,
+    [switch]$DoBackups,
     $BackupDirRootLocalV8,
     $BackupDirRootConv,
     $fileStub = "run-all",

@@ -8,8 +8,9 @@ param(
     $endRow,
     [switch]$MultiFileSetsOff,
     $ReportStyle="qc",   #  qc [default], or client
-    #[string] $FileStub = (get-date -f "yyMMddHHmmss"),
-    [string] $FileStub = "x",
+    [string] $FileStub = (get-date -f "yyMMddHHmmss"),
+    #[string] $FileStub = "x",
+    [switch]$WriteReports,
     [switch]$pgmAll,
     [switch]$pgmBackup,
     [switch]$pgmBackupLocalv8,
@@ -81,7 +82,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 
     $script:rowHasError = $false
     $script:rowStatusGood = $false
-    try {
+    #try {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
@@ -110,7 +111,9 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
             $dbRow.$pgmStatFld = $CF_STATUS_READY
             write-verbose "Program cell: status file not found --> stat = ready"
             if ($incBlankStatus) {
-                CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
+                if ($WriteReports) {
+                    CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
+                }
             }
         }
         elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
@@ -122,17 +125,19 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         else {
             write-verbose "Program cell: log says failed"
             $dbRow.$pgmStatFld = $CF_STATUS_FAILED
-            CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $false $ReportStyle
+            if ($WriteReports) {
+                CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $false $ReportStyle
+            }
         }
         write-verbose "Program cell: stat = $($dbRow.$pgmStatFld)"
         # batch id, dbid, stat field, stat value
         CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
-    }
-    catch {
-        CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
-        $script:rowHasError = $true
-    }
-    CF-Finish-Log $script:statusFilePFN 
+    #}
+    #catch {
+        #CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
+        #$script:rowHasError = $true
+    #}
+    #CF-Finish-Log $script:statusFilePFN 
 }
 
 # For each row, call Process-Cell to just that pgm for just that row
@@ -180,10 +185,11 @@ function Main {
         # Now, Process-Cell is really acting like a Process-Cell, b/c it's called 
         #
         foreach ($pgm in $pgms) {
+            write-host "Start pgm: $pgm"
             # The log of the munged error lines from all the pgms we're looking at
             # It will also go in the curr dir  
             $script:collectedErrLog = "errors-$($runEnv.bstr)${FileStub}-${pgm}.txt"
-            echo $null > $collectedErrLog
+            #echo $null > $collectedErrLog
             CF-Make-Global-Err-Clear-File-Seen $collectedErrLog
 
             # the Good log

@@ -276,6 +276,7 @@ function CF-Initialize-Log ($logPfn)
 # Makes the record header in the collected error report
 function CF-Make-Global-Error-File-Record-Header ($errLog, $style) 
 {
+    echo $null > $errLog
     if ($style -eq $null) { $style = "client" } 
     write-verbose "header style = $style"
     switch ($style) {
@@ -308,12 +309,11 @@ function CF-Make-Global-Err-Clear-File-Seen($errLog)
 #    "qc"
 function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
 {
-
     if ($style -eq $null) { $style = "client" }
     write-verbose "rec style = $style"
 
     # Make header if this is the first time for this log
-    if (!($CF_ErrFileSeen.ContainsKey($pgmStatusFilePFN))) {
+    if (!($CF_ErrFileSeen.ContainsKey($errLog))) {
         $CF_ErrFileSeen[$errLog] = 1
         CF-Make-Global-Error-File-Record-Header $errLog $style
     }
@@ -938,14 +938,14 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false)
     if (!$ignoreStatus -and (!($noStatFld))) {
         $statVal = $row.$($runEnv.StatusField) 
         if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "") -and ($statval -ne $null)) {
-            write-host "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
+            #write-verbose "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
             return $true
         }
     }
     
     foreach ($preReq in $arrPreReqs)  {
         if ($preReq -ne $CF_STATUS_GOOD) {
-            write-verbose "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
+            #write-verbose "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
             return $true
         }
     }
