@@ -153,8 +153,7 @@ function Process-Row($dbRow, $runEnv) {
 
         ($backupDir, $newDcbPfn) = Get-BackupDir $backupDirRoot $dcbPfn $dcbPathFoldersToSkip
 
-        if ($FileSetLocalv8) { $dbrow.local_v8_dcb = $newDcbPfn }
-        else { $dbrow.conv_dcb = $newDcbPfn }
+        UpdatePathInDBs $runEnv $row $newDcbPfn
 
         # Delete the destination backup dir? (mostly for testing)
         if (($DeleteEachDestDir) -and (test-path $backupDir)) {
@@ -199,6 +198,15 @@ function Process-Row($dbRow, $runEnv) {
     CF-Finish-Log $script:statusFilePFN 
 }
 
+function UpdatePathInDBs($runEnv, $dbRow, $dcbPfn) {
+    $r = $runEnv
+
+    if ($FileSetLocalv8) { $column = "local_v8_dcb" }
+    else { $column = "conv_dcb" }
+    $dbRow.$column = $dcbPfn
+    CF-Update-Status-in-SQL $r.sCmd $r.bid $dbrow.dbid $column $dcbPfn "bkup-conv: "
+}
+
 function Main {
     # Initialize
     # Minimum necessary to make entry in master log
@@ -209,6 +217,7 @@ function Main {
         # Inits
         $script:errMsg = "";
         $bStr = $runEnv.bStr        
+        $runEnv.sCmd = CF-Get-SQL-Cmd
 
         if ($FileSetLocalv8 -and $FileSetConv -or ($FileSetLocalv8 -eq $false -and $FileSetConv -eq $false)) {
             write-host "Please choose either -FileSetLocalv8 OR -FileSetConv"
@@ -233,12 +242,14 @@ function Main {
             }
 
             # Process this row
+            CF-Write-Progress $row.dbid $row.orig_dcb
             Process-Row $row $runEnv
             
             # Write out whole DB every time in case stop before end of run
             if ($writeToDBFile) {
                 CF-Write-DB-File "DCBs" $dcbRows
             }
+
         }
 
     }

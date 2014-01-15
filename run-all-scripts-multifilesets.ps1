@@ -29,11 +29,15 @@ param(
     [switch]$DoBackups,
     $BackupDirRootLocalV8,
     $BackupDirRootConv,
+    [switch]$DoGetNumDictLines,
+    [switch]$UseTestDirs,
+    [switch]$UseRealDirs,
     $fileStub = "run-all",
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
-    $DBId
+    $DBId,
+    $DriverFile
 )
 
 set-strictmode -version latest
@@ -44,6 +48,14 @@ set-strictmode -version latest
 function Main {
     $runEnv = CF-Init-RunEnv $BatchID 
     $startDate = $(get-date -format $CF_DateFormat)
+    if ($UseTestDirs) {
+        $BackupDirRootLocalV8 = "W:\_LN_Test\Pre-conversion\batch${BatchID}\localv8"
+        $BackupDirRootConv = "W:\_LN_Test\Pre-conversion\batch${BatchID}\Conv"
+    }
+    elseif ($UseRealDirs) {
+        $BackupDirRootLocalV8 = "W:\_LN_Test\Pre-conversion\batch${BatchID}\localv8"
+        $BackupDirRootConv = "W:"
+    }
 
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "Start Start row=$startRow  End row=$endRow"
 
@@ -99,6 +111,13 @@ function Main {
         
         if ($DBid -ne $null) {
             $cmd += " -DBId $dbid"
+        }
+        if ($DriverFile -ne $null) {
+            $cmd += " -DriverFile $DriverFile"
+        }
+
+        if ($cmd -match 'compare-dict' -and $DontCountDictRecs) {
+            $cmd += " -DontCountRecs"
         }
         echo $cmd
         invoke-expression $cmd

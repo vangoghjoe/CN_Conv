@@ -25,7 +25,7 @@ One or more examples
 [CmdLetBinding()]
 param(
     $BatchID,
-    [switch]$NoCountRecs,
+    [switch]$DontCountRecs,
     $startRow,
     $endRow,
     [switch] $ignoreStatus,
@@ -227,7 +227,7 @@ function Process-Row($dbRow, $runEnv) {
     $script:rowResultsHasError = $false
 
     try {
-        if ($NoCountRecs -eq $false) {
+        if ($DontCountRecs -eq $false) {
             Get-Num-Words-In-Dict $dbRow $runEnv "v8"
             Get-Num-Words-In-Dict $dbRow $runEnv "v10"
         }

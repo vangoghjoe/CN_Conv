@@ -8,8 +8,8 @@ param(
     $endRow,
     [switch]$MultiFileSetsOff,
     $ReportStyle="qc",   #  qc [default], or client
-    [string] $FileStub = (get-date -f "yyMMddHHmmss"),
-    #[string] $FileStub = "x",
+    #[string] $FileStub = (get-date -f "yyMMddHHmm"),
+    [string] $FileStub = "",
     [switch]$WriteReports,
     [switch]$pgmAll,
     [switch]$pgmBackup,

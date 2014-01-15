@@ -86,9 +86,10 @@ where batchid=$batchid $clause
         }
 
     $msg = @"
+--  Check for any that aren't in the DB 
 SELECT l.dbid, l.dcb, d.id from LN_temp l
 LEFT OUTER JOIN [DATABASE] d
-ON l.dcb = d.unc
+ON l.upper(dcb) = d.upper(unc)
 WHERE d.id is null;
 "@
 

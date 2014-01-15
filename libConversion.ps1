@@ -286,7 +286,7 @@ function CF-Make-Global-Error-File-Record-Header ($errLog, $style)
         }
         "qc" {
             # Dbid | Local v8 Dir | Conv Dir | any other pieces 
-            $msg = @(" Dbid", "Local v8 dir", "Conv dir","Messages")
+            $msg = @("Clear","Batch","Dbid", "Local v8 dir", "Conv dir","Messages")
         }
     }
 
@@ -307,7 +307,7 @@ function CF-Make-Global-Err-Clear-File-Seen($errLog)
 # Style values:
 #    "client" [default]
 #    "qc"
-function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
+function CF-Make-Global-Error-File-Record-Old ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
 {
     if ($style -eq $null) { $style = "client" }
     write-verbose "rec style = $style"
@@ -358,6 +358,68 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
                 CF-Write-File $errLog $msg
             }
         }
+    }
+}
+
+# Takes a status file, pulls out any errors,
+# adds some info to each error, and appends it to the global err log
+# Style values:
+#    "client" [default]
+#    "qc"
+function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
+{
+    if ($style -eq $null) { $style = "client" }
+    write-verbose "rec style = $style"
+
+    # Make header if this is the first time for this log
+    if (!($CF_ErrFileSeen.ContainsKey($errLog))) {
+        $CF_ErrFileSeen[$errLog] = 1
+        CF-Make-Global-Error-File-Record-Header $errLog $style
+    }
+
+    if ($forBlankStatus) {
+        #$msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
+        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
+        $msg += ("| BLANK STATUS FIELD")
+    }
+    else {
+
+        # Error recs look like:
+        # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
+        switch ($style) {
+            "client" { 
+                # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
+                $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb,
+                         $p[0])
+                $msg +=  $p[3 .. ($p.length-1)] 
+            }
+            "qc" {
+                # dbid | dbdir | any other pieces 
+                if ($UseMultiFileSets) {
+                    $v8dir = [System.io.path]::GetDirectoryName($dbrow.local_v8_dcb)
+                    $v8dir = "=Hyperlink(""$v8dir"")"
+                }
+                else {
+                    $v8dir = ""
+                }
+                $convdir = [System.io.path]::GetDirectoryName($dbrow.conv_dcb)
+                $convdir = "=Hyperlink(""$convdir"")"
+                $msg = @("", $dbRow.batchid, $dbRow.dbid, $v8dir, $convdir)
+            }
+        }
+        $recs = @(get-content $pgmStatusFilePFN)
+        $errArr = @()
+        foreach ($rec in $recs) {
+            $p = $rec -split "\|"
+            if ($p[2] -eq "ERROR") {
+                $errStr =  $p[3 .. ($p.length-1)] -join ";"
+                $errArr += $errStr
+            }
+        }
+        $errStr = $errArr -join "|"
+        $msg += $errStr
+        $msg = $msg -join $CF_Error_File_Delim
+        CF-Write-File $errLog $msg
     }
 }
 
@@ -1006,12 +1068,13 @@ function CF-Write-Progress ($dbid, $dcb)
     write-host ("{3} Ct:{0} DB:{1} DCB:{2}" -f ( $writeProgCt, $dbid, $dcb.substring([math]::max($dcb.length - 50,0)), (get-date -f $CF_DateFormat)))
 }
 
-function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal) 
+function CF-Update-Status-in-SQL($sqlCmd, $bID, $dbid, $statFld, $statVal, $verboseMsg) 
 {
     $sqlCmd.CommandText = @"
 UPDATE DCBs SET $statFld='$statVal'
 WHERE BatchID=$bID and dbid=$dbid
 "@
+    write-verbose "$verboseMsg $($sqlCmd.CommandText)"
     $sqlCmd.ExecuteNonQuery() > $null
 }
 
@@ -1046,4 +1109,15 @@ function CF-Count-Lines-In-File($file) {
         $reader.Close()
     }
     return $ct
+}
+
+function CF-SQL-Update-Column-in-DCBs($runEnv, $colName, $colValue, $verboseMsg) {
+    $cmd = $runEnv.sCmd
+    $cmd.CommandText = @"
+UPDATE DCBs SET $colName='$colValue' 
+WHERE batchid=$($runEnv.batchid)
+  AND dbid=$($runenv.dbid)
+"@
+    write-verbose "$verboseMsg  $($cmd.CommandText)"
+    #$cmd.ExecuteNonQuery()
 }
