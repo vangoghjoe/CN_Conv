@@ -20,3 +20,31 @@ go
 alter table dcbs add st_num_dict_orig bigint
 alter table dcbs add st_num_dict_conv bigint
 go
+
+
+alter table dcbs drop column st_qc_conv_report_results_ttl 
+go
+alter table dcbs add st_qc_conv_report_results_manual int
+go
+alter table dcbs add st_qc_conv_report_results_ttl 
+AS (case when st_qc_conv_report_results_manual is not null then st_qc_conv_report_results_manual  else st_qc_conv_report_results end)
+go 
+
+alter table dcbs add st_qc_conv_report_results_manual int
+go
+alter table dcbs add st_qc_conv_report_results_ttl 
+AS (case when st_qc_conv_report_results_manual is not null then st_qc_conv_report_results_manual  else st_qc_conv_report_results end)
+go
+
+alter table dcbs add st_qc_compare_tags_results_manual int
+go
+alter table dcbs add st_qc_compare_tags_results_ttl 
+AS (case when st_qc_compare_tags_results_manual is not null then st_qc_compare_tags_results_manual  else st_qc_compare_tags_results end)
+go
+
+alter table dcbs add st_qc_compare_dict_results_manual int
+go
+alter table dcbs add st_qc_compare_dict_results_ttl 
+AS (case when st_qc_compare_dict_results_manual is not null then st_qc_compare_dict_results_manual  else st_qc_compare_dict_results end)
+go
+

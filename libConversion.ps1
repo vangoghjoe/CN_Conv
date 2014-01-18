@@ -253,14 +253,18 @@ function CF-Get-Pgm-Global-Config ($pgmName)
 {
     # get outStub and status field
     $h = @{} 
-    if ($CF_PGMS.ContainsKey($pgmName)) {
-        $h["StatusField"] = $CF_PGMS[$pgmName][0]
-        $h["outFileStub"] = $CF_PGMS[$pgmName][1]
-    }
-    else {
-        $h["StatusField"] = "st_" + $pgmName.replace("^run-","").replace("-","_")
-        $h["outFileStub"] = "st_" + $pgmName.replace("^run-","")
-    }
+    # Better to throw an error in case mis-typed it
+    $h["StatusField"] = $CF_PGMS[$pgmName][0]
+    $h["outFileStub"] = $CF_PGMS[$pgmName][1]
+
+    #if ($CF_PGMS.ContainsKey($pgmName)) {
+    #    $h["StatusField"] = $CF_PGMS[$pgmName][0]
+    #    $h["outFileStub"] = $CF_PGMS[$pgmName][1]
+    #}
+    #else {
+    #    #$h["StatusField"] = "st_" + $pgmName.replace("^run-","").replace("-","_")
+    #    #$h["outFileStub"] = $pgmName.replace("^run-","")
+    #}
     return $h
 }
 
@@ -543,17 +547,20 @@ function CF-Hostname {
     return $(Get-WmiObject win32_computersystem).name
 }
 
-# $type = status or search or qc
-function CF-Make-Output-PFN-Name ($runEnv, $stub, $type) {
+# $type = status or results
+function CF-Pgm-Output-PFN ($batchEnv, $pgmName, $dbid, $type) {
+    $badbStr = $batchEnv.bStr + "_" + ("{0:0000}" -f [int]$dbid)
+    $pgmStub = $(CF-Get-Pgm-Global-Config $pgmName).outFileStub
+
     if ($type -eq "status") { 
-        $root = $runEnv.ProgramLogsDir 
+        $root = $batchEnv.ProgramLogsDir 
         $suf = "_STATUS" 
     } 
-    elseif ($type -eq "search") { 
-        $root = $runEnv.SearchResultsDir 
+    elseif ($type -eq "results") { 
+        $root = $batchEnv.SearchResultsDir 
         $suf = "" 
     } 
-    $file = $root + "\" + $runEnv.badbStr + "_" + $stub + $suf + ".txt"
+    $file = $root + "\" + $badbStr + "_" + $pgmStub + $suf + ".txt"
     return $file
 }
 
