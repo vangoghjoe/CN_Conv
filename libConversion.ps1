@@ -278,7 +278,7 @@ function CF-Initialize-Log ($logPfn)
 }
 
 # Makes the record header in the collected error report
-function CF-Make-Global-Error-File-Record-Header ($errLog, $style) 
+function CF-Make-Global-Error-File-Record-Header ($errLog, $style,$pgm) 
 {
     echo $null > $errLog
     if ($style -eq $null) { $style = "client" } 
@@ -290,7 +290,13 @@ function CF-Make-Global-Error-File-Record-Header ($errLog, $style)
         }
         "qc" {
             # Dbid | Local v8 Dir | Conv Dir | any other pieces 
-            $msg = @("Clear","Batch","Dbid", "Local v8 dir", "Conv dir","Messages")
+            $msg = @("Clear","Batch","Dbid", "Local v8 dir", "Conv dir")
+            switch ($pgm) {
+                "parse-conversion-report" {
+                $msg += @("V8 tags","V10 tags")
+                }
+            }
+            $msg += "Messages"
         }
     }
 
@@ -306,63 +312,9 @@ function CF-Make-Global-Err-Clear-File-Seen($errLog)
 {
     $CF_ErrFileSeen.Remove($errLog)
 }
-# Takes a status file, pulls out any errors,
-# adds some info to each error, and appends it to the global err log
-# Style values:
-#    "client" [default]
-#    "qc"
-function CF-Make-Global-Error-File-Record-Old ($pgm, $dbRow, $pgmStatusFilePFN, $errLog, $forBlankStatus = $false, $style) 
-{
-    if ($style -eq $null) { $style = "client" }
-    write-verbose "rec style = $style"
 
-    # Make header if this is the first time for this log
-    if (!($CF_ErrFileSeen.ContainsKey($errLog))) {
-        $CF_ErrFileSeen[$errLog] = 1
-        CF-Make-Global-Error-File-Record-Header $errLog $style
-    }
-
-    if ($forBlankStatus) {
-        #$msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
-        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb, "") -join "|"
-        $msg += ("| BLANK STATUS FIELD")
-    }
-    else {
-        $recs = @(get-content $pgmStatusFilePFN)
-        $buf = ""
-
-        # Error recs look like:
-        # 2013-08-30 20:21:50||ERROR|The jabberwocky is in the house
-        foreach ($rec in $recs) {
-            $p = $rec -split "\|"
-            if ($p[2] -eq "ERROR") {
-                switch ($style) {
-                    "client" { 
-                        # dbid | clientid | pgm | orig_dcb | TS | any other pieces 
-                        $msg = @($dbRow.dbid, $dbRow.clientid, $pgm, $dbRow.orig_dcb,
-                                 $p[0])
-                        $msg +=  $p[3 .. ($p.length-1)] 
-                    }
-                    "qc" {
-                        # dbid | dbdir | any other pieces 
-                        if ($UseMultiFileSets) {
-                            $v8dir = [System.io.path]::GetDirectoryName($dbrow.local_v8_dcb)
-                            $v8dir = "=Hyperlink(""$v8dir"")"
-                        }
-                        else {
-                            $v8dir = ""
-                        }
-                        $convdir = [System.io.path]::GetDirectoryName($dbrow.conv_dcb)
-                        $convdir = "=Hyperlink(""$convdir"")"
-                        $msg = @($dbRow.dbid, $v8dir, $convdir)
-                        $msg += $p[3 .. ($p.length-1)]
-                    }
-                }
-                $msg = $msg -join $CF_Error_File_Delim
-                CF-Write-File $errLog $msg
-            }
-        }
-    }
+function CF-Make-Excel-Hyperlink($text) {
+    return "=Hyperlink(""$text"")"
 }
 
 # Takes a status file, pulls out any errors,
@@ -378,7 +330,7 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
     # Make header if this is the first time for this log
     if (!($CF_ErrFileSeen.ContainsKey($errLog))) {
         $CF_ErrFileSeen[$errLog] = 1
-        CF-Make-Global-Error-File-Record-Header $errLog $style
+        CF-Make-Global-Error-File-Record-Header $errLog $style $pgm
     }
 
     if ($forBlankStatus) {
@@ -401,14 +353,23 @@ function CF-Make-Global-Error-File-Record ($pgm, $dbRow, $pgmStatusFilePFN, $err
                 # dbid | dbdir | any other pieces 
                 if ($UseMultiFileSets) {
                     $v8dir = [System.io.path]::GetDirectoryName($dbrow.local_v8_dcb)
-                    $v8dir = "=Hyperlink(""$v8dir"")"
+                    $v8dir = CF-Make-Excel-Hyperlink $v8dir
                 }
                 else {
                     $v8dir = ""
                 }
                 $convdir = [System.io.path]::GetDirectoryName($dbrow.conv_dcb)
-                $convdir = "=Hyperlink(""$convdir"")"
+                $convdir = CF-Make-Excel-Hyperlink $convdir
                 $msg = @("", $dbRow.batchid, $dbRow.dbid, $v8dir, $convdir)
+                
+                switch ($pgm) {
+                    "parse-conversion-report" {
+                        $v8tags = CF-Pgm-Output-PFN $runEnv "run-qc-v8-tags" $dbid "results"
+                        $v10tags = CF-Pgm-Output-PFN $runEnv "run-qc-v10-tags" $dbid "results"
+                        $msg += @(CF-Make-Excel-Hyperlink $v8tags)
+                        $msg += @(CF-Make-Excel-Hyperlink $v10tags)
+                    }
+                }
             }
         }
         $recs = @(get-content $pgmStatusFilePFN)

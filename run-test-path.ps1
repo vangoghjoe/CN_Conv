@@ -41,8 +41,9 @@ set-strictmode -version latest
 function Process-Row($dbRow, $runEnv) {
     $script:rowHasError = $false
     
-    if (!(test-path "$($dbrow.orig_dcb)")) {
-        $script:missct++
+    $orig = $dbrow.orig_cb
+    $new = $orig -replace "X:", "W:"
+    if ((test-path "$($dbrow.orig_dcb)")) {
         if ($script:missct -eq 1) { 
             echo $null > $outFile
         }
