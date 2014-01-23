@@ -62,17 +62,40 @@ function Main {
 
     if ($ColName -eq $null) { echo "use -For* to enter report type" ; return } 
 
+    $RmName = "st_remove"
+
     $rows = get-content $reportFile
 
     foreach ($row in $rows) { 
         $cols = $row -split $reportFileDelim
         $cleared = $cols[0]
         $dbid = $cols[2]
+
+        # Header row
         if ($dbid -eq 'dbid') { continue }
-        if ($cleared -ne "") { $ColValue = 2 }
-        else {$ColValue = "null" }
+
+        if ($cleared -match "c") { 
+            $ColValue = 2
+            $RmValue = "null"
+        }
+        elseif ($cleared -match "r") { 
+            $ColValue = "null"
+            $RmValue = "2"
+        }
+        else {
+            #hmmm, if blank, should it clear everything or just leave it alone?
+            # --> leave it alone
+            continue
+
+            #$ColValue = "null"
+            #$RmValue = "2"
+        }
+
         $sCmd.CommandText = @"
-UPDATE DCBs SET $ColName=$ColValue WHERE batchid=$BatchID and dbid=$dbid
+-- _manual_results column
+UPDATE DCBs SET $ColName=$ColValue WHERE batchid=$BatchID and dbid=$dbid;
+-- St_remove column
+UPDATE DCBs SET $RmName=$RmValue WHERE batchid=$BatchID and dbid=$dbid;
 "@
         write-verbose $scmd.CommandText
         $sCmd.ExecuteNonQuery() > $null
