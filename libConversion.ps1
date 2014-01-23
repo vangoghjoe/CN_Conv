@@ -975,7 +975,8 @@ function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false)
     }
     
     foreach ($preReq in $arrPreReqs)  {
-        if ($preReq -ne $CF_STATUS_GOOD) {
+        if ( $preReq -ne $CF_STATUS_GOOD -and
+            ($preReq -ne $CF_STATUS_MANUALLY_CLEARED)) {
             #write-verbose "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
             return $true
         }

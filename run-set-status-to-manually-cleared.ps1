@@ -68,7 +68,6 @@ function Build-List-Of-Pgms() {
     return $pgms;
 }
 
-
 function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
     # Inits
     CF-Init-RunEnv-This-Row $runEnv $dbRow
@@ -82,68 +81,17 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 
     $script:rowHasError = $false
     $script:rowStatusGood = $false
-    #try {
-        # Calc status field and status file
-        $pgmStatFld = $CF_PGMS.$pgm[0];
-        $pgmStatFileStub = $CF_PGMS.$pgm[1];
-        write-verbose "type = $type"
-        if ($type -eq "status") {
-            $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
-            $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
-        }
-        elseif ($type -eq "results") {
-            $pgmStatFld += "_results"
-            $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}.txt"
-            $pgmStatusFilePFN =  "$($runEnv.SearchResultsDir)\$pgmStatusFile"
-            write-verbose "type = results"
-        }
-        write-verbose "statusfile = $pgmStatusFilePFN"
 
-        # DEBUG SECTION
-        #write-host "pgm = $pgm"
-        #write-host "statfld = $pgmStatFld"
-        #write-host "stub = $pgmStatFileStub"
-        #write-host "statfile = $pgmStatusFilePFN"
+    $pgmStatFld = $CF_PGMS.$pgm[0];
+    if ($type -eq "results") {
+        $pgmStatFld += "_results"
+    }
 
-        # First check if existing status indicates it's been manually cleared
-        if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) {
-            return
-        }
+    $dbRow.$pgmStatFld = $CF_STATUS_MANUALLY_CLEARED
 
-        # Get status from log
-        # If log not there at all, have to assume it didn't run, so status is empty
-
-        if (-not (test-path $pgmStatusFilePFN)) {
-            $dbRow.$pgmStatFld = $CF_STATUS_READY
-            write-verbose "Program cell: status file not found --> stat = ready"
-            if ($incBlankStatus) {
-                if ($WriteReports) {
-                    CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $true
-                }
-            }
-        }
-        elseif (CF-Log-Says-Ran-Successfully $pgmStatusFilePFN) {
-            $dbRow.$pgmStatFld = $CF_STATUS_GOOD
-            $script:rowStatusGood = $true
-            write-verbose "Program cell: log says good"
-            #CF-Make-Global-Good-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedGoodLog
-        }
-        else {
-            write-verbose "Program cell: log says failed"
-            $dbRow.$pgmStatFld = $CF_STATUS_FAILED
-            if ($WriteReports) {
-                CF-Make-Global-Error-File-Record $pgm $dbRow $pgmStatusFilePFN $script:collectedErrLog $false $ReportStyle
-            }
-        }
-        write-verbose "Program cell: stat = $($dbRow.$pgmStatFld)"
-        # batch id, dbid, stat field, stat value
-        CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
-    #}
-    #catch {
-        #CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
-        #$script:rowHasError = $true
-    #}
-    #CF-Finish-Log $script:statusFilePFN 
+    write-verbose "Program cell: stat = $($dbRow.$pgmStatFld)"
+    # batch id, dbid, stat field, stat value
+    CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
 }
 
 # For each row, call Process-Cell to just that pgm for just that row
@@ -155,6 +103,10 @@ function Main {
     CF-Log-To-Master-Log $runEnv.bstr "" "STATUS" "START"
 
     try {
+        if (!($DriverFile) -and (!($DBid))) {
+            echo "Must set either -DriverFile or -DBId"
+            return
+        }
         # set up update status sql cmd
         $script:sqlUpdStat = CF-Get-SQL-Cmd $CF_DBName
 
@@ -192,16 +144,6 @@ function Main {
         #
         foreach ($pgm in $pgms) {
             write-host "Start pgm: $pgm"
-            # The log of the munged error lines from all the pgms we're looking at
-            # It will also go in the curr dir  
-            $script:collectedErrLog = "errors-$($runEnv.bstr)${FileStub}-${pgm}.txt"
-            #echo $null > $collectedErrLog
-            CF-Make-Global-Err-Clear-File-Seen $collectedErrLog
-
-            # the Good log
-            #$script:collectedGoodLog = "good-$($runEnv.bstr)${FileStub}-${pgm}.txt"
-            #CF-Initialize-Log $collectedGoodLog
-            #CF-Write-File $collectedGoodLog "PGM | DB_ID | CLIENT_ID | DCB | Timestamp" 
 
             for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
                 $row = $dcbRows[$i]
@@ -219,21 +161,21 @@ function Main {
 
                 Process-Cell $row $runEnv $pgm
 
-                if ($CF_ResultsSteps -contains $pgm) {
-                    # if parent status isn't good, the child results should
-                    # automatically be cleared (not error, that wouldn't quite make
-                    # sense, either). Otherwise, get the results
-                    # status from the results file itself
-                    $pgmStatFld = $CF_PGMS.$pgm[0];
-                    if ($row.$pgmStatFld -ne $CF_STATUS_GOOD) {
-                        $resStatFld = "${pgmStatFld}_results"
-                        $row.$resStatFld = $CF_STATUS_READY
-                    }
-                    else {
-                        write-verbose "Call $pgm for results"
-                        Process-Cell $row $runEnv $pgm "results"
-                    }
-                }
+#                if ($CF_ResultsSteps -contains $pgm) {
+#                    # if parent status isn't good, the child results should
+#                    # automatically be cleared (not error, that wouldn't quite make
+#                    # sense, either). Otherwise, get the results
+#                    # status from the results file itself
+#                    $pgmStatFld = $CF_PGMS.$pgm[0];
+#                    if ($row.$pgmStatFld -ne $CF_STATUS_GOOD) {
+#                        $resStatFld = "${pgmStatFld}_results"
+#                        $row.$resStatFld = $CF_STATUS_READY
+#                    }
+#                    else {
+#                        write-verbose "Call $pgm for results"
+#                        Process-Cell $row $runEnv $pgm "results"
+#                    }
+#                }
             }
         }
 
@@ -245,46 +187,7 @@ function Main {
         CF-Log-To-Master-Log $runEnv.bstr "" "ERROR" "$($error[0])"
     }
 
-    # Now, update st_size_all and st_all
-    # st_size_all is good if both size_native and size_images are good
-    # st_all is 2 if all statuses are good
-    for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
-        $row = $dcbRows[$i]
 
-        # Only process this row if it's in the right batch 
-        if ($row.batchid -ne $BatchID) {
-            continue
-        }
-
-        # Check against driver file, if using
-        if ($DriverFile) {
-            if (-not (CF-Is-DBID-in-Driver $row.dbid)) {
-                continue
-            }
-        }
-
-
-        #if (($row.st_size_natives -eq $CF_STATUS_GOOD) -and 
-            #($row.st_size_images -eq $CF_STATUS_GOOD)
-            #) {
-            #$row.st_size = $CF_STATUS_GOOD
-        #}
-        #else {
-            #$row.st_size = ""
-        #}
-
-        # update st_all
-        if (($row.st_backup -eq $CF_STATUS_GOOD) -and 
-            ($row.st_qc_compare_tags_results -eq $CF_STATUS_GOOD)
-           )
-        {
-            $row.st_all = $CF_STATUS_GOOD
-        }
-        else {
-            $row.st_all = $CF_STATUS_FAILED
-        }
-
-    }
     # one last to make sure got all errors
     CF-Write-DB-File "DCBs" $dcbRows
 
