@@ -101,6 +101,7 @@ $CF_STATUS_FAILED = -1
 $CF_STATUS_READY = 0  # as in, ready to be processed
 $CF_STATUS_IN_PROGRESS = 1
 $CF_STATUS_GOOD = 2
+$CF_STATUS_MANUALLY_CLEARED = 3
 
 function CF-Put-DCB-Header-On-Clipboard() 
 {
