@@ -27,7 +27,7 @@ param(
     [Parameter(mandatory=$true)]
     $BatchID,
     [Parameter(mandatory=$true)]
-    $FYI,
+    $FYI,  # 3 or 5
     [Parameter(mandatory=$true)]
     $outFile
 )
@@ -47,14 +47,19 @@ function Main {
         $destDrive = "X"
         $dcbName = "orig_dcb"
         $textType = "nvarchar(max)"
+        $oldOnline = 1
+        $newOnline = 0
+
     }
     else {
-        $clause = " AND st_all=1" 
+        $clause = " AND st_all=2" 
         $srcDrive = "X"
         $destDrive = "W"
         #$dcbName = "conv_dcb"
         $dcbName = "orig_dcb"
         $textType = "text"
+        $oldOnline = 0
+        $newOnline = 1
     }
 
     $msg = "create table $table(dbid int, dcb $textType);"
@@ -64,8 +69,9 @@ function Main {
     try {
         $sCmd = CF-Get-SQL-Cmd
         $sCmd.CommandText = @"
-SELECT DBID, $dcbName from DCBs
-where batchid=$batchid $clause
+SELECT DBID, $dcbName FROM DCBs
+WHERE batchid=$batchid $clause
+ORDER BY DBID
 "@
         write-verbose $scmd.CommandText
         $reader = $sCmd.ExecuteReader()
@@ -85,26 +91,59 @@ where batchid=$batchid $clause
             CF-Write-File $outFile $msg
         }
 
-    $msg = @"
+    if ($fyi -eq 5 -or $fyi -eq 3) {
+        $msg = @"
 --  Check for any that aren't in the DB 
-SELECT l.dbid, l.dcb, d.id from LN_temp l
+SELECT l.dbid as 'LN recs not in DB', l.dcb, d.id from LN_temp l
 LEFT OUTER JOIN [DATABASE] d
-ON l.upper(dcb) = d.upper(unc)
+ON upper(l.dcb) = upper(replace(d.unc,'W:\Z_client','W:\client'))
 WHERE d.id is null;
-"@
 
-UPDATE [database] set online=1 where upper(unc) in (select upper(dcb) from LN_temp);
+-- Check for dups
+select UNC,COUNT(UNC) as 'dups' from [DATABASE] 
+where upper(replace(unc,'W:\Z_client','W:\client'))
+(select dcb from LN_temp)
+group by UNC
+having COUNT(UNC) > 1;
 
-SELECT count(*) from LN_temp l
+
+--  Check for any that have an unexpected ONLINE value
+SELECT l.dbid as 'unexpected online=$newonline', l.dcb, d.id from LN_temp l
 LEFT OUTER JOIN [DATABASE] d
-ON upper(l.dcb) = upper(d.unc)
-WHERE d.online=1;
+ON upper(l.dcb) = upper(replace(d.unc,'W:\Z_client','W:\client'))
+WHERE d.online=$newOnline;
 
+-- COUNT of all new online val BEFORE
+SELECT COUNT(*) as 'num online=$newOnline BEFORE' FROM [database]
+WHERE online=$newOnline;
 
-    CF-Write-File $outFile $msg 
+-- Flip the Online value
+--UPDATE [database] 
+--SET online=$newOnline 
+--WHERE upper(replace(d.unc,'W:\Z_client','W:\client')) IN 
+--    (SELECT upper(dcb) FROM LN_temp);
 
-    $msg = "`ndrop table $table;"
-    CF-Write-File $outFile $msg 
+-- COUNT of all new online val AFTER
+--SELECT COUNT(*) as 'num online=$newOnline AFTER' FROM [database]
+--WHERE online=$newOnline;
+
+-- ONLY FYI 5 -- Fix the "Z_" in the path
+-UPDATE [database] 
+--SET unc=replace(unc,':\Z_','')
+--WHERE upper(replace(d.unc,'W:\Z_client','W:\client')) IN 
+--    (SELECT upper(dcb) FROM LN_temp);
+
+-- Check the count of the ones we wanted to change
+--SELECT * from LN_temp l
+--LEFT OUTER JOIN [DATABASE] d
+--ON upper(l.dcb) = upper(replace(d.unc,'W:\Z_client','W:\client'))
+--WHERE d.online=$newOnline;
+
+-- Remove our "temp" table
+--DROP TABLE $table;
+"@
+        }
+        CF-Write-File $outFile $msg
     }
     finally {
         $reader.Close()

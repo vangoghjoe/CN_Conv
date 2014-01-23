@@ -153,7 +153,8 @@ function Main {
         $script:sqlUpdStat = CF-Get-SQL-Cmd $CF_DBName
 
         # set up @pgms
-        $pgms = Build-List-Of-Pgms
+        $pgms = @($(Build-List-Of-Pgms))
+        if ($pgms.length -eq 0) { echo "Pick at least one pgm."; return }
 
         # For this program, use a simple log file in curr dir to capture errors
         $script:statusFilePFN = "run-update-statuses-STATUS.txt"

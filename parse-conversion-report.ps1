@@ -310,7 +310,9 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         
-        $arrPreReqs = @($row.st_convert_one_dcb)
+        $arrPreReqs = @()
+        $arrPreReqs += @($row.st_convert_one_dcb)
+        #$arrPreReqs += @($row.st_qc_compare_tags_results)
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }

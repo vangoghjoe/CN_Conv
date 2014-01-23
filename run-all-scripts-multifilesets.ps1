@@ -29,7 +29,7 @@ param(
     [switch]$DoBackups,
     $BackupDirRootLocalV8,
     $BackupDirRootConv,
-    [switch]$DoGetNumDictLines,
+    [switch]$DontCountDictRecs,
     [switch]$UseTestDirs,
     [switch]$UseRealDirs,
     $fileStub = "run-all",
