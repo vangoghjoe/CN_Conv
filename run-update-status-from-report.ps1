@@ -59,6 +59,7 @@ function Main {
         $cols = $row -split $reportFileDelim
         $cleared = $cols[0]
         $dbid = $cols[2]
+        if ($dbid -eq 'dbid') { continue }
         if ($cleared -ne "") { $ColValue = 2 }
         else {$ColValue = "null" }
         $sCmd.CommandText = @"

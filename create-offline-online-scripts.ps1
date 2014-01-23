@@ -127,6 +127,11 @@ WHERE online=$newOnline;
 --SELECT COUNT(*) as 'num online=$newOnline AFTER' FROM [database]
 --WHERE online=$newOnline;
 
+-- ONLY FYI 5 -- Fix the "Z_" in the path
+-UPDATE [database] 
+--SET unc=replace(unc,':\Z_','')
+--WHERE upper(replace(d.unc,'W:\Z_client','W:\client')) IN 
+--    (SELECT upper(dcb) FROM LN_temp);
 
 -- Check the count of the ones we wanted to change
 --SELECT * from LN_temp l
