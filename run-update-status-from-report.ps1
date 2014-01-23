@@ -31,6 +31,8 @@ param(
     [switch]$ForConvReport,
     [switch]$ForCompareTags,
     [switch]$ForCompareDict
+    [switch]$ForAllReports,
+    [switch]$ForWholeShebang
 )
 
 set-strictmode -version latest
@@ -51,6 +53,13 @@ function Main {
     elseif ($ForCompareTags) {
         $ColName = "st_qc_compare_tags_results_manual"
     }
+    elseif ($ForAllReports) {
+        $ColName = "st_qc_all_reports_manual"
+    }
+    elseif ($ForWholeShebang) {
+        $ColName = "st_all_manual"
+    }
+
     if ($ColName -eq $null) { echo "use -For* to enter report type" ; return } 
 
     $rows = get-content $reportFile

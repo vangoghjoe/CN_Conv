@@ -48,3 +48,11 @@ alter table dcbs add st_qc_compare_dict_results_ttl
 AS (case when st_qc_compare_dict_results_manual is not null then st_qc_compare_dict_results_manual  else st_qc_compare_dict_results end)
 go
 
+alter table dcbs add st_qc_all_reports_manual int
+go
+
+alter table dcbs add st_all_manual int
+go
+
+
+
