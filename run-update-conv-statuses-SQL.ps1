@@ -106,7 +106,10 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         #write-host "statfile = $pgmStatusFilePFN"
 
         # First check if existing status indicates it's been manually cleared
-        if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) {
+        # or by some sleight of hand it's marked as st_all is good
+        $dbReader = CF-Get-Row-From-SQL $script:sqlUpdStat $bID $dbid 
+        if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED
+            -or ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD)) {
             return
         }
 

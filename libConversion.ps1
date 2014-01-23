@@ -1091,3 +1091,10 @@ WHERE batchid=$($runEnv.batchid)
     write-verbose "$verboseMsg  $($cmd.CommandText)"
     #$cmd.ExecuteNonQuery()
 }
+
+function CF-Get-Row-From-SQL ($sCmd, $bID, $dbid) {
+    $sCmd.CommandText = @"
+SELECT * from DCBs WHERE batchid=$bID and dbid=$dbid
+"@
+    return $sCmd.ExecuteNonQuery()
+}
