@@ -1093,11 +1093,17 @@ WHERE batchid=$($runEnv.batchid)
 }
 
 function CF-Get-Row-From-SQL ($sCmd, $bID, $dbid) {
+    try {
+        $script:dbReader.Close()
+    }
+    catch {
+        # no-op
+    }
     $sCmd.CommandText = @"
 SELECT * from DCBs WHERE batchid=$bID and dbid=$dbid
 "@
-    write-verbose $sCmd.CommandText
-    $reader = $sCmd.ExecuteReader() > $null
-    $reader.read() > $null
-    return $reader
+    #write-verbose $sCmd.CommandText
+    $script:dbReader = $sCmd.ExecuteReader() 
+    $script:dbReader.read() 
+    #return $reader  # somehow not returning correctly
 }

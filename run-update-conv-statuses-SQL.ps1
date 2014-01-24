@@ -82,7 +82,6 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
 
     $script:rowHasError = $false
     $script:rowStatusGood = $false
-    #try {
         # Calc status field and status file
         $pgmStatFld = $CF_PGMS.$pgm[0];
         $pgmStatFileStub = $CF_PGMS.$pgm[1];
@@ -99,21 +98,15 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         }
         write-verbose "statusfile = $pgmStatusFilePFN"
 
-        # DEBUG SECTION
-        #write-host "pgm = $pgm"
-        #write-host "statfld = $pgmStatFld"
-        #write-host "stub = $pgmStatFileStub"
-        #write-host "statfile = $pgmStatusFilePFN"
-
         # First check if existing status indicates it's been manually cleared
         # or by some sleight of hand it's marked with st_all is good
         # OR it's been marked as removed
-        $dbReader = CF-Get-Row-From-SQL $script:sqlStatRead $bID $dbid 
-        write-verbose "dbid = $dbid  reader field count = $($dbReader.FieldCount)"
+        CF-Get-Row-From-SQL $script:sqlStatRead $bID $dbid 
+        $myReader = $script:dbReader
+        write-verbose "dbid = $dbid  reader field count = $($myReader.FieldCount)"
         if ( ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) -or
-            ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
-            ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
-            return
+            ($myReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
+            ($myReader.Item('st_remove') -eq $CF_STATUS_GOOD)) {
         }
 
         # Get status from log
@@ -144,12 +137,6 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         write-verbose "Program cell: stat = $($dbRow.$pgmStatFld)"
         # batch id, dbid, stat field, stat value
         CF-Update-Status-in-SQL $script:sqlUpdStat $bID $dbid $pgmStatFld $dbRow.$pgmStatFld
-    #}
-    #catch {
-        #CF-Write-Log $script:statusFilePFN "|ERROR|$($error[0])"
-        #$script:rowHasError = $true
-    #}
-    #CF-Finish-Log $script:statusFilePFN 
 }
 
 # For each row, call Process-Cell to just that pgm for just that row
