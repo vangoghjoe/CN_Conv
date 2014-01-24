@@ -30,7 +30,7 @@ param(
     $ReportFile,
     [switch]$ForConvReport,
     [switch]$ForCompareTags,
-    [switch]$ForCompareDict
+    [switch]$ForCompareDict,
     [switch]$ForAllReports,
     [switch]$ForWholeShebang
 )

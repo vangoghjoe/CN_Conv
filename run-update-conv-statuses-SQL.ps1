@@ -110,9 +110,9 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # OR it's been marked as removed
         $dbReader = CF-Get-Row-From-SQL $script:sqlStatRead $bID $dbid 
         write-verbose "dbid = $dbid  reader field count = $($dbReader.FieldCount)"
-        if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED
-            -or ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD)
-            -or ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
+        if ( ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) -or
+            ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
+            ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
             return
         }
 
