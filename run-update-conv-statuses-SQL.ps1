@@ -108,7 +108,8 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # First check if existing status indicates it's been manually cleared
         # or by some sleight of hand it's marked with st_all is good
         # OR it's been marked as removed
-        $dbReader = CF-Get-Row-From-SQL $script:sqlUpdStat $bID $dbid 
+        $dbReader = CF-Get-Row-From-SQL $script:sqlStatRead $bID $dbid 
+        write-verbose "dbid = $dbid  reader field count = $($dbReader.FieldCount)"
         if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED
             -or ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD)
             -or ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
@@ -162,6 +163,7 @@ function Main {
     try {
         # set up update status sql cmd
         $script:sqlUpdStat = CF-Get-SQL-Cmd $CF_DBName
+        $script:sqlStatRead = CF-Get-SQL-Cmd $CF_DBName
 
         # set up @pgms
         $pgms = Build-List-Of-Pgms
