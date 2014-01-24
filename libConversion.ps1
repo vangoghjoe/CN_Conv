@@ -1097,6 +1097,7 @@ function CF-Get-Row-From-SQL ($sCmd, $bID, $dbid) {
 SELECT * from DCBs WHERE batchid=$bID and dbid=$dbid
 "@
     write-verbose $sCmd.CommandText
-    $reader = $sCmd.ExecuteReader()
-    return $reader.read()
+    $reader = $sCmd.ExecuteReader() > $null
+    $reader.read() > $null
+    return $reader
 }
