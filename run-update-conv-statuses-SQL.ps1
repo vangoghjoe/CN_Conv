@@ -109,9 +109,9 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # or by some sleight of hand it's marked with st_all is good
         # OR it's been marked as removed
         $dbReader = CF-Get-Row-From-SQL $script:sqlUpdStat $bID $dbid 
-        if ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED
-            -or ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD)
-            -or ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
+        if ( ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) -or
+            ($dbReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
+            ($dbReader.Item('st_removed') -eq $CF_STATUS_GOOD)) {
             return
         }
 

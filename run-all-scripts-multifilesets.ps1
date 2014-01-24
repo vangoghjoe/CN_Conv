@@ -72,31 +72,31 @@ function Main {
         $cmds += @(
         "backup-for-conversion.ps1  -backupDirRoot $BackupDirRootLocalV8 -FileSetLocalv8 -WriteToDbFile",
         "backup-for-conversion.ps1 -backupDirRoot $BackupDirRootConv -FileSetConv -WriteToDbFile",
-        "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+        "run-update-conv-statuses-SQL.ps1 -pgmBackupLocalv8 -pgmBackup -FileStub $fileStub"
         )
     }
     $cmds += @(
     "run-qc-tags.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcV8Tags -FileStub $fileStub",
     "run-qc-list-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcListDictV8 -FileStub $fileStub",
     "run-qc-dict-pick-qc-words.ps1  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcPickWords -FileStub $fileStub",
     "run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcQueryDictV8 -FileStub $fileStub",
     "run-convert-one-dcb.ps1  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmConvDcb -FileStub $fileStub",
     "run-qc-tags.ps1 -CN_Ver 10 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcV10Tags -FileStub $fileStub",
     "run-qc-compare-tags.ps1",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcCompareTags -FileStub $fileStub",
     "run-qc-list-dict.ps1 -CN_Ver 10  ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcListDictV10 -FileStub $fileStub",
     "run-qc-query-dict.ps1 -CN_Ver 10 ",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
+    "run-update-conv-statuses-SQL.ps1 -pgmQcQueryDictV10 -FileStub $fileStub",
     "run-qc-compare-dict.ps1 ",
     "parse-conversion-report.ps1",
-    "run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub"
+    "run-update-conv-statuses-SQL.ps1 -pgmQcCompareDict -pgmConvReport -FileStub $fileStub"
     )
 
     foreach ($cmd in $cmds) {
