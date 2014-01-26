@@ -170,7 +170,7 @@ main()
     start_time = get_time_stamp();
     write_stats_log("DCB|" + dcb_pfn + "|START|" + start_time);
 
-    if ((db = opendbconvert(dcb_pfn)) <> EOF)
+    if ((db = opendb(dcb_pfn)) <> EOF)
         status = STATUS_OK;
     else
         status = STATUS_BAD;
@@ -185,41 +185,6 @@ main()
         exit();
     }
 
-    /* Convert DIR */
-    if (exist(dir_pfn)) {
-        start_time = get_time_stamp();
-        write_stats_log("DIR|" + dir_pfn + "|START|" + start_time);
-        status = ConvertSingleDIRImagebase(dir_pfn, nDstVersion);
-        stop_time = get_time_stamp();
-        write_stats_log("DIR|" + dir_pfn + "|DURATION|" + xlate_status(status) + "|"+ start_time + "|" + stop_time);
-
-        if (status==STATUS_BAD) {
-            g_hasError = TRUE;
-            finish_stats_log();
-            exit();
-        }
-    }
-    else {
-        write_stats_log("DIR|NONE FOUND||N/A");
-    }
-
-    /* Convert VOL */
-    if (exist(vol_pfn)) {
-        start_time = get_time_stamp();
-        write_stats_log("VOL|" + vol_pfn + "|START|" + start_time);
-        status = ConvertSingleVOLImagebase(vol_pfn, nDstVersion);
-        stop_time = get_time_stamp();
-        write_stats_log("VOL|" + vol_pfn + "|DURATION|" + xlate_status(status) + "|"+ start_time + "|" + stop_time);
-
-        if (status==STATUS_BAD) {
-            g_hasError = TRUE;
-            finish_stats_log();
-            exit();
-        }
-    }
-    else {
-        write_stats_log("VOL|NONE FOUND||N/A");
-    }
 
     /* Index DB */
     if (convert_status == STATUS_OK) {

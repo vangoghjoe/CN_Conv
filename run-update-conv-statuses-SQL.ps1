@@ -107,6 +107,7 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         if ( ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) -or
             ($myReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
             ($myReader.Item('st_remove') -eq $CF_STATUS_GOOD)) {
+            return
         }
 
         # Get status from log
