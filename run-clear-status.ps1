@@ -79,7 +79,7 @@ function Build-List-Of-Pgms() {
     }
     else {
         if ($pgmBackup) { $pgms += "backup-for-conversion"; }
-        if ($pgmBackup) { $pgms += "backup-for-conversion-local-v8"; }
+        if ($pgmBackupLocalV8) { $pgms += "backup-for-conversion-local-v8"; }
         if ($pgmQcV8Tags) { $pgms += "run-qc-v8-tags"; }
         if ($pgmQcListDictV8) { $pgms += "run-qc-list-dict-v8"; }
         if ($pgmQcPickWords) { $pgms += "run-qc-dict-pick-qc-words"; }

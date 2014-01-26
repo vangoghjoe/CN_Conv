@@ -74,6 +74,11 @@ function Main {
         # Header row
         if ($dbid -eq 'dbid') { continue }
 
+        if (!($dbid -match "^\d+$")) {
+            echo "ERROR: dbid blank or not numeric: line $linect"
+            continue
+        }
+
         if ($cleared -match "c") { 
             $ColValue = 2
             $RmValue = "null"
@@ -82,13 +87,14 @@ function Main {
             $ColValue = "null"
             $RmValue = "2"
         }
-        else {
+        elseif ($cleared -eq "") { 
             #hmmm, if blank, should it clear everything or just leave it alone?
             # --> leave it alone
             continue
-
-            #$ColValue = "null"
-            #$RmValue = "2"
+        }
+        else {
+            echo "Error: invalid value for 'cleared' col: $cleared"
+            continue
         }
 
         $sCmd.CommandText = @"
@@ -99,7 +105,9 @@ UPDATE DCBs SET $RmName=$RmValue WHERE batchid=$BatchID and dbid=$dbid;
 "@
         write-verbose $scmd.CommandText
         $sCmd.ExecuteNonQuery() > $null
+        #mv $reportFile "$reportFile.LOADED.txt"
     }
+
 }
 
 Main
