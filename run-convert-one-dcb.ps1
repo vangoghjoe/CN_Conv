@@ -29,6 +29,7 @@ param(
     $BatchID,
     [switch]$UseMultiFileSets,
     [switch]$ignoreStatus,
+    [switch]$ImageBaseOnly,
     $DBid,
     $DriverFile,
     $startRow,
@@ -41,7 +42,12 @@ set-strictmode -version latest
 
 
 function Set-Up-CPT () {
-    $CPT_name = "convert-one-dcb.CPT"
+    if ($ImageBaseOnly) {
+        $CPT_name = "convert-one-imagebase.CPT"
+    }
+    else {
+        $CPT_name = "convert-one-dcb.CPT"
+    }
     
     if ($(hostname) -eq "LNGHBEL-5009970") {
         $CPT_DEV_DIR = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\Scripts\CPLs"
@@ -132,14 +138,18 @@ function Main {
         # So, the conversions can start as soon as the conv bkups are done
         # But if not, all the v8 Qc steps have to be run first
         # NB: "st_backup" is for the conv backup, as opposed to st_backup_local_v8
-        if ($UseMultiFileSets) {
-            $arrPreReqs = @($row.st_backup)
+        if ($ImageBaseOnly) {
+            $ignoreStatus = $true
         }
         else {
-            $arrPreReqs += $row.st_qc_v8_tags
-            $arrPreReqs += $row.st_qc_query_dict_v8
+            if ($UseMultiFileSets) {
+                $arrPreReqs = @($row.st_backup)
+            }
+            else {
+                $arrPreReqs += $row.st_qc_v8_tags
+                $arrPreReqs += $row.st_qc_query_dict_v8
+            }
         }
-       
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
