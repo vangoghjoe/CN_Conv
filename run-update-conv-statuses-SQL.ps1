@@ -11,6 +11,7 @@ param(
     #[string] $FileStub = (get-date -f "yyMMddHHmm"),
     [string] $FileStub = "",
     [switch]$WriteReports,
+    [switch]$WriteEvenIfWaived,
     [switch]$pgmAll,
     [switch]$pgmBackup,
     [switch]$pgmBackupLocalv8,
@@ -89,13 +90,16 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         if ($type -eq "status") {
             $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}_STATUS.txt"
             $pgmStatusFilePFN =  "$($runEnv.ProgramLogsDir)\$pgmStatusFile"
+            $pgmStatFldForClear = "${pgmStatFld}"
         }
         elseif ($type -eq "results") {
             $pgmStatFld += "_results"
+            $pgmStatFldForClear = "${pgmStatFld}_ttl"
             $pgmStatusFile = "${bStr}_${dbStr}_${pgmStatFileStub}.txt"
             $pgmStatusFilePFN =  "$($runEnv.SearchResultsDir)\$pgmStatusFile"
             write-verbose "type = results"
         }
+        write-verbose "stat fld clear = $pgmStatFldForClear"
         write-verbose "statusfile = $pgmStatusFilePFN"
 
         # First check if existing status indicates it's been manually cleared
@@ -103,11 +107,25 @@ function Process-Cell($dbRow, $runEnv, $pgm, $type="status") {
         # OR it's been marked as removed
         CF-Get-Row-From-SQL $script:sqlStatRead $bID $dbid 
         $myReader = $script:dbReader
-        write-verbose "dbid = $dbid  reader field count = $($myReader.FieldCount)"
-        if ( ($dbRow.$pgmStatFld -eq $CF_STATUS_MANUALLY_CLEARED) -or
-            ($myReader.Item('st_all') -eq $CF_STATUS_GOOD) -or
-            ($myReader.Item('st_remove') -eq $CF_STATUS_GOOD)) {
-            return
+        #if ( ($dbRow.$pgmStatFldForClear -ge $CF_STATUS_GOOD) ) {
+        $statValForClear = $myReader.item($pgmStatFldForClear)
+        if ($statValForClear -eq $null -or ($statValForClear -eq [system.dbnull]::Value)) {
+            $statValForClear = 0
+        }
+        write-verbose "dbid = $dbid  stat val for clear $pgmStatFldForClear = $statValForClear"
+        if ( !($WriteEvenIfWaived)) {
+            if ( $statValForClear -ge $CF_STATUS_GOOD)  {
+                write-verbose "$dbid cleared based on ttl results"
+                return
+            }
+             elseif   ($myReader.Item('st_all') -eq $CF_STATUS_GOOD) {
+                write-verbose "$dbid cleared based on st_all"
+                return
+            }
+            elseif ($myReader.Item('st_remove') -eq $CF_STATUS_GOOD) {
+                write-verbose "$dbid cleared based on st_remove"
+                return
+            }
         }
 
         # Get status from log

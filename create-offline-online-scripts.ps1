@@ -49,6 +49,7 @@ function Main {
         $textType = "nvarchar(max)"
         $oldOnline = 1
         $newOnline = 0
+        #$clause = " AND st_remove=2 "
 
     }
     else {

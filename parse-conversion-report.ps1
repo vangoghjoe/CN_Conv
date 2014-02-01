@@ -22,7 +22,7 @@ One or more examples
 .LINK
 
 #>
-
+[CmdLetBinding()]
 param(
     $BatchID,
     [switch] $ignoreStatus,
@@ -55,14 +55,21 @@ function DCB-To-CR ($dcbPfn) {
     $dir = [system.io.path]::GetDirectoryName($dcbPfn)
     $dcbName = [system.io.path]::GetFileNameWithoutExtension($dcbPfn)
     $convRoot = "$dir/Conversion Report - $dcbName"
+    # sometimes the name of ther conversion uses a slightly shorter version.
+    # BUT, there is a small risk will get the wrong one.
+    if (!(test-path $convRoot)) {
+        $convRoot = $convRoot.Substring(0, $convRoot.length-1)
+    }
     try {
         # careful: if only one file, returns a FileInfo object
         #    if > 1, returns an array of FileInfo Objects
         $a = $(Get-ChildItem ${convRoot}* | sort-object -property fullname -Descending)
         if ($a.gettype() -eq "Object[]") {        
+            write-verbose "conv report = $($a[0])"
             return $a[0]
         }
         else {
+            write-verbose "conv report = $a"
             return $a
         }
     }

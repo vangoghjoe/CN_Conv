@@ -27,6 +27,10 @@ One or more examples
 param(
     $BatchID,
     [switch] $ignoreStatus,
+    [switch] $SrcOrig,
+    [switch] $SrcRealConv,
+    [switch] $SrcLocalV8,
+    [switch] $SrcConv,
     $DBId,
     $DriverFile,
     $startRow,
@@ -41,13 +45,27 @@ set-strictmode -version latest
 function Process-Row($dbRow, $runEnv) {
     $script:rowHasError = $false
     
-    $orig = $dbrow.orig_cb
-    $new = $orig -replace "X:", "W:"
-    if ((test-path "$($dbrow.orig_dcb)")) {
+    if ($SrcOrig) {
+        $file = $dbrow.orig_dcb
+    }
+    elseif ($SrcLocalV8) {
+        $file = $dbrow.local_v8_dcb
+    }
+    elseif ($SrcConv) {
+        $file = $dbrow.conv_dcvb
+    }
+    elseif ($SrcRealConv) {
+        $file = $dbrow.orig_dcb -replace "X:","W:"
+    }
+
+    write-verbose "File = $file"
+
+    if ((test-path "$file")) {
+        $script:missct++
         if ($script:missct -eq 1) { 
             echo $null > $outFile
         }
-        $msg = "$($dbrow.client_matter)`t$($dbrow.orig_dcb)"
+        $msg = "$($dbrow.dbid)`t$($dbrow.client_matter)`t$file"
         CF-Write-File $outFile $msg
     }
 }

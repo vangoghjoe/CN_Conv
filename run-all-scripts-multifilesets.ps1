@@ -29,6 +29,7 @@ param(
     [switch]$DoBackups,
     $BackupDirRootLocalV8,
     $BackupDirRootConv,
+    [switch]$DoUpdateAllFirst,
     [switch]$DontCountDictRecs,
     [switch]$UseTestDirs,
     [switch]$UseRealDirs,
@@ -67,6 +68,10 @@ function Main {
     }
    
     $cmds= @()
+    if ($DoUpdateAllFirst) {
+        $cmds += "run-update-conv-statuses-SQL.ps1 -pgmAll -FileStub $fileStub"
+    }
+
     #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
     if ($DoBackups) {
         $cmds += @(
@@ -84,7 +89,7 @@ function Main {
     "run-update-conv-statuses-SQL.ps1 -pgmQcPickWords -FileStub $fileStub",
     "run-qc-query-dict.ps1 -CN_Ver 8 -useMultiFileSets ",
     "run-update-conv-statuses-SQL.ps1 -pgmQcQueryDictV8 -FileStub $fileStub",
-    "run-convert-one-dcb.ps1  ",
+    "run-convert-one-dcb.ps1 -useMultiFileSets",
     "run-update-conv-statuses-SQL.ps1 -pgmConvDcb -FileStub $fileStub",
     "run-qc-tags.ps1 -CN_Ver 10 ",
     "run-update-conv-statuses-SQL.ps1 -pgmQcV10Tags -FileStub $fileStub",
