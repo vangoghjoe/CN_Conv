@@ -80,7 +80,12 @@ function Exec-CPL {
     
     $dbStr = "{0:0000}" -f [int]$dbid
     $dcbDir = [system.io.path]::GetDirectoryName($dcbPfn)
-    $statusFile = "${bStr}_${dbStr}_convert-one-dcb_STATUS.txt"
+    if ($ImageBaseOnly) { 
+        $statusFile = "${bStr}_${dbStr}_convert-one-imagebase_STATUS.txt"
+    }
+    else {
+        $statusFile = "${bStr}_${dbStr}_convert-one-dcb_STATUS.txt"
+    }
     #$localResFilePFN = "$dcbDir\$CF_LocaldcbDir
     $statusFilePFN =  CF-Encode-CPL-Safe-Path "$($runEnv.ProgramLogsDir)\$statusFile"
     
@@ -122,17 +127,6 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
 
-        if ($row.batchid -ne $BatchID) {   
-            continue
-        }
-
-        $statVal = $row.$($runEnv.StatusField) 
-
-        if ($statVal -ne $CF_STATUS_READY -and 
-            ($statVal -ne "") ) {
-            continue
-        }
-
         $arrPreReqs = @()
         # if Multi sets, then the v8 qc is in a different dir than the conversions.
         # So, the conversions can start as soon as the conv bkups are done
@@ -150,6 +144,7 @@ function Main {
                 $arrPreReqs += $row.st_qc_query_dict_v8
             }
         }
+        write-verbose "ib = $ImageBaseOnly  $($row.dbid) $($row.batchid)"
         if (CF-Skip-This-Row $runEnv $row $arrPreReqs) {
             continue
         }
