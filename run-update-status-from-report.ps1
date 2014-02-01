@@ -78,6 +78,7 @@ function Main {
             echo "ERROR: dbid blank or not numeric: line $linect"
             continue
         }
+    $dbRow.$pgmStatFld = $CF_STATUS_MANUALLY_CLEARED
 
         if ($cleared -match "c") { 
             $ColValue = 2

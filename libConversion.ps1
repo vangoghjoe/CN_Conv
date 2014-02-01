@@ -1,6 +1,9 @@
 #####
-$CF_DEBUG = $true
-#$CF_DEBUG = $false
+#$CF_DEBUG = $true
+$CF_DEBUG = $false
+
+#$CF_DEBUG_SKIP = $true
+$CF_DEBUG_SKIP = $false
 #####
 
 . ((Split-Path $script:MyInvocation.MyCommand.Path) + "/conversion-config.ps1")
@@ -694,7 +697,9 @@ function CF-Get-DbFiles
     # get name of full pfn without extension
     $dcbBase = CF-Get-PfnWithoutExtension $dcbPfn
     
-    return Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
+    #return Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*"
+    # 1/27/2014: force return to be an array
+    return @(Get-ChildItem "${dcbBase}.*","${dcbBase}-notes.*","${dcbBase}-redlines.*")
 }
 
 function CF-Get-DbFiles-With-Sizes 
@@ -939,49 +944,54 @@ function CF-Get-File-Sizes($files)
 function CF-Skip-This-Row ($runEnv, $row, $arrPreReqs, $noStatFld=$false) 
 {
     $skip = $false
+    $debugDbid = $row.dbid
     if ($row.batchid -ne $BatchID) {   
         return $true
     }
 
     $script:CF_BatchRow++
-    #write-verbose "skip-this: dbid = $($row.dbid)"
-    #write-verbose "skip-this: it's in batch $BatchID"
+    write-verbose-skip "skip-this: dbid = $($row.dbid)"
+    write-verbose-skip "skip-this: it's in batch $BatchID"
     if ($DriverFile) {
         # WARNING: this doesn't work if multiple steps are using 
         # this libary in same executable b/c the values are only
         # initialized the first time the lib is loaded
         if ($script:CF_BatchRow -eq 1) {
             CF-Load-Driver-File $DriverFile
-            #write-verbose "skip-this: loaded driver"
+            #write-verbose-skip "skip-this: loaded driver"
         }
 
         if (!(CF-Is-DBID-in-Driver $row.dbid)) {
-            #write-verbose "skip-this: failed driver file"
+            #write-verbose-skip "skip-this: failed driver file"
             return $true
         }
-        #write-verbose "skip-this: it's in driver file"
+        write-verbose-skip "skip-this: it's in driver file"
     }
+
+    #write-verbose-skip "stat field = $($runEnv.StatusField) = $($row.$($runEnv.StatusField))"
 
     if (!$ignoreStatus -and (!($noStatFld))) {
         $statVal = $row.$($runEnv.StatusField) 
+        write-verbose-skip "testing stat val"
         if ($statVal -ne $CF_STATUS_READY -and ($statVal -ne "") -and ($statval -ne $null)) {
-            #write-verbose "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
-            #write-verbose "skip-this: failed stat test"
+            write-verbose-skip "[$($row.dbid)] CF-Skip: failed curr stat: $statval"
+            write-verbose-skip "skip-this: failed stat test"
             return $true
         }
     }
     
+    write-verbose-skip "after testing stat val"
     foreach ($preReq in $arrPreReqs)  {
         if ( $preReq -ne $CF_STATUS_GOOD -and
             ($preReq -ne $CF_STATUS_MANUALLY_CLEARED)) {
-            #write-verbose "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
+            write-verbose-skip "[$($row.dbid)] CF-Skip: failed prereq: $preReq"
             return $true
         }
     }
 
 
     if (($DBid -ne $null) -and ($row.dbid -ne $DBid)) { 
-        #write-verbose "skip-this: failed dbid test"
+        write-verbose-skip "skip-this: failed dbid test"
         return $true
     }
     
@@ -1105,4 +1115,13 @@ SELECT * from DCBs WHERE batchid=$bID and dbid=$dbid
     $script:dbReader = $sCmd.ExecuteReader() 
     $script:dbReader.read() > $null
     #return $reader  # somehow not returning correctly
+}
+
+function write-verbose-skip($msg) {
+    if ($CF_DEBUG_SKIP) {
+        if (($DBid -ne $null) -and ($row.dbid -ne $DBid)) { 
+            return 
+        }
+        write-verbose $msg
+    }
 }

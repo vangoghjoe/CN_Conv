@@ -125,34 +125,6 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         
-        if ($row.batchid -ne $BatchID) {   
-            continue
-        }
-
-        if (!$ignoreStatus) {
-            $statVal = $row.$($runEnv.StatusField) 
-            if ($statVal -ne $CF_STATUS_READY -and 
-                ($statVal -ne "") ) {
-                continue
-            }
-
-            # Both v8 and v10 req that pick-qc-words has been run
-            # In addition, if v10, must have run convert_one_dcb also
-            if ($row.st_qc_dict_pick_qc_words -ne $CF_STATUS_GOOD) {
-                continue
-            }
-
-            if ($Vstr -eq 'v10') {
-                if ($row.st_convert_one_dcb -ne $CF_STATUS_GOOD) {
-                    continue
-                }
-            }
-        }
-
-        if ($DBid -and ($row.dbid -ne $DBid)) { 
-            continue
-        }
-        
         $arrPreReqs = @()
         $arrPreReqs += $row.st_qc_dict_pick_qc_words
         if ($Vstr -eq 'v10') {
