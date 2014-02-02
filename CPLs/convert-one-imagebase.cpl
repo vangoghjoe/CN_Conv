@@ -117,7 +117,7 @@ stripDcbExt (text pfn) {
 }
 
 
-
+int DEBUG=1;
 main()
 {
     int    i, fhLog;
@@ -125,6 +125,8 @@ main()
     text   start_time, stop_time;
     char   status, convert_status;
     char   dcb_pfn_root[256];
+
+    if (DEBUG) messageBox("DEBUGGING","",0);
 
 
     g_hasError = FALSE;
@@ -171,6 +173,7 @@ main()
     write_stats_log("DCB|" + dcb_pfn + "|START|" + start_time);
 
 
+    if (DEBUG) messageBox("DIR_pfn = " + dir_pfn,"",0);
     /* Convert DIR */
     if (exist(dir_pfn)) {
         start_time = get_time_stamp();
@@ -211,7 +214,9 @@ main()
     write_stats_log("END|"+get_time_stamp());
     /* Still here? Finished successfully */
     finish_stats_log();
-    exit();  /* ends the CPL, closes all dbs and quit CN */
+
+    /* ends the CPL, closes all dbs and quit CN */
+    if (DEBUG==0) exit();
 
 }
 
@@ -369,6 +374,7 @@ ConvertSingleDIRImagebase(text pszFile; int nDstVersion)
    }
    else if (nSrcVersion < nDstVersion)
    {
+        if (DEBUG) messageBox("ConvertImageBase src<Dest","",0);
       /* Open the .DIR file */
       if ((btDir = btopen(pszFile)) <> EOF) 
       {      

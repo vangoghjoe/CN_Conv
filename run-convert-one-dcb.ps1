@@ -48,6 +48,7 @@ function Set-Up-CPT () {
     else {
         $CPT_name = "convert-one-dcb.CPT"
     }
+    write-verbose "cpt name is : $CPT_name"
     
     if ($(hostname) -eq "LNGHBEL-5009970") {
         $CPT_DEV_DIR = "C:\Documents and Settings\hudsonj1\My Documents\Hogan\Scripts\CPLs"
