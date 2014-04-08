@@ -845,16 +845,29 @@ function CF-Get-Client-Matter ($dcb)
 }
 
 # $vers = "v8" or "v10"
+# 3/2014: For historical reasons, the version converting FROM is always CALLED v8
+#         in things like the status fields, whether converting v8 or v9.  It
+#         would be more accurate to call it something like "vOld" or "vFrom",
+#         but that would be a hassle to refactor.  Only the var
+#         $CF_CN_VERS_CONV_FROM specifies whether that's v8 vs v9
 function CF-Get-CN-Exe($vers) 
 {
     if (-not ($vers)) {
         throw "Must define `$vers when calling CF-Get-CN-Exe"
     }
 
-    $v8 = @( "C:\Program Files\Dataflight\Concordance\Concordance.exe", 
-             "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
-             "C:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
-           )
+    if ($CF_CN_VERS_CONV_FROM -match "8") {
+        $v8 = @( "C:\Program Files\Dataflight\Concordance\Concordance.exe", 
+                 "C:\Program Files (x86)\LexisNexis\Concordance\Concordance.exe",
+                 "C:\Program Files (x86)\Dataflight\Concordance\Concordance.exe"
+               )
+    }
+    elseif ($CF_CN_VERS_CONV_FROM -match "9") {
+        $v8 = @("C:\Program Files\LexisNexis\Concordance\Concordance.exe")
+    }
+    else {
+        throw "CF_CN_VERS_CONV_FROM must match '8' or '9'"
+    }
 
     $v10 = @("C:\Program Files\LexisNexis\Concordance 10\Concordance_10.exe",
              "C:\Program Files (x86)\LexisNexis\Concordance 10\Concordance_10.exe"
@@ -883,6 +896,7 @@ function CF-Get-CN-Info ($CN_Ver)
     }
 
     if ($CN_Ver -match "8") { $VStr = "v8" }
+    elseif ($CN_Ver -match "9") { $VStr = "v9" }
     elseif ($CN_Ver -match "10") { $VStr = "v10" }
     else { throw "Bad value for CN_Ver: $CN_Ver" }
 

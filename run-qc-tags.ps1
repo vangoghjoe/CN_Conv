@@ -40,6 +40,9 @@ set-strictmode -version latest
 
 
 function Set-Up-CPT ($Vstr) {
+    if ($Vstr -match "8") {
+        $Vstr = $CF_CN_VERS_CONV_FROM
+    }
     $CPT_name = "Hogan-Query-Tags-${Vstr}.CPT"
     
     if ($(hostname) -eq "LNGHBEL-5009970") {
@@ -70,7 +73,7 @@ function Exec-Get-Tags {
     $bStr = $runEnv.bStr
     $dbid = $dbRow.dbid
 
-    if ($Vstr -match '8') {
+    if ($Vstr -notmatch '10') {
         if ($UseMultiFilesets) {
             $dcbPfn = $dbRow.local_v8_dcb;
         }
@@ -123,7 +126,7 @@ function Main {
     for ($i = ($startRow-1) ; $i -lt $endRow ; $i++) {
         $row = $dcbRows[$i]
         $arrPreReqs = @()
-        if ($Vstr -eq 'v8') {
+        if ($Vstr -notmatch '10') {
             if ($UseMultiFilesets) {
                 $arrPreReqs += $row.st_backup_local_v8
             }
