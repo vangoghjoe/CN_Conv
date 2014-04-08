@@ -1,6 +1,6 @@
 #####
-#$CF_DEBUG = $true
-$CF_DEBUG = $false
+$CF_DEBUG = $true
+#$CF_DEBUG = $false
 
 #$CF_DEBUG_SKIP = $true
 $CF_DEBUG_SKIP = $false

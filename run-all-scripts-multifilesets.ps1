@@ -69,7 +69,7 @@ function Main {
    
     $cmds= @()
     if ($DoUpdateAllFirst) {
-        $cmds += "run-update-conv-statuses-SQL.ps1 -pgmAll -FileStub $fileStub"
+        $cmds += "run-update-conv-statuses-SQL.ps1 -WriteEvenIfWaived -pgmAll -FileStub $fileStub"
     }
 
     #"run-update-conv-statuses-SQL.ps1 -pgmall -FileStub $fileStub",
